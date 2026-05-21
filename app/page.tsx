@@ -2,7 +2,7 @@ export default function Home() {
   return (
     <main className="flex flex-1 flex-col items-center justify-center min-h-screen bg-meetoo-bg-light px-6 py-24">
       <div className="text-center flex flex-col items-center gap-8">
-        <span className="font-inter font-extrabold uppercase tracking-[0.3em] text-xs text-meetoo-accent-light">
+        <span className="font-inter font-extrabold uppercase tracking-[0.3em] text-xs text-meetoo-accent-dark">
           Studio Pilates &amp; Yoga
         </span>
 
