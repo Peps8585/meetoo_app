@@ -11,6 +11,11 @@ const sections = [
     title: 'Tipologie Lezioni',
     desc: 'Gestisci i tipi di lezione disponibili',
   },
+  {
+    href: '/admin/palinsesto',
+    title: 'Palinsesto',
+    desc: 'Visualizza e gestisci il calendario settimanale delle lezioni',
+  },
 ]
 
 export default function AdminPage() {
