@@ -8,6 +8,7 @@ const links = [
   { href: '/admin/istruttori', label: 'Istruttori' },
   { href: '/admin/lezioni', label: 'Tipologie Lezioni' },
   { href: '/admin/palinsesto', label: 'Palinsesto' },
+  { href: '/admin/clienti', label: 'Clienti' },
 ]
 
 export default function AdminNav() {
