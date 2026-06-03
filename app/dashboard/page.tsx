@@ -1,6 +1,12 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { Calendar, User, Play } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+
+type Profile = {
+  first_name: string | null
+  last_name: string | null
+}
 
 type UpcomingLesson = {
   id: string
@@ -23,6 +29,15 @@ function fmtTime(iso: string): string {
   return new Date(iso).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
 }
 
+function fmtTodayLong(): string {
+  return new Date().toLocaleDateString('it-IT', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+}
+
 export default async function DashboardPage() {
   const supabase = await createClient()
   const {
@@ -38,7 +53,17 @@ export default async function DashboardPage() {
     redirect('/login')
   }
 
-  // Fetch next 3 confirmed bookings
+  // Fetch profile for personalized greeting
+  const { data: profileData } = await supabase
+    .from('profiles')
+    .select('first_name, last_name')
+    .eq('id', user.id)
+    .single()
+
+  const profile = profileData as Profile | null
+  const displayName = profile?.first_name ?? user.email?.split('@')[0] ?? 'ospite'
+
+  // Fetch upcoming confirmed bookings (next 3)
   const now = new Date().toISOString()
 
   const { data: rawBookings } = await supabase
@@ -68,15 +93,16 @@ export default async function DashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-meetoo-bg-light px-6 py-12">
+    <main className="min-h-screen bg-meetoo-bg-light px-4 sm:px-6 py-8 sm:py-12">
       <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-12">
+
+        {/* ── Header ── */}
+        <div className="flex items-start justify-between mb-10">
           <div>
-            <p className="font-inter font-extrabold uppercase tracking-[0.3em] text-xs text-meetoo-accent-dark/60 mb-1">
+            <p className="font-inter font-extrabold uppercase tracking-[0.3em] text-[10px] text-meetoo-accent-dark/50 mb-1">
               Studio Pilates &amp; Yoga
             </p>
-            <h1 className="font-inter font-extrabold uppercase tracking-widest text-4xl text-meetoo-accent-dark leading-none">
+            <h1 className="font-inter font-extrabold uppercase tracking-widest text-3xl sm:text-4xl text-meetoo-accent-dark leading-none">
               MEE TOO
             </h1>
           </div>
@@ -84,48 +110,48 @@ export default async function DashboardPage() {
           <form action={logout}>
             <button
               type="submit"
-              className="border border-meetoo-accent-dark/30 text-meetoo-accent-dark font-inter font-normal uppercase tracking-widest text-xs px-6 py-3 rounded-full transition-colors duration-300 hover:bg-meetoo-accent-dark hover:text-meetoo-bg-light"
+              className="border border-meetoo-accent-dark/30 text-meetoo-accent-dark font-inter font-normal uppercase tracking-widest text-[10px] px-5 py-2.5 rounded-full transition-colors duration-300 hover:bg-meetoo-accent-dark hover:text-meetoo-bg-light"
             >
               Esci
             </button>
           </form>
         </div>
 
-        {/* Welcome */}
-        <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-sm border border-white/80 px-8 py-8 mb-8">
-          <p className="font-inter font-extrabold uppercase tracking-widest text-xs text-meetoo-accent-dark/50 mb-3">
-            Area riservata
+        {/* ── Welcome card ── */}
+        <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-sm border border-white/80 px-6 sm:px-8 py-7 mb-8">
+          <p className="font-inter font-normal text-[10px] uppercase tracking-[0.25em] text-meetoo-accent-dark/40 mb-2">
+            {fmtTodayLong()}
           </p>
-          <h2 className="font-inter font-light text-2xl text-meetoo-accent-dark">
-            Benvenuta,{' '}
-            <span className="font-normal">{user.email}</span>
+          <h2 className="font-inter font-light text-2xl sm:text-3xl text-meetoo-accent-dark leading-snug">
+            Ciao,{' '}
+            <span className="font-semibold capitalize">{displayName}</span>!
           </h2>
         </div>
 
-        {/* Upcoming booked lessons */}
+        {/* ── Le tue prossime lezioni ── */}
         <section className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-inter font-extrabold uppercase tracking-widest text-xs text-meetoo-accent-dark">
-              Prossime lezioni
+            <h3 className="font-inter font-extrabold uppercase tracking-widest text-[11px] text-meetoo-accent-dark">
+              Le tue prossime lezioni
             </h3>
             <Link
               href="/palinsesto"
-              className="font-inter font-light text-xs text-meetoo-accent-dark/50 hover:text-meetoo-accent-dark transition-colors"
+              className="font-inter font-light text-xs text-meetoo-accent-dark/45 hover:text-meetoo-accent-dark transition-colors"
             >
               Vai al palinsesto →
             </Link>
           </div>
 
           {upcoming.length === 0 ? (
-            <div className="bg-white/40 rounded-2xl border border-white/80 px-6 py-10 text-center">
-              <p className="font-inter font-light text-sm text-meetoo-accent-dark/40 mb-4">
+            <div className="bg-white/40 rounded-2xl border border-white/70 px-6 py-10 text-center">
+              <p className="font-inter font-light text-sm text-meetoo-accent-dark/40 mb-5">
                 Nessuna lezione prenotata
               </p>
               <Link
                 href="/palinsesto"
-                className="inline-block font-inter font-normal uppercase tracking-widest text-xs px-6 py-3 rounded-full bg-meetoo-accent-dark text-meetoo-bg-light hover:bg-meetoo-accent-light transition-colors"
+                className="inline-block font-inter font-normal uppercase tracking-widest text-[11px] px-7 py-3 rounded-full bg-meetoo-accent-dark text-meetoo-bg-light hover:bg-meetoo-accent-light transition-colors"
               >
-                Prenota una lezione
+                Vai al Palinsesto
               </Link>
             </div>
           ) : (
@@ -133,12 +159,12 @@ export default async function DashboardPage() {
               {upcoming.map((lesson) => (
                 <div
                   key={lesson.id}
-                  className="bg-white/60 backdrop-blur-sm border border-white/80 rounded-2xl px-5 py-4 flex items-center gap-4 shadow-sm"
+                  className="bg-white/60 backdrop-blur-sm border border-white/80 rounded-2xl px-4 sm:px-5 py-4 flex items-center gap-4 shadow-sm"
                 >
                   {/* Color stripe */}
                   <div
                     className="w-1 rounded-full self-stretch shrink-0"
-                    style={{ backgroundColor: lesson.classes?.color ?? '#a8876a' }}
+                    style={{ backgroundColor: lesson.classes?.color ?? 'var(--meetoo-accent-light)' }}
                   />
 
                   {/* Info */}
@@ -146,7 +172,7 @@ export default async function DashboardPage() {
                     <p className="font-inter font-light text-[10px] uppercase tracking-widest text-meetoo-accent-dark/40">
                       {fmtDay(lesson.starts_at)}
                     </p>
-                    <p className="font-inter font-medium text-meetoo-accent-dark truncate mt-0.5">
+                    <p className="font-inter font-medium text-sm text-meetoo-accent-dark truncate mt-0.5">
                       {lesson.classes?.name ?? '—'}
                     </p>
                     {lesson.profiles && (
@@ -155,15 +181,15 @@ export default async function DashboardPage() {
                       </p>
                     )}
                     {lesson.location && (
-                      <p className="font-inter font-light text-xs text-meetoo-accent-dark/35 truncate">
+                      <p className="font-inter font-light text-[11px] text-meetoo-accent-dark/35 truncate mt-0.5">
                         {lesson.location}
                       </p>
                     )}
                   </div>
 
-                  {/* Time */}
+                  {/* Time badge */}
                   <div className="shrink-0 text-right">
-                    <p className="font-inter font-medium text-sm text-meetoo-accent-dark">
+                    <p className="font-inter font-semibold text-sm text-meetoo-accent-dark">
                       {fmtTime(lesson.starts_at)}
                     </p>
                     <p className="font-inter font-light text-xs text-meetoo-accent-dark/40">
@@ -176,27 +202,60 @@ export default async function DashboardPage() {
           )}
         </section>
 
-        {/* Quick links */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Link
-            href="/palinsesto"
-            className="group bg-white/60 backdrop-blur-sm rounded-2xl border border-white/80 px-6 py-8 flex items-center justify-between hover:bg-white/80 transition-colors shadow-sm"
-          >
-            <span className="font-inter font-normal uppercase tracking-widest text-sm text-meetoo-accent-dark">
-              Palinsesto
-            </span>
-            <span className="text-meetoo-accent-dark/30 group-hover:text-meetoo-accent-light transition-colors text-lg">
-              →
-            </span>
-          </Link>
+        {/* ── Accesso rapido ── */}
+        <section>
+          <h3 className="font-inter font-extrabold uppercase tracking-widest text-[11px] text-meetoo-accent-dark mb-4">
+            Accesso rapido
+          </h3>
 
-          <div className="bg-white/40 rounded-2xl border border-white/80 px-6 py-8 flex items-center justify-between">
-            <span className="font-inter font-normal uppercase tracking-widest text-sm text-meetoo-accent-dark/40">
-              Il mio profilo
-            </span>
-            <span className="text-meetoo-accent-dark/20 text-lg">→</span>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <Link
+              href="/palinsesto"
+              className="group bg-white/60 backdrop-blur-sm rounded-2xl border border-white/80 px-5 py-7 flex flex-col justify-between gap-6 hover:bg-white/80 transition-colors shadow-sm"
+            >
+              <Calendar className="w-6 h-6 text-[#2c2c2c]" />
+              <div>
+                <p className="font-inter font-normal uppercase tracking-widest text-sm text-meetoo-accent-dark">
+                  Palinsesto
+                </p>
+                <p className="font-inter font-light text-xs text-meetoo-accent-dark/40 mt-0.5">
+                  Prenota lezioni
+                </p>
+              </div>
+            </Link>
+
+            <Link
+              href="/profilo"
+              className="group bg-white/60 backdrop-blur-sm rounded-2xl border border-white/80 px-5 py-7 flex flex-col justify-between gap-6 hover:bg-white/80 transition-colors shadow-sm"
+            >
+              <User className="w-6 h-6 text-[#2c2c2c]" />
+              <div>
+                <p className="font-inter font-normal uppercase tracking-widest text-sm text-meetoo-accent-dark">
+                  Il mio profilo
+                </p>
+                <p className="font-inter font-light text-xs text-meetoo-accent-dark/40 mt-0.5">
+                  Dati &amp; abbonamento
+                </p>
+              </div>
+            </Link>
+
+            <Link
+              href="/contenuti"
+              className="group bg-white/60 backdrop-blur-sm rounded-2xl border border-white/80 px-5 py-7 flex flex-col justify-between gap-6 hover:bg-white/80 transition-colors shadow-sm"
+            >
+              <Play className="w-6 h-6 text-[#2c2c2c]" />
+              <div>
+                <p className="font-inter font-normal uppercase tracking-widest text-sm text-meetoo-accent-dark">
+                  Contenuti
+                </p>
+                <p className="font-inter font-light text-xs text-meetoo-accent-dark/40 mt-0.5">
+                  Video on demand
+                </p>
+              </div>
+            </Link>
           </div>
-        </div>
+        </section>
+
       </div>
     </main>
   )
