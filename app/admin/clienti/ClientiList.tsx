@@ -6,7 +6,7 @@ import { Search } from 'lucide-react'
 
 export type ActivePackage = {
   id: string
-  remaining_lessons: number | null
+  credits_remaining: number
   expires_at: string | null
   package_name: string | null
 }
@@ -162,7 +162,7 @@ export default function ClientiList({ clients }: { clients: ClientRow[] }) {
                     <td className="px-5 py-4">
                       {c.active_package ? (
                         <span className="font-inter font-semibold text-sm text-meetoo-accent-dark">
-                          {c.active_package.remaining_lessons ?? '—'}
+                          {c.active_package.credits_remaining ?? '—'}
                         </span>
                       ) : (
                         <span className="font-inter text-sm text-meetoo-accent-dark/30">—</span>
@@ -179,7 +179,7 @@ export default function ClientiList({ clients }: { clients: ClientRow[] }) {
                     {/* Link */}
                     <td className="pr-6 pl-5 py-4 text-right">
                       <Link
-                        href="#"
+                        href={`/admin/clienti/${c.id}`}
                         className="font-inter font-light text-xs text-meetoo-accent-dark/40 hover:text-meetoo-accent-dark transition-colors whitespace-nowrap"
                       >
                         Vedi profilo →
@@ -216,7 +216,7 @@ export default function ClientiList({ clients }: { clients: ClientRow[] }) {
                     </div>
                   </div>
                   <Link
-                    href="#"
+                    href={`/admin/clienti/${c.id}`}
                     className="shrink-0 font-inter font-light text-xs text-meetoo-accent-dark/40 hover:text-meetoo-accent-dark transition-colors mt-0.5"
                   >
                     →
@@ -244,7 +244,7 @@ export default function ClientiList({ clients }: { clients: ClientRow[] }) {
                           Lezioni
                         </p>
                         <p className="font-inter font-semibold text-sm text-meetoo-accent-dark">
-                          {c.active_package.remaining_lessons ?? '—'}
+                          {c.active_package.credits_remaining ?? '—'}
                         </p>
                       </div>
                     </>

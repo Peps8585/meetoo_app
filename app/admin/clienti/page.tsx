@@ -7,7 +7,8 @@ import type { ClientRow } from './ClientiList'
 // Raw shapes returned by Supabase nested select
 type RawPackage = {
   id: string
-  remaining_lessons: number | null
+  credits_total: number | null
+  credits_used: number | null
   expires_at: string | null
   packages: { name: string } | null
 }
@@ -52,7 +53,7 @@ export default async function ClientiPage() {
       .from('profiles')
       .select(
         `id, first_name, last_name, created_at,
-         client_packages ( id, remaining_lessons, expires_at,
+         client_packages ( id, credits_total, credits_used, expires_at,
            packages:package_id ( name )
          )`
       )
@@ -68,7 +69,9 @@ export default async function ClientiPage() {
 
   const clients: ClientRow[] = rawProfiles.map((p) => {
     const activePkg =
-      p.client_packages.find((pkg) => (pkg.remaining_lessons ?? 0) > 0) ?? null
+      p.client_packages.find(
+        (pkg) => (pkg.credits_total ?? 0) - (pkg.credits_used ?? 0) > 0
+      ) ?? null
     return {
       id: p.id,
       first_name: p.first_name,
@@ -78,7 +81,7 @@ export default async function ClientiPage() {
       active_package: activePkg
         ? {
             id: activePkg.id,
-            remaining_lessons: activePkg.remaining_lessons,
+            credits_remaining: (activePkg.credits_total ?? 0) - (activePkg.credits_used ?? 0),
             expires_at: activePkg.expires_at,
             package_name: activePkg.packages?.name ?? null,
           }

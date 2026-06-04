@@ -17,15 +17,15 @@ export default function RegistratiPage() {
     const formData = new FormData(e.currentTarget)
     const supabase = createClient()
 
-    const { error } = await supabase.auth.signUp({
+    const nome    = formData.get('nome')    as string
+    const cognome = formData.get('cognome') as string
+
+    const { data: authData, error } = await supabase.auth.signUp({
       email: formData.get('email') as string,
       password: formData.get('password') as string,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
-        data: {
-          nome: formData.get('nome') as string,
-          cognome: formData.get('cognome') as string,
-        },
+        data: { nome, cognome },
       },
     })
 
@@ -37,6 +37,15 @@ export default function RegistratiPage() {
       )
       setLoading(false)
     } else {
+      // Salva first_name e last_name nel profilo (il trigger Supabase crea la riga,
+      // upsert aggiunge i dati anagrafici anche se il trigger è già passato)
+      if (authData.user) {
+        await supabase.from('profiles').upsert({
+          id: authData.user.id,
+          first_name: nome,
+          last_name: cognome,
+        })
+      }
       setSuccess(true)
     }
   }
