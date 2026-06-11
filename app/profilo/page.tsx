@@ -11,8 +11,10 @@ type Profile = {
 
 type ClientPackage = {
   id: string
-  remaining_lessons: number | null
+  credits_total: number
+  credits_used: number
   expires_at: string | null
+  is_active: boolean
   packages: { name: string } | null
 }
 
@@ -77,11 +79,13 @@ export default async function ProfiloPage() {
   const profile = profileData as Profile | null
 
   // ── Pacchetti attivi ────────────────────────────────────────────────
+  const now = new Date().toISOString()
   const { data: packagesData } = await supabase
     .from('client_packages')
-    .select('id, remaining_lessons, expires_at, packages:package_id(name)')
+    .select('id, credits_total, credits_used, expires_at, is_active, packages:package_id(name)')
     .eq('client_id', user.id)
-    .gt('remaining_lessons', 0)
+    .eq('is_active', true)
+    .or(`expires_at.is.null,expires_at.gt.${now}`)
     .order('expires_at', { ascending: true })
 
   const activePackages = (packagesData as unknown as ClientPackage[]) ?? []
@@ -212,7 +216,7 @@ export default async function ProfiloPage() {
 
                   <div className="shrink-0 text-right">
                     <p className="font-inter font-semibold text-xl text-meetoo-accent-dark leading-none">
-                      {pkg.remaining_lessons ?? '—'}
+                      {pkg.credits_total - pkg.credits_used} / {pkg.credits_total}
                     </p>
                     <p className="font-inter font-light text-[10px] uppercase tracking-widest text-meetoo-accent-dark/40 mt-0.5">
                       lezioni
