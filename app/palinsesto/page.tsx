@@ -15,6 +15,24 @@ type Schedule = {
   profiles: { first_name: string | null; last_name: string | null } | null
 }
 
+type Feedback = { message: string; type: 'error' | 'success' | 'warning' }
+
+const RPC_ERRORS: Record<string, string> = {
+  no_credits:         'Non hai crediti disponibili. Acquista un pacchetto per prenotare.',
+  full:               'Lezione al completo.',
+  already_booked:     'Hai già prenotato questa lezione.',
+  schedule_cancelled: 'Questa lezione è stata annullata.',
+  schedule_past:      'Non puoi prenotare una lezione già iniziata.',
+  not_authenticated:  'Devi effettuare l\'accesso.',
+  not_owner:          'Impossibile annullare questa prenotazione.',
+  booking_not_found:  'Impossibile annullare questa prenotazione.',
+  not_active:         'Impossibile annullare questa prenotazione.',
+}
+
+function translateRpcError(msg: string): string {
+  return RPC_ERRORS[msg] ?? 'Si è verificato un errore. Riprova.'
+}
+
 function getMonday(d: Date): Date {
   const date = new Date(d)
   const day = date.getDay()
@@ -40,7 +58,7 @@ export default function PalinsestoPage() {
   const [schedules, setSchedules] = useState<Schedule[]>([])
   const [weekStart, setWeekStart] = useState<Date>(() => getMonday(new Date()))
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [feedback, setFeedback] = useState<Feedback | null>(null)
   const [studioId, setStudioId] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
   const [myBookings, setMyBookings] = useState<Map<string, string>>(new Map())
@@ -90,7 +108,7 @@ export default function PalinsestoPage() {
       .order('starts_at')
 
     if (schErr) {
-      setError(schErr.message)
+      setFeedback({ message: schErr.message, type: 'error' })
       setLoading(false)
       return
     }
@@ -136,56 +154,54 @@ export default function PalinsestoPage() {
     })
   }
 
-  async function handleBook(scheduleId: string, currentCount: number) {
+  async function handleBook(scheduleId: string) {
     if (!userId) return
     toggleBusy(scheduleId, true)
-    setError(null)
+    setFeedback(null)
     const supabase = createClient()
 
-    const { error: bkErr } = await supabase.from('bookings').insert({
-      client_id: userId,
-      schedule_id: scheduleId,
-      studio_id: studioId,
-      status: 'confirmed',
-    })
+    const { error } = await supabase.rpc('book_lesson', { p_schedule_id: scheduleId })
 
-    if (bkErr) {
-      setError(bkErr.message)
+    if (error) {
+      setFeedback({ message: translateRpcError(error.message), type: 'error' })
       await loadSchedules(true)
       toggleBusy(scheduleId, false)
       return
     }
 
-    await supabase
-      .from('schedules')
-      .update({ current_bookings: currentCount + 1 })
-      .eq('id', scheduleId)
-
     await loadSchedules(true)
     toggleBusy(scheduleId, false)
   }
 
-  async function handleCancel(scheduleId: string, bookingId: string, currentCount: number) {
+  async function handleCancel(scheduleId: string, bookingId: string, within24h: boolean) {
     if (!userId) return
+
+    if (within24h) {
+      const confirmed = window.confirm(
+        'Sei entro le 24 ore: se disdici perdi il credito. Confermi?'
+      )
+      if (!confirmed) return
+    }
+
     toggleBusy(scheduleId, true)
-    setError(null)
+    setFeedback(null)
     const supabase = createClient()
 
-    const { error: cancelErr } = await supabase
-      .from('bookings')
-      .update({ status: 'cancelled' })
-      .eq('id', bookingId)
+    const { data, error } = await supabase.rpc('cancel_booking', { p_booking_id: bookingId })
 
-    if (cancelErr) {
-      setError(cancelErr.message)
+    if (error) {
+      setFeedback({ message: translateRpcError(error.message), type: 'error' })
       toggleBusy(scheduleId, false)
       return
     }
 
-    await supabase
-      .from('schedules')
-      .update({ current_bookings: Math.max(0, currentCount - 1) })
-      .eq('id', scheduleId)
+    const refunded = (data as { refunded: boolean }).refunded
+    setFeedback({
+      message: refunded
+        ? 'Prenotazione annullata, credito riaccreditato.'
+        : 'Prenotazione annullata. Credito trattenuto (penale entro 24h).',
+      type: refunded ? 'success' : 'warning',
+    })
 
     await loadSchedules(true)
     toggleBusy(scheduleId, false)
@@ -222,10 +238,16 @@ export default function PalinsestoPage() {
           </Link>
         </div>
 
-        {/* Error */}
-        {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 font-inter text-sm">
-            {error}
+        {/* Feedback */}
+        {feedback && (
+          <div className={`mb-6 rounded-xl px-4 py-3 font-inter text-sm border ${
+            feedback.type === 'error'
+              ? 'bg-red-50 border-red-200 text-red-700'
+              : feedback.type === 'success'
+              ? 'bg-green-50 border-green-200 text-green-700'
+              : 'bg-amber-50 border-amber-200 text-amber-700'
+          }`}>
+            {feedback.message}
           </div>
         )}
 
@@ -352,27 +374,17 @@ export default function PalinsestoPage() {
                             </span>
 
                             {isBooked ? (
-                              <span
-                                title={
-                                  within24h
-                                    ? 'Cancellazione non disponibile entro 24h'
-                                    : undefined
-                                }
+                              <button
+                                disabled={busy}
+                                onClick={() => handleCancel(s.id, bookingId!, within24h)}
+                                className={`font-inter font-normal uppercase tracking-widest text-[10px] px-4 py-1.5 rounded-full border transition-colors ${
+                                  busy
+                                    ? 'border-meetoo-accent-dark/15 text-meetoo-accent-dark/25 cursor-wait'
+                                    : 'border-red-300 text-red-500 hover:bg-red-50'
+                                }`}
                               >
-                                <button
-                                  disabled={busy || within24h}
-                                  onClick={() =>
-                                    handleCancel(s.id, bookingId!, s.current_bookings)
-                                  }
-                                  className={`font-inter font-normal uppercase tracking-widest text-[10px] px-4 py-1.5 rounded-full border transition-colors ${
-                                    busy || within24h
-                                      ? 'border-meetoo-accent-dark/15 text-meetoo-accent-dark/25 cursor-not-allowed'
-                                      : 'border-red-300 text-red-500 hover:bg-red-50'
-                                  }`}
-                                >
-                                  {busy ? '…' : 'Cancella'}
-                                </button>
-                              </span>
+                                {busy ? '…' : 'Cancella'}
+                              </button>
                             ) : isFull ? (
                               <button
                                 disabled
@@ -383,7 +395,7 @@ export default function PalinsestoPage() {
                             ) : (
                               <button
                                 disabled={busy}
-                                onClick={() => handleBook(s.id, s.current_bookings)}
+                                onClick={() => handleBook(s.id)}
                                 className={`font-inter font-normal uppercase tracking-widest text-[10px] px-4 py-1.5 rounded-full transition-colors ${
                                   busy
                                     ? 'bg-meetoo-accent-dark/40 text-meetoo-bg-light cursor-wait'
