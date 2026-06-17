@@ -57,7 +57,7 @@ Il progetto `lcyexuqqinabjoinrsku` non esiste → connection timeout → `fetch(
 
 1. **[IN CORSO]** Risolvi blocco login (`Failed to fetch`) → verifica anche creazione istruttore (Server Action con service role key)
 2. **[Sicurezza]** Mattia disabilita legacy key su Supabase + rigenera key Resend → aggiorna env + redeploy
-3. **[Schema]** Versiona nel repo RPC e schema DB (`supabase/migrations/`): `book_lesson`, `cancel_booking`, `client_notes` + schema tabelle (oggi vivono solo nel DB)
+3. **[FATTO]** ~~Versiona nel repo RPC e schema DB~~ → `supabase/migrations/` creata con snapshot 14 tabelle + 4 RPC complete
 4. **[RLS]** Blocca scritture dirette client su `bookings` e `client_packages`, consenti solo via RPC
 5. **[Test E2E]** prenota → scala credito → cancella → rimborso, dall'app su hotspot
 6. **[Auth]** Fix auth callback (magic link / reset password) e bottone "Scopri le lezioni" in homepage
@@ -77,4 +77,5 @@ Backlog successivo: contenuti+Stripe, CRM/email Resend, polish PWA, beta launch 
 - Fix applicato: Mattia ha corretto `NEXT_PUBLIC_SUPABASE_URL` su Vercel → redeploy → login ok
 - **Secret key verificata**: `GET /auth/v1/admin/users` → HTTP 200, 3 utenti, accettata come service_role
 - **Task 1 CHIUSO** — entrambe le key funzionano end-to-end
-- **Prossimo step**: Mattia disabilita legacy key su Supabase + rigenera key Resend (Roadmap punto 2)
+- **Roadmap punto 3 CHIUSO**: `supabase/migrations/` creata — 14 tabelle (snapshot) + 4 RPC (book_lesson, cancel_booking, get_user_role, get_user_studio_id) con corpi reali
+- **Prossimo step**: RLS hardening (Roadmap punto 4)
