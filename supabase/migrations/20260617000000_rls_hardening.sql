@@ -33,7 +33,7 @@ CREATE POLICY "bookings_restrict_insert"
   ON public.bookings
   AS RESTRICTIVE
   FOR INSERT
-  TO authenticated
+  TO public
   WITH CHECK (get_user_role() IN ('admin', 'instructor'));
 
 -- blocca UPDATE diretti da client
@@ -42,7 +42,7 @@ CREATE POLICY "bookings_restrict_update"
   ON public.bookings
   AS RESTRICTIVE
   FOR UPDATE
-  TO authenticated
+  TO public
   USING     (get_user_role() IN ('admin', 'instructor'))
   WITH CHECK (get_user_role() IN ('admin', 'instructor'));
 
@@ -53,7 +53,7 @@ CREATE POLICY "bookings_restrict_delete"
   ON public.bookings
   AS RESTRICTIVE
   FOR DELETE
-  TO authenticated
+  TO public
   USING (get_user_role() IN ('admin', 'instructor'));
 
 -- =============================================================================
@@ -71,7 +71,7 @@ CREATE POLICY "client_packages_restrict_insert"
   ON public.client_packages
   AS RESTRICTIVE
   FOR INSERT
-  TO authenticated
+  TO public
   WITH CHECK (get_user_role() IN ('admin', 'instructor'));
 
 -- blocca UPDATE diretti da client (credits_used, is_active, ecc.)
@@ -80,7 +80,7 @@ CREATE POLICY "client_packages_restrict_update"
   ON public.client_packages
   AS RESTRICTIVE
   FOR UPDATE
-  TO authenticated
+  TO public
   USING     (get_user_role() IN ('admin', 'instructor'))
   WITH CHECK (get_user_role() IN ('admin', 'instructor'));
 
@@ -90,5 +90,5 @@ CREATE POLICY "client_packages_restrict_delete"
   ON public.client_packages
   AS RESTRICTIVE
   FOR DELETE
-  TO authenticated
+  TO public
   USING (get_user_role() IN ('admin', 'instructor'));
