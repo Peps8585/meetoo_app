@@ -21,6 +21,10 @@
 - Multi-tenant via `studio_id`
 - Repo: github.com/Peps8585/meetoo_app
 
+## Decisioni di design
+
+- **`wallet_transactions` ≠ crediti-lezioni**: la tabella `wallet_transactions` è il wallet monetario (gift card, shop — feature non ancora costruita). Il credito-lezioni è gestito interamente da `client_packages.credits_used` via le RPC `book_lesson`/`cancel_booking`. Le due cose sono separate per design. Non integrare `wallet_transactions` nelle RPC di prenotazione senza una decisione esplicita.
+
 ## Dipendenze chiave
 
 - `@supabase/supabase-js`: 2.106.0
@@ -58,7 +62,7 @@ Il progetto `lcyexuqqinabjoinrsku` non esiste → connection timeout → `fetch(
 1. **[IN CORSO]** Risolvi blocco login (`Failed to fetch`) → verifica anche creazione istruttore (Server Action con service role key)
 2. **[Sicurezza]** Mattia disabilita legacy key su Supabase + rigenera key Resend → aggiorna env + redeploy
 3. **[FATTO]** ~~Versiona nel repo RPC e schema DB~~ → `supabase/migrations/` creata con snapshot 14 tabelle + 4 RPC complete
-4. **[RLS]** Blocca scritture dirette client su `bookings` e `client_packages`, consenti solo via RPC
+4. **[IN CORSO]** RLS hardening: migration `20260617000000_rls_hardening.sql` scritta — in attesa di review e applicazione da Mattia nel SQL Editor
 5. **[Test E2E]** prenota → scala credito → cancella → rimborso, dall'app su hotspot
 6. **[Auth]** Fix auth callback (magic link / reset password) e bottone "Scopri le lezioni" in homepage
 7. **[Pulizia]** Elimina 2 vecchi progetti Vercel (meetoo-app, meetoo-app-v1); risolvi 3 warning ESLint/Tailwind + 1 warning build
@@ -77,5 +81,5 @@ Backlog successivo: contenuti+Stripe, CRM/email Resend, polish PWA, beta launch 
 - Fix applicato: Mattia ha corretto `NEXT_PUBLIC_SUPABASE_URL` su Vercel → redeploy → login ok
 - **Secret key verificata**: `GET /auth/v1/admin/users` → HTTP 200, 3 utenti, accettata come service_role
 - **Task 1 CHIUSO** — entrambe le key funzionano end-to-end
-- **Roadmap punto 3 CHIUSO**: `supabase/migrations/` creata — 14 tabelle (snapshot) + 4 RPC (book_lesson, cancel_booking, get_user_role, get_user_studio_id) con corpi reali
-- **Prossimo step**: RLS hardening (Roadmap punto 4)
+- **Roadmap punto 3 CHIUSO**: `supabase/migrations/` creata — 14 tabelle (snapshot) + 4 RPC con corpi reali
+- RLS hardening: scritta `20260617000000_rls_hardening.sql` (policy RESTRICTIVE su bookings e client_packages) — **in attesa di applicazione da Mattia**
