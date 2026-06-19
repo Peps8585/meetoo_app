@@ -31,7 +31,7 @@
 - `@supabase/ssr`: 0.10.3 (peer dep: supabase-js ^2.105.3 — compatibile)
 - `next`: 16.2.6
 
-## Stato attuale (aggiornato: 17 giugno 2026)
+## Stato attuale (aggiornato: 19 giugno 2026)
 
 ### Fatto
 - Migrate alle nuove API key Supabase: `sb_publishable_*` (anon) e `sb_secret_*` (service role) create e sostituite in `.env.local` e nelle env Vercel. Redeploy su `meetoo-app-ntls` completato.
@@ -42,27 +42,16 @@
 - **Disabilitare le legacy key `eyJ...`** su Supabase dashboard (ora che entrambe le nuove key sono confermate)
 - **Rigenerare la key Resend** e aggiornare `RESEND_API_KEY` in `.env.local` e Vercel → redeploy
 
-### Blocco attuale: "Failed to fetch" al login → ROOT CAUSE TROVATA
+### Blocco login — RISOLTO (sessione 17 giu)
 
-**Sintomo**: il login su `meetoo-app-ntls.vercel.app/login` restituisce "Failed to fetch".
-
-**Root cause (trovata sessione 17 giu)**: **typo nell'URL Supabase baked nel bundle Vercel**.
-
-| | Valore |
-|---|---|
-| Corretto (da `.env.local`) | `lcyexu**gq**inabjoinrsku.supabase.co` |
-| Errato (baked nel bundle Vercel) | `lcyexu**qq**inabjoinrsku.supabase.co` |
-
-Il progetto `lcyexuqqinabjoinrsku` non esiste → connection timeout → `fetch()` lancia eccezione → "Failed to fetch". CORS, versione libreria e formato key erano tutti corretti.
-
-**Fix**: aggiornare la variabile `NEXT_PUBLIC_SUPABASE_URL` su Vercel con il valore corretto, poi fare redeploy.
+Typo `qq` → `gq` nell'URL Supabase baked nel bundle Vercel. Fix: `NEXT_PUBLIC_SUPABASE_URL` corretto su Vercel + redeploy → login ok.
 
 ## Roadmap
 
-1. **[IN CORSO]** Risolvi blocco login (`Failed to fetch`) → verifica anche creazione istruttore (Server Action con service role key)
-2. **[Sicurezza]** Mattia disabilita legacy key su Supabase + rigenera key Resend → aggiorna env + redeploy
+1. **[FATTO]** ~~Risolvi blocco login (`Failed to fetch`)~~ → fix URL Vercel + redeploy; key publishable e service_role verificate end-to-end
+2. **[Sicurezza — da fare su dashboard]** Mattia disabilita legacy key `eyJ...` su Supabase + rigenera key Resend → aggiorna env + redeploy
 3. **[FATTO]** ~~Versiona nel repo RPC e schema DB~~ → `supabase/migrations/` creata con snapshot 14 tabelle + 4 RPC complete
-4. **[IN CORSO]** RLS hardening: migration `20260617000000_rls_hardening.sql` scritta — in attesa di review e applicazione da Mattia nel SQL Editor
+4. **[FATTO]** ~~RLS hardening~~ → `20260617000000_rls_hardening.sql` applicata e validata: 6 policy RESTRICTIVE TO public su `bookings` e `client_packages`; client bloccato da INSERT/UPDATE/DELETE diretti; SELECT e RPC (`book_lesson`/`cancel_booking`) intatti; **9/9 test PASS** (`supabase/tests/rls_validation_bookings_client_packages.sql`)
 5. **[Test E2E]** prenota → scala credito → cancella → rimborso, dall'app su hotspot
 6. **[Auth]** Fix auth callback (magic link / reset password) e bottone "Scopri le lezioni" in homepage
 7. **[Pulizia]** Elimina 2 vecchi progetti Vercel (meetoo-app, meetoo-app-v1); risolvi 3 warning ESLint/Tailwind + 1 warning build
@@ -75,11 +64,16 @@ Backlog successivo: contenuti+Stripe, CRM/email Resend, polish PWA, beta launch 
 
 ### 2026-06-17 — Sessione 1
 - Creato CLAUDE.md con stato, regole, roadmap e log
-- Analizzato "Failed to fetch" al login: versioni librerie ok (supabase-js 2.106.0 + ssr 0.10.3 compatibili), codice corretto, CORS ok (testato con curl)
-- Ispezionato JS bundle deployato su Vercel: trovato typo `gq` → `qq` nell'URL Supabase nella variabile `NEXT_PUBLIC_SUPABASE_URL`
-- **Root cause**: l'URL nel bundle punta a un progetto Supabase inesistente → timeout → "Failed to fetch"
-- Fix applicato: Mattia ha corretto `NEXT_PUBLIC_SUPABASE_URL` su Vercel → redeploy → login ok
-- **Secret key verificata**: `GET /auth/v1/admin/users` → HTTP 200, 3 utenti, accettata come service_role
-- **Task 1 CHIUSO** — entrambe le key funzionano end-to-end
-- **Roadmap punto 3 CHIUSO**: `supabase/migrations/` creata — 14 tabelle (snapshot) + 4 RPC con corpi reali
-- RLS hardening: scritta `20260617000000_rls_hardening.sql` (policy RESTRICTIVE su bookings e client_packages) — **in attesa di applicazione da Mattia**
+- Trovato e risolto "Failed to fetch" al login: typo `qq` → `gq` in `NEXT_PUBLIC_SUPABASE_URL` su Vercel → redeploy → login ok
+- Secret key verificata: `GET /auth/v1/admin/users` → HTTP 200, 3 utenti
+- **Roadmap 1 CHIUSO** — entrambe le key funzionano end-to-end
+- **Roadmap 3 CHIUSO**: `supabase/migrations/` creata — 14 tabelle (snapshot) + 4 RPC con corpi reali
+- Scritta `20260617000000_rls_hardening.sql` (6 policy RESTRICTIVE su bookings e client_packages)
+
+### 2026-06-19 — Sessione 2
+- RLS hardening applicata da Mattia nel SQL Editor (sessione 17 giu, completata 19 giu)
+- Preflight Sezione 0 verde: funzioni SECURITY DEFINER owner=postgres, rls_enabled=true su entrambe le tabelle
+- Scritto blocco SQL di validazione con tabella risultati (no RAISE NOTICE, compatibile SQL Editor)
+- **9/9 test PASS**: 6 policy RESTRICTIVE confermate in pg_policies; INSERT bloccato con eccezione RLS; UPDATE/DELETE 0 righe; SELECT proprie righe intatta
+- **Roadmap 4 CHIUSO** — RLS hardening completata e validata
+- Salvato blocco di validazione in `supabase/tests/rls_validation_bookings_client_packages.sql`
