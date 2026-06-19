@@ -31,7 +31,7 @@
 - `@supabase/ssr`: 0.10.3 (peer dep: supabase-js ^2.105.3 — compatibile)
 - `next`: 16.2.6
 
-## Stato attuale (aggiornato: 19 giugno 2026 — sessione 3)
+## Stato attuale (aggiornato: 19 giugno 2026 — sessione 4)
 
 ### Fatto
 - Migrate alle nuove API key Supabase: `sb_publishable_*` (anon) e `sb_secret_*` (service role) create e sostituite in `.env.local` e nelle env Vercel. Redeploy su `meetoo-app-ntls` completato.
@@ -49,7 +49,7 @@ Typo `qq` → `gq` nell'URL Supabase baked nel bundle Vercel. Fix: `NEXT_PUBLIC_
 ## Roadmap
 
 1. **[FATTO]** ~~Risolvi blocco login (`Failed to fetch`)~~ → fix URL Vercel + redeploy; key publishable e service_role verificate end-to-end
-2. **[Sicurezza — da fare su dashboard]** Mattia disabilita legacy key `eyJ...` su Supabase + rigenera key Resend → aggiorna env + redeploy
+2. **[FATTO]** ~~Pulizia chiavi~~ → legacy key Supabase `eyJ...` disattivate; Resend ruotata (re_9AM1... revocata → re_g5yCUWxg attiva); tutte le chiavi esposte nel PDF ora morte. Pendente (igiene): eliminare il PDF dalla circolazione; aggiungere `RESEND_API_KEY` su Vercel quando si attivano le email
 3. **[FATTO]** ~~Versiona nel repo RPC e schema DB~~ → `supabase/migrations/` creata con snapshot 14 tabelle + 4 RPC complete
 4. **[FATTO]** ~~RLS hardening~~ → `20260617000000_rls_hardening.sql` applicata e validata: 6 policy RESTRICTIVE TO public su `bookings` e `client_packages`; client bloccato da INSERT/UPDATE/DELETE diretti; SELECT e RPC (`book_lesson`/`cancel_booking`) intatti; **9/9 test PASS** (`supabase/tests/rls_validation_bookings_client_packages.sql`)
 5. **[FATTO]** ~~Test E2E funzionale + smoke test UI~~ → SQL 13/13 PASS; UI live (Maria Test): prenota credito 9→8 posto -1, cancella credito 8→9 posto ripristinato. Lezioni di test create nel palinsesto (utili anche per demo Giorgia)
@@ -86,3 +86,9 @@ Backlog successivo: contenuti+Stripe, CRM/email Resend, polish PWA, beta launch 
 - **Smoke test UI SUPERATO** su app live (hotspot): Maria Test prenota lezione → credito 9→8, posto -1; cancella → credito 8→9, posto ripristinato
 - Lezioni di test create nel palinsesto, disponibili anche per la demo con Giorgia
 - **Roadmap 5 CHIUSO completamente** — E2E SQL (13/13) + smoke test UI entrambi verdi
+
+### 2026-06-19 — Sessione 4
+- Legacy key Supabase `eyJ...` disattivate su dashboard
+- Resend ruotata: re_9AM1... revocata, re_g5yCUWxg attiva (non ancora su Vercel — email non ancora attive)
+- Tutte le chiavi esposte nel PDF ora morte
+- **Roadmap 2 CHIUSO** — pendenti non bloccanti: eliminare PDF circolante; aggiungere `RESEND_API_KEY` su Vercel prima di attivare le email
