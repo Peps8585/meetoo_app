@@ -31,7 +31,7 @@
 - `@supabase/ssr`: 0.10.3 (peer dep: supabase-js ^2.105.3 — compatibile)
 - `next`: 16.2.6
 
-## Stato attuale (aggiornato: 19 giugno 2026 — sessione 2)
+## Stato attuale (aggiornato: 19 giugno 2026 — sessione 3)
 
 ### Fatto
 - Migrate alle nuove API key Supabase: `sb_publishable_*` (anon) e `sb_secret_*` (service role) create e sostituite in `.env.local` e nelle env Vercel. Redeploy su `meetoo-app-ntls` completato.
@@ -52,7 +52,7 @@ Typo `qq` → `gq` nell'URL Supabase baked nel bundle Vercel. Fix: `NEXT_PUBLIC_
 2. **[Sicurezza — da fare su dashboard]** Mattia disabilita legacy key `eyJ...` su Supabase + rigenera key Resend → aggiorna env + redeploy
 3. **[FATTO]** ~~Versiona nel repo RPC e schema DB~~ → `supabase/migrations/` creata con snapshot 14 tabelle + 4 RPC complete
 4. **[FATTO]** ~~RLS hardening~~ → `20260617000000_rls_hardening.sql` applicata e validata: 6 policy RESTRICTIVE TO public su `bookings` e `client_packages`; client bloccato da INSERT/UPDATE/DELETE diretti; SELECT e RPC (`book_lesson`/`cancel_booking`) intatti; **9/9 test PASS** (`supabase/tests/rls_validation_bookings_client_packages.sql`)
-5. **[FATTO — SQL]** ~~Test E2E funzionale RPC~~ → `book_lesson` scala credito e incrementa posti; `cancel_booking` rimborsa e libera posto su lezione >24h; **13/13 PASS** (`supabase/tests/e2e_book_cancel_rpc.sql`). Resto aperto: **smoke test UI + prep demo** (hotspot, app live, Giorgia)
+5. **[FATTO]** ~~Test E2E funzionale + smoke test UI~~ → SQL 13/13 PASS; UI live (Maria Test): prenota credito 9→8 posto -1, cancella credito 8→9 posto ripristinato. Lezioni di test create nel palinsesto (utili anche per demo Giorgia)
 6. **[Auth]** Fix auth callback (magic link / reset password) e bottone "Scopri le lezioni" in homepage
 7. **[Pulizia]** Elimina 2 vecchi progetti Vercel (meetoo-app, meetoo-app-v1); risolvi 3 warning ESLint/Tailwind + 1 warning build
 8. **[Demo]** Demo con Giorgia (riattivare free tier Supabase se in pausa)
@@ -81,3 +81,8 @@ Backlog successivo: contenuti+Stripe, CRM/email Resend, polish PWA, beta launch 
 - **13/13 PASS**: setup auto (studio/class/schedule/crediti), `book_lesson` scala credits_used +1 e current_bookings +1, `cancel_booking` su lezione >24h rimborsa e libera posto
 - **Roadmap 5 CHIUSO (SQL)** — percorso RPC integro dopo la hardening; resta smoke test UI + prep demo Giorgia
 - Salvato `supabase/tests/e2e_book_cancel_rpc.sql`
+
+### 2026-06-19 — Sessione 3
+- **Smoke test UI SUPERATO** su app live (hotspot): Maria Test prenota lezione → credito 9→8, posto -1; cancella → credito 8→9, posto ripristinato
+- Lezioni di test create nel palinsesto, disponibili anche per la demo con Giorgia
+- **Roadmap 5 CHIUSO completamente** — E2E SQL (13/13) + smoke test UI entrambi verdi
