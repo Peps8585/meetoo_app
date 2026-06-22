@@ -136,7 +136,7 @@ export default function IstruttoriPage() {
   return (
     <div className="p-8">
       {/* Header */}
-      <div className="flex items-start justify-between mb-8">
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-0 mb-8">
         <div>
           <p className="font-inter font-normal uppercase tracking-[0.3em] text-xs text-meetoo-accent-dark/50 mb-1">
             Admin
@@ -148,7 +148,7 @@ export default function IstruttoriPage() {
         {!showForm && (
           <button
             onClick={openCreate}
-            className="border border-meetoo-accent-dark/30 text-meetoo-accent-dark font-inter font-normal uppercase tracking-widest text-xs px-6 py-3 rounded-full hover:bg-meetoo-accent-dark hover:text-meetoo-bg-light transition-colors"
+            className="w-full md:w-auto border border-meetoo-accent-dark/30 text-meetoo-accent-dark font-inter font-normal uppercase tracking-widest text-xs px-6 py-3 rounded-full hover:bg-meetoo-accent-dark hover:text-meetoo-bg-light transition-colors"
           >
             + Aggiungi
           </button>
@@ -263,25 +263,28 @@ export default function IstruttoriPage() {
           {instructors.map((inst) => (
             <div
               key={inst.id}
-              className="bg-white/60 backdrop-blur-sm border border-white/80 rounded-2xl px-6 py-5 flex items-center gap-4 shadow-sm"
+              className="bg-white/60 backdrop-blur-sm border border-white/80 rounded-2xl px-6 py-5 flex flex-col md:flex-row md:items-center gap-4 shadow-sm"
             >
-              {/* Avatar iniziali */}
-              <div className="w-12 h-12 rounded-full bg-meetoo-accent-light/20 flex items-center justify-center shrink-0">
-                <span className="font-inter font-extrabold text-meetoo-accent-dark/50 text-sm uppercase">
-                  {(inst.first_name?.[0] ?? '') + (inst.last_name?.[0] ?? '')}
-                </span>
-              </div>
+              {/* Avatar + info: affiancati su mobile, su md il wrapper sparisce (md:contents) */}
+              <div className="flex items-center gap-4 min-w-0 md:contents">
+                {/* Avatar iniziali */}
+                <div className="w-12 h-12 rounded-full bg-meetoo-accent-light/20 flex items-center justify-center shrink-0">
+                  <span className="font-inter font-extrabold text-meetoo-accent-dark/50 text-sm uppercase">
+                    {(inst.first_name?.[0] ?? '') + (inst.last_name?.[0] ?? '')}
+                  </span>
+                </div>
 
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <p className="font-inter font-medium text-meetoo-accent-dark truncate">
-                  {inst.first_name} {inst.last_name}
-                </p>
-                {inst.phone && (
-                  <p className="font-inter font-light text-xs text-meetoo-accent-dark/50 truncate">
-                    {inst.phone}
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <p className="font-inter font-medium text-meetoo-accent-dark md:truncate">
+                    {inst.first_name} {inst.last_name}
                   </p>
-                )}
+                  {inst.phone && (
+                    <p className="font-inter font-light text-xs text-meetoo-accent-dark/50 md:truncate">
+                      {inst.phone}
+                    </p>
+                  )}
+                </div>
               </div>
 
               {/* Actions */}
