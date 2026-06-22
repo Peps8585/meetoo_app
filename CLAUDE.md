@@ -92,3 +92,13 @@ Backlog successivo: contenuti+Stripe, CRM/email Resend, polish PWA, beta launch 
 - Resend ruotata: re_9AM1... revocata, re_g5yCUWxg attiva (non ancora su Vercel — email non ancora attive)
 - Tutte le chiavi esposte nel PDF ora morte
 - **Roadmap 2 CHIUSO** — pendenti non bloccanti: eliminare PDF circolante; aggiungere `RESEND_API_KEY` su Vercel prima di attivare le email
+
+### 2026-06-22 — Sessione 5 — Admin mobile-responsive
+- Layout admin responsive: sidebar → drawer off-canvas sotto md (hamburger + 
+  top bar mobile), <main> a piena larghezza su mobile (md:ml-60). Desktop invariato.
+- Card responsive (Tipologie Lezioni, Istruttori): flex-col mobile / md:flex-row, 
+  md:truncate, min-w-0. Istruttori: avatar accanto al nome via wrapper md:contents.
+- Header bottone-azione (Istruttori, Palinsesto): w-full md:w-auto + flex-col 
+  md:flex-row → bottone sotto il titolo su mobile.
+- Backdrop drawer /50 → /60. Palinsesto: tenuto scroll orizzontale grid 7 giorni.
+- Pattern utile: md:contents per neutralizzare un wrapper mobile a desktop.
