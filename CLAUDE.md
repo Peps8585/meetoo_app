@@ -102,3 +102,28 @@ Backlog successivo: contenuti+Stripe, CRM/email Resend, polish PWA, beta launch 
   md:flex-row → bottone sotto il titolo su mobile.
 - Backdrop drawer /50 → /60. Palinsesto: tenuto scroll orizzontale grid 7 giorni.
 - Pattern utile: md:contents per neutralizzare un wrapper mobile a desktop.
+
+### 2026-06-22 — Sessione 6 — Fix UI: CTA home + redirect role-based login
+- Fix 1 — Bottone CTA "Scopri le lezioni" in `app/page.tsx`: era un placeholder 
+  `<a href="#">`, ora `<Link href="/registrati">` (next/link). Destinazione 
+  /registrati scelta come punto di conversione comune del funnel (sia pubblico 
+  in presenza sia audience online). Commit 73faf66.
+- Fix 2 — Redirect role-based post-login. Creata helper condivisa 
+  `lib/supabase/destination.ts` → `destinationForUser(supabase, userId)`: legge 
+  profiles.role, ritorna '/admin' se role==='admin' altrimenti '/dashboard' 
+  (fallback sicuro su errore o role null). Applicata ai 3 redirect prima fissi a 
+  /dashboard: `app/(auth)/login/page.tsx` (handler), `app/auth/callback/route.ts` 
+  (post exchangeCodeForSession + getUser), `app/(auth)/layout.tsx` (utente già 
+  loggato). Nessun middleware introdotto. Commit fc90331.
+- Verifica produzione OK: admin (mat_peps) → /admin; client (laurarossi/Maria 
+  Test) → area cliente. Typecheck (tsc --noEmit) pulito prima del commit.
+
+Backlog / prossimi obiettivi:
+- "Funnel landing pubblico": vetrina consultabile da anonimi (anteprima 
+  palinsesto read-only + catalogo contenuti/corsi online). Richiede risolvere 
+  studio_id per anonimo (probabile hardcode/env, di fatto single-tenant) + 
+  aprire RLS in SELECT su schedules/classes/instructors.
+- Revisione copy CTA home: "Scopri le lezioni" è stretta per l'audience online, 
+  renderla trasversale.
+- Verificare il redirect del client: confermare che atterri su /dashboard e non 
+  /profilo (non bloccante, da controllare).
