@@ -279,23 +279,23 @@ export default function LezioniPage() {
           {classes.map((cls) => (
             <div
               key={cls.id}
-              className="bg-white/60 backdrop-blur-sm border border-white/80 rounded-2xl px-6 py-5 flex items-center gap-4 shadow-sm"
+              className="bg-white/60 backdrop-blur-sm border border-white/80 rounded-2xl px-6 py-5 flex flex-col md:flex-row md:items-center gap-4 shadow-sm"
             >
-              {/* Color swatch */}
+              {/* Color swatch — accento orizzontale su mobile, barra verticale da md */}
               <div
-                className="w-4 h-10 rounded-full shrink-0"
+                className="rounded-full shrink-0 h-1.5 w-10 md:h-10 md:w-4"
                 style={{ backgroundColor: cls.color ?? '#a8876a' }}
               />
 
               {/* Info */}
               <div className="flex-1 min-w-0">
-                <p className="font-inter font-medium text-meetoo-accent-dark truncate">
+                <p className="font-inter font-medium text-meetoo-accent-dark md:truncate">
                   {cls.name}
                 </p>
                 <p className="font-inter font-light text-xs text-meetoo-accent-dark/50">
                   {cls.duration_minutes} min
                   {cls.description && (
-                    <span className="ml-2 truncate">· {cls.description}</span>
+                    <span className="ml-2 md:truncate">· {cls.description}</span>
                   )}
                 </p>
               </div>
