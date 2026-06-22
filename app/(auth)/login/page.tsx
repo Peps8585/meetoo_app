@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { destinationForUser } from '@/lib/supabase/destination'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -18,7 +19,7 @@ export default function LoginPage() {
     const formData = new FormData(e.currentTarget)
     const supabase = createClient()
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: formData.get('email') as string,
       password: formData.get('password') as string,
     })
@@ -31,7 +32,10 @@ export default function LoginPage() {
       )
       setLoading(false)
     } else {
-      router.push('/dashboard')
+      const dest = data.user
+        ? await destinationForUser(supabase, data.user.id)
+        : '/dashboard'
+      router.push(dest)
       router.refresh()
     }
   }
