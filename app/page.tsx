@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 export default function Home() {
   return (
     <main className="flex flex-1 flex-col items-center justify-center min-h-screen bg-meetoo-bg-light px-6 py-24">
@@ -25,12 +27,12 @@ export default function Home() {
           lezione.
         </p>
 
-        <a
-          href="#"
+        <Link
+          href="/registrati"
           className="mt-2 inline-block bg-meetoo-accent-dark text-meetoo-bg-light font-inter font-normal uppercase tracking-widest text-sm px-12 py-4 rounded-full transition-colors duration-300 hover:bg-meetoo-accent-light"
         >
           Scopri le lezioni
-        </a>
+        </Link>
       </div>
     </main>
   );
