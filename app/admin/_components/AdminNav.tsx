@@ -85,7 +85,7 @@ export default function AdminNav() {
         <div
           onClick={() => setOpen(false)}
           aria-hidden="true"
-          className="md:hidden fixed inset-0 z-30 bg-meetoo-accent-dark/50 backdrop-blur-sm"
+          className="md:hidden fixed inset-0 z-30 bg-meetoo-accent-dark/60 backdrop-blur-sm"
         />
       )}
 

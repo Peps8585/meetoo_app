@@ -224,7 +224,7 @@ export default function PalinsestoAdminPage() {
   return (
     <div className="p-8">
       {/* Header */}
-      <div className="flex items-start justify-between mb-8">
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-0 mb-8">
         <div>
           <p className="font-inter font-normal uppercase tracking-[0.3em] text-xs text-meetoo-accent-dark/50 mb-1">
             Admin
@@ -236,7 +236,7 @@ export default function PalinsestoAdminPage() {
         {!showForm && (
           <button
             onClick={openForm}
-            className="border border-meetoo-accent-dark/30 text-meetoo-accent-dark font-inter font-normal uppercase tracking-widest text-xs px-6 py-3 rounded-full hover:bg-meetoo-accent-dark hover:text-meetoo-bg-light transition-colors"
+            className="w-full md:w-auto border border-meetoo-accent-dark/30 text-meetoo-accent-dark font-inter font-normal uppercase tracking-widest text-xs px-6 py-3 rounded-full hover:bg-meetoo-accent-dark hover:text-meetoo-bg-light transition-colors"
           >
             + Aggiungi lezione
           </button>
