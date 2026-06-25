@@ -127,3 +127,33 @@ Backlog / prossimi obiettivi:
   renderla trasversale.
 - Verificare il redirect del client: confermare che atterri su /dashboard e non 
   /profilo (non bloccante, da controllare).
+
+### 2026-06-25 — Sessione 7 — Decisioni: funnel pubblico + wallet in euro (NO CODE)
+
+**Funnel pubblico (deciso):**
+- Route nuova dedicata (es. `/lezioni`), NON sganciare auth da `/palinsesto`.
+- Rendering statico/cache (SSG/ISR), niente posti live → SEO + sicurezza.
+- RLS: SELECT `anon` solo su schedules/classes/instructors, solo colonne vetrina; VIEW pubblica per istruttori (mai riga `profiles` intera). bookings/client_packages/profiles restano blindate.
+- `studio_id` anonimi: env hardcoded via helper `getPublicStudioId()` (migrabile a slug per SaaS).
+
+**Modello credito → wallet in euro (deciso):**
+- Saldo in euro fungibile. Prezzo fisso per disciplina (`classes.price`), override workshop (`schedules.price_override`).
+- Pacchetti → confezioni di ricarica (credito + bonus); sconto-volume = credito bonus calibrato sugli sconti attuali (numeri da definire con Giorgia).
+- Persa garanzia letterale "10 reformer" → posizionata come flessibilità a costo zero.
+- Tranche esplicite (riuso `client_packages`: `amount_initial`/`amount_remaining`/`late_cancel_used`). Scadenza DURA per taglia (5→2m, 10→3m, 15→5m, 20→6m) via `validity_days`. Consumo FIFO per scadenza.
+- Ledger `wallet_transactions` append-only (+ FK `booking_id`, `client_package_id`; type: topup/bonus/booking_debit/cancel_refund/gift/adjustment). Scrittura solo via RPC DEFINER.
+- §8 chiusi: (a) split-debit; (b) bonus 1 cancellazione tardiva = 1 per ricarica; (c) scadenza dura, quota su tranche scaduta NON rimborsata; (d) valvola gift fuori dal motore.
+- RPC `book_lesson`/`cancel_booking` da riscrivere su saldo+prezzo, preservando lock FOR UPDATE / finestra 24h / posto sempre liberato.
+- Fix: indice unico `(client_id, schedule_id)` → parziale `WHERE status='confirmed'`. `bookings.client_package_id` → legacy.
+
+**Audit DB (25/06):** `classes` senza prezzo (gap principale); `wallet_transactions` già esiste, dormiente, RLS solo SELECT; RPC tutte/sole in book_lesson/cancel_booking; UNIQUE pieno su bookings da rendere parziale.
+
+**Da verificare a inizio S8:**
+- RLS attiva su `wallet_transactions`? `SELECT relname, relrowsecurity FROM pg_class WHERE relname='wallet_transactions';` (se false = ledger aperto, abilitare).
+- Definire con Giorgia prezzi reali per disciplina + `credit_amount`/`validity_days` dei bundle.
+
+**Tempi:** nessuna deadline; build a freddo, test/cutover dopo (anche prossima stagione).
+
+**Backlog (passaggi dedicati):** posto fisso; push pre-scadenza + upsell; gift card; workshop UX; funnel pubblico build; migrazione saldi al cutover (oggi su cartellini di carta → inserimento manuale come tranche iniziali).
+
+**Design spec:** `docs/DESIGN_wallet_model_S7.md`.
