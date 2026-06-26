@@ -8,6 +8,7 @@ type Package = {
   name: string
   description: string | null
   price: number
+  credit_amount: number
   credits: number
   validity_days: number
   is_active: boolean
@@ -17,6 +18,7 @@ type FormState = {
   name: string
   description: string
   price: string
+  creditAmount: string
   credits: string
   validity_days: string
   is_active: boolean
@@ -28,6 +30,7 @@ const emptyForm: FormState = {
   name: '',
   description: '',
   price: '',
+  creditAmount: '',
   credits: '',
   validity_days: '',
   is_active: true,
@@ -63,7 +66,7 @@ export default function PacchettiManager({ studioId }: { studioId: string }) {
     const supabase = createClient()
     const { data, error } = await supabase
       .from('packages')
-      .select('id, name, description, price, credits, validity_days, is_active')
+      .select('id, name, description, price, credit_amount, credits, validity_days, is_active')
       .eq('studio_id', studioId)
       .order('name', { ascending: true })
     if (error) showFeedback(error.message, 'error')
@@ -89,6 +92,7 @@ export default function PacchettiManager({ studioId }: { studioId: string }) {
       name: pkg.name,
       description: pkg.description ?? '',
       price: String(pkg.price),
+      creditAmount: String(pkg.credit_amount),
       credits: String(pkg.credits),
       validity_days: String(pkg.validity_days),
       is_active: pkg.is_active,
@@ -113,13 +117,20 @@ export default function PacchettiManager({ studioId }: { studioId: string }) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+
+    if (parseFloat(form.creditAmount) < parseFloat(form.price)) {
+      showFeedback('Il credito erogato non può essere inferiore al prezzo.', 'error')
+      return
+    }
+
     setSaving(true)
 
     const payload = {
       name: form.name.trim(),
       description: form.description.trim() || null,
       price: parseFloat(form.price),
-      credits: parseInt(form.credits, 10),
+      credit_amount: parseFloat(form.creditAmount),
+      credits: parseInt(form.credits, 10) || 0,
       validity_days: parseInt(form.validity_days, 10),
       is_active: form.is_active,
     }
@@ -167,6 +178,12 @@ export default function PacchettiManager({ studioId }: { studioId: string }) {
       await load()
     }
   }
+
+  const bonusPrice = parseFloat(form.price)
+  const bonusCredit = parseFloat(form.creditAmount)
+  const bonusValid = !Number.isNaN(bonusPrice) && !Number.isNaN(bonusCredit)
+  const bonusValue = bonusCredit - bonusPrice
+  const bonusPct = bonusPrice > 0 ? Math.round((bonusValue / bonusPrice) * 1000) / 10 : 0
 
   return (
     <div>
@@ -230,8 +247,8 @@ export default function PacchettiManager({ studioId }: { studioId: string }) {
               />
             </div>
 
-            {/* Prezzo · Lezioni · Validità */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            {/* Prezzo · Credito erogato */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div className="space-y-1">
                 <label className={labelClass}>Prezzo (€) *</label>
                 <input
@@ -246,11 +263,32 @@ export default function PacchettiManager({ studioId }: { studioId: string }) {
                 />
               </div>
               <div className="space-y-1">
-                <label className={labelClass}>Credits *</label>
+                <label className={labelClass}>Credito erogato (€) *</label>
                 <input
                   type="number"
                   required
-                  min="1"
+                  min="0"
+                  step="0.01"
+                  value={form.creditAmount}
+                  onChange={field('creditAmount')}
+                  placeholder="50.00"
+                  className={inputClass}
+                />
+              </div>
+            </div>
+
+            {/* Bonus calcolato live (read-only) */}
+            <p className="font-inter font-light text-xs uppercase tracking-widest text-meetoo-accent-dark/60">
+              {bonusValid ? `Bonus: €${bonusValue.toFixed(2)} (+${bonusPct}%)` : 'Bonus: —'}
+            </p>
+
+            {/* N. lezioni (riferimento) · Scadenza tranche */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="space-y-1">
+                <label className={labelClass}>N. lezioni (riferimento, non usato dal sistema)</label>
+                <input
+                  type="number"
+                  min="0"
                   step="1"
                   value={form.credits}
                   onChange={field('credits')}
@@ -259,7 +297,7 @@ export default function PacchettiManager({ studioId }: { studioId: string }) {
                 />
               </div>
               <div className="space-y-1">
-                <label className={labelClass}>Validità (giorni) *</label>
+                <label className={labelClass}>Scadenza tranche (giorni) *</label>
                 <input
                   type="number"
                   required
