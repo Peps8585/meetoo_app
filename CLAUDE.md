@@ -218,3 +218,30 @@ Backlog / prossimi obiettivi:
 3. Bollo automatico nel checkout (con Stripe).
 4. S9 — cron annullamento automatico (minimo 2 persone → annulla+avvisa; lezione vuota a 12h → annulla); probabile cron unico a 12h (DA CONFERMARE); apre terzo tipo di rimborso "annullamento studio". Pixel Meta + CRM.
 5. Inserimento manuale tranche iniziali clienti al cutover (settembre).
+
+### 2026-06-26 — Sessione 9 — UI admin pacchetti euro + brief cron sotto-soglia
+
+**PUNTO 1 CHIUSO — Form admin pacchetti allineato al modello wallet euro (S7):**
+- Commit `911dc86`, file unico `app/admin/pacchetti/PacchettiManager.tsx`.
+- Aggiunto `credit_amount` (= credito totale erogato, base+bonus) a: type `Package`, `FormState`, `emptyForm`, `openEdit`, SELECT in `load()`, payload.
+- Riga bonus read-only calcolata live: `credit_amount − price`, mostrata in € con `toFixed(2)` e in % a 1 decimale.
+- Validazione submit: blocca se `credit_amount < price`.
+- `credits` (legacy, conteggio lezioni interi) retrocesso a campo OPZIONALE con fallback `parseInt(...) || 0`; ri-etichettato "riferimento, non usato dal sistema". `credits` resta NOT NULL in DB.
+- `validity_days` ri-etichettato "Scadenza tranche (giorni)".
+- 3 test funzionali passati in produzione: (1) creazione con campo lezioni vuoto → `credits=0`, nessun crash NOT NULL; (2) bonus €16.67 (+50%) su prezzo 33.33 / credito 50, nessuna spazzatura float; (3) update non azzera `credit_amount` (payload condiviso insert+update verificato a vista).
+
+**Decisioni di prodotto (S9):**
+- UX form pacchetti: scelta **Opzione A** — Giorgia inserisce `price` + `credit_amount`, il form mostra il bonus derivato (non è una colonna). Scartata Opzione B (inserire bonus, calcolare `credit_amount`) per evitare trasformazioni tra input e storage su un campo che muove denaro.
+- Pulizia colonna legacy `credits` (`DROP NOT NULL` o `DROP COLUMN`) RINVIATA alla finestra di migration rehearsal di agosto, non fatta mid-flight.
+
+**Brief decisionale cron sotto-soglia** — preparato documento Word (`MeeToo_Decisione_Sotto-Soglia.docx`) da compilare con Giorgia.
+- Regola base confermata: soglia 2 persone uguale per tutte le discipline, razionale economico (istruttore ≥25€/h + utenze).
+- Caso "1 iscritta": tre vie d'uscita — A) cambio orario, B) conferma da sola con supplemento, C) riaccredito + riprenota. C è anche il default automatico se la cliente non sceglie.
+- Punto critico isolato: la "finestra di scelta" (seconda soglia temporale nascosta) — quanto tempo ha la cliente per decidere tra A/B/C.
+- Nota strategica: opzione B (supplemento) introduce un addebito extra che il wallet euro oggi NON gestisce e tocca le RPC di prenotazione → vale una sessione a sé. Valutare lancio settembre con solo A+C se B risulta "nice to have".
+
+**Risk register / backlog UI (accumulato in S9 — nessuno blocca il lancio, tutti da chiudere prima di settembre):**
+1. Form pacchetti si apre fuori viewport (in testa alla pagina) → Giorgia clicca Modifica e sembra non succeda nulla. Fix: `scrollIntoView` sul form all'apertura. Micro-task UI.
+2. Mutation `packages` è insert/update diretto dal browser client su un campo che ora muove denaro (`credit_amount`). Verificare policy RLS WRITE scoped a studio-admin. Finestra hardening agosto.
+3. Migrazioni S8 NON versionate (`credit_amount`, `classes.price`, `schedules.price_override`, `client_packages.amount_*`, `wallet_transactions.*` vivono solo in produzione, nessuna migrazione ≥26 giu nel repo). La prova di migrazione di agosto non riprodurrebbe lo schema euro. Recuperare in migrazione versionata. CUTOVER-KILLER se dimenticato.
+4. Accessibilità form: 12 issue Chrome (label non collegate via `htmlFor`/`id`, input senza `id`/`name`). 0 errori, solo accessibilità. Fix meccanico batchabile su tutti i form, finestra polish pre-lancio.
