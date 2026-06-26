@@ -200,4 +200,21 @@ Backlog / prossimi obiettivi:
 
 **GATE prima di andare live:** backfill `classes.price` con prezzi reali + definizione `credit_amount`/`validity_days` bundle. Finché `price=0`, ogni prenotazione è gratis → RPC nuovi NON attivi in produzione fino al backfill.
 
-**Prossimo:** backfill prezzi (dati pronti lato Peps).
+**Backfill COMPLETATO (26-06-2026):**
+- `classes.price` popolato per 5 discipline: Matwork €16, Functional Pilates €16, Reformer €23, Yoga €18, MAM €20. MOTORE ACCESO (book_lesson scala credito reale).
+- `packages`: 14 bundle creati e calibrati (metodo §4). price = prezzo nudo listino; credit_amount = lezioni × singola; validità 60/90/150/180gg. Bonus uniforme per taglia: €5/€20/€37,50/€60. Reformer 10 = UPDATE della riga preesistente (id cc296130), altri 13 = INSERT.
+- Functional Pilates: stessi prezzi Matwork; usa i pacchetti Matwork (fungibilità, nessun bundle dedicato).
+- `packages.credits` (legacy NOT NULL) popolato col numero lezioni come riferimento; non letto dagli RPC.
+
+**Decisione modello — fungibilità piena CONFERMATA:** il credito euro è spendibile su qualsiasi disciplina; ogni prenotazione scala il prezzo della disciplina DELLA LEZIONE (coalesce(price_override, classes.price)), non del pacchetto. Abilita il cross-disciplina occasionale (es. cliente Reformer fa una Mat) senza far gestire conti a Giorgia. Buco di margine residuo limitato al solo bonus migrabile = trascurabile dato l'uso occasionale. Vincolo per disciplina (Opzione B) valutato e SCARTATO.
+
+**Decisione bollo:** marca da bollo €2 sopra €77,47 NON inclusa in packages.price. Da gestire come regola automatica nel flusso di checkout (Stripe) + voce separata in fattura (Fatture in Cloud). Requisito registrato per quando si costruisce il pagamento.
+
+**Stato motore:** acceso e calibrato, ma nessuna cliente ha ancora tranche euro (saldi reali da inserire a mano al cutover settembre, doc §9) → nessuno può prenotare finché non ha credito. Coerente con fase test.
+
+**Prossimi blocchi (non in S8):**
+1. UI admin gestione pacchetti — aggiungere campo credit_amount (la UI è pre-S8). Frontend / Claude Code.
+2. Frontend cliente — mostrare saldo/tranche/scadenze nel profilo, costo in prenotazione, mappare errori booking_closed / price_not_set / no_credits. Frontend / Claude Code.
+3. Bollo automatico nel checkout (con Stripe).
+4. S9 — cron annullamento automatico (minimo 2 persone → annulla+avvisa; lezione vuota a 12h → annulla); probabile cron unico a 12h (DA CONFERMARE); apre terzo tipo di rimborso "annullamento studio". Pixel Meta + CRM.
+5. Inserimento manuale tranche iniziali clienti al cutover (settembre).
