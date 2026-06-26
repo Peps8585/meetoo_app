@@ -157,3 +157,47 @@ Backlog / prossimi obiettivi:
 **Backlog (passaggi dedicati):** posto fisso; push pre-scadenza + upsell; gift card; workshop UX; funnel pubblico build; migrazione saldi al cutover (oggi su cartellini di carta → inserimento manuale come tranche iniziali).
 
 **Design spec:** `docs/DESIGN_wallet_model_S7.md`.
+
+### 2026-06-26 — Sessione 8 — Build motore wallet in euro (DDL + RPC + test E2E)
+
+**Obiettivo:** trasformare il booking engine da conta-lezioni a wallet in euro, secondo `docs/DESIGN_wallet_model_S7.md`.
+
+**Stato di partenza (verificato, non assunto):** audit Fase 0 confermato sullo schema reale del 25/06. RLS già attiva su `wallet_transactions` (Task 1 chiuso: una sola policy SELECT, ledger blindato — write solo via RPC SECURITY DEFINER).
+
+**Fase 1 — DDL (migration unica, transazionale, additiva):**
+- `classes.price numeric NOT NULL DEFAULT 0`
+- `schedules.price_override numeric NULL`
+- `packages.credit_amount numeric NOT NULL DEFAULT 0`
+- `client_packages` + `amount_initial`, `amount_remaining`, `late_cancel_used`
+- `wallet_transactions` + `client_package_id`, `booking_id` (FK)
+- Fix bug indice: droppato CONSTRAINT `bookings_client_id_schedule_id_key` (UNIQUE pieno) → creato indice parziale `bookings_active_uniq ON (client_id, schedule_id) WHERE status='confirmed'`. Sblocca book→cancel→rebook.
+- Colonne vecchie (`credits`, `credits_total`, `credits_used`) NON droppate — DEPRECATE in transizione.
+
+**Fase 2 — RPC riscritti (entrambi SECURITY DEFINER, search_path fissato):**
+- `book_lesson`: prezzo = `coalesce(schedules.price_override, classes.price)` via join `class_id`; check saldo somma tranche vive; split-debit FIFO (oldest-first) su più tranche con scrittura ledger `type='debit'`; `bookings.client_package_id` non più popolato (LEGACY→NULL).
+- `cancel_booking`: rimborso ripercorrendo le righe `debit` dal ledger (non più da `bookings.client_package_id`); rimborso solo a tranche ancora viva (§8.c: quota su tranche scaduta NON rimborsata); bonus late-cancel = Opzione B (ancorato alla tranche FIFO viva, check+mark sulla stessa riga); bonus consumato SOLO se almeno una quota realmente rimborsata (`v_any_refunded`); json `refunded` = rimborso reale, non eleggibilità.
+
+**Decisioni chiuse:**
+- Errore credito insufficiente: resta `no_credits` (retrocompatibilità frontend).
+- Tassonomia ledger: usati valori esistenti del CHECK `'debit'`/`'refund'` (NON la tassonomia estesa del doc §3 — il CHECK reale ammette solo credit/debit/refund). Distinzione "addebito da prenotazione" via `booking_id IS NOT NULL`.
+- Bonus late-cancel: 1 per ricarica/tranche (Opzione B).
+
+**Feedback Giorgia integrati / registrati:**
+- ✅ Finestra iscrizione min 12h prima → aggiunta a `book_lesson` (errore `booking_closed`, valore in variabile `v_min_booking_lead`).
+- ✅ Cancellazione ≥24h per credito → già conforme, nessuna modifica.
+- ⏳ S9+: minimo 2 persone → annullo+avviso; lezione vuota a 12h → annullo. Probabile cron unico a 12h prima (0→annulla, 1→annulla+avvisa, ≥2→conferma) — DA CONFERMARE. Richiede pg_cron + Edge Function + Resend. Apre necessità di un terzo tipo di rimborso "annullamento studio" (rimborsa sempre, ignora 24h/bonus).
+- ⏳ S9+: Pixel Meta, CRM/advertising → layer frontend/marketing, intrecciato col funnel pubblico già a backlog.
+
+**Test E2E (funzioni usa-e-getta, create/lanciate/droppate):**
+- `_test_wallet_e2e`: split-debit, invariante §11, rimborso inverso, rebook su indice parziale → 12/12 pass.
+- `_test_bonus_e2e`: bonus consumato, bonus esaurito, §8.c (flag non bruciato a vuoto) → 9/9 pass.
+- Totale 21/21. Impersonazione via `set_config('request.jwt.claim.sub', ...)`. Entrambe le funzioni DROPPATE a fine sessione.
+- NON coperto: concorrenza (protetta dai FOR UPDATE preservati, ma non testabile single-thread) → osservare nel dry-run luglio.
+
+**Nuovi errori RPC per il frontend (da mappare a valle):** `booking_closed` (iscrizioni chiuse <12h), `price_not_set` (disciplina senza prezzo).
+
+**Debito tecnico annotato:** `client_packages.credits_total` è ancora `integer NOT NULL` senza default — il futuro flusso "acquisto bundle" dovrà passare un valore fittizio (0) finché non si fa `DROP NOT NULL` sulle colonne legacy.
+
+**GATE prima di andare live:** backfill `classes.price` con prezzi reali + definizione `credit_amount`/`validity_days` bundle. Finché `price=0`, ogni prenotazione è gratis → RPC nuovi NON attivi in produzione fino al backfill.
+
+**Prossimo:** backfill prezzi (dati pronti lato Peps).
