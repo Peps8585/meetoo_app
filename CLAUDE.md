@@ -245,3 +245,17 @@ Backlog / prossimi obiettivi:
 2. Mutation `packages` è insert/update diretto dal browser client su un campo che ora muove denaro (`credit_amount`). Verificare policy RLS WRITE scoped a studio-admin. Finestra hardening agosto.
 3. Migrazioni S8 NON versionate (`credit_amount`, `classes.price`, `schedules.price_override`, `client_packages.amount_*`, `wallet_transactions.*` vivono solo in produzione, nessuna migrazione ≥26 giu nel repo). La prova di migrazione di agosto non riprodurrebbe lo schema euro. Recuperare in migrazione versionata. CUTOVER-KILLER se dimenticato.
 4. Accessibilità form: 12 issue Chrome (label non collegate via `htmlFor`/`id`, input senza `id`/`name`). 0 errori, solo accessibilità. Fix meccanico batchabile su tutti i form, finestra polish pre-lancio.
+
+## Sessione 10 — Motore sotto-soglia (SQL completo, in produzione, inerte)
+- Decisioni Giorgia: soglia 2, check a T-12h, finestra 1h, C-auto come pavimento.
+  Opzione A solo su lezioni ≥12h (nativo di book_lesson). Opzione B → fase Stripe.
+- Tranche morta al rimborso: Opzione 1 (riattiva + proroga +30gg da now), NON tocca late_cancel_used.
+- Regola confermata: CHECK SINGOLO a 12h (no ri-controllo se cala da 2 a 1 dopo).
+- Migrazioni versionate + applicate + verificate:
+  - 20260630094736_s10_subthreshold_foundation.sql (commit 440bc1e)
+  - 20260630102720_s10_subthreshold_live.sql (commit 08a772d)
+- Testato su Postgres 16 in sandbox prima del deploy.
+- INERTE: cron NON schedulato. Funzioni esistono ma nessuno le chiama.
+- Aperti: attivare pg_cron (con backfill subthreshold_checked sulle lezioni già imminenti),
+  frontend (card decisione + mapping errori booking_closed/price_not_set/decision_*),
+  push (VAPID, dopo test iPhone IT).
