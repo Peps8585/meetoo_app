@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Calendar, User, Play } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import DecisionCard from './DecisionCard'
 
 type Profile = {
   first_name: string | null
@@ -92,6 +93,35 @@ export default async function DashboardPage() {
     upcoming = (data as unknown as UpcomingLesson[]) ?? []
   }
 
+  // Fetch pending subthreshold decision (if any)
+  const { data: decisionRow } = await supabase
+    .from('subthreshold_decisions')
+    .select('id, schedule_id, state')
+    .eq('client_id', user.id)
+    .eq('state', 'pending')
+    .limit(1)
+    .maybeSingle()
+
+  let decision: { id: string; className: string; startsAt: string } | null = null
+  if (decisionRow) {
+    const { data: schedRow } = await supabase
+      .from('schedules')
+      .select('starts_at, classes:class_id(name)')
+      .eq('id', decisionRow.schedule_id)
+      .maybeSingle()
+    if (schedRow) {
+      const s = schedRow as unknown as {
+        starts_at: string
+        classes: { name: string } | null
+      }
+      decision = {
+        id: decisionRow.id,
+        className: s.classes?.name ?? 'Lezione',
+        startsAt: s.starts_at,
+      }
+    }
+  }
+
   return (
     <main className="min-h-screen bg-meetoo-bg-light px-4 sm:px-6 py-8 sm:py-12">
       <div className="max-w-2xl mx-auto">
@@ -116,6 +146,15 @@ export default async function DashboardPage() {
             </button>
           </form>
         </div>
+
+        {/* ── Decisione sotto-soglia (se presente) ── */}
+        {decision && (
+          <DecisionCard
+            decisionId={decision.id}
+            className={decision.className}
+            startsAt={decision.startsAt}
+          />
+        )}
 
         {/* ── Welcome card ── */}
         <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-sm border border-white/80 px-6 sm:px-8 py-7 mb-8">
