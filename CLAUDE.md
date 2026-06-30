@@ -259,3 +259,15 @@ Backlog / prossimi obiettivi:
 - Aperti: attivare pg_cron (con backfill subthreshold_checked sulle lezioni già imminenti),
   frontend (card decisione + mapping errori booking_closed/price_not_set/decision_*),
   push (VAPID, dopo test iPhone IT).
+
+### Apprendimenti / campanelli (post-test opzione C)
+- Maria Test (client_id c0432d65-9121-41d6-b882-23e46aca1c3d) NON ha credito euro:
+  la tranche usata oggi era di test ed è stata rimossa a fine sessione. Per testare
+  prenotazioni reali dal frontend serve accreditarla prima tramite l'admin.
+- Prezzo reale di riferimento per i test: la lezione "Pilates Matwork" costa 16€
+  (valore non tondo) — utile per verificare la specularità dei movimenti wallet.
+- Campanello pre-settembre: il wallet euro di Maria a zero fa sospettare che molte
+  clienti reali possano ritrovarsi col wallet euro vuoto dopo il passaggio al modello
+  euro. Da verificare con Giorgia se le tranche esistenti sono state migrate al campo
+  amount_remaining prima del cutover di settembre. Non bloccante ora, ma da chiudere
+  prima del lancio.
