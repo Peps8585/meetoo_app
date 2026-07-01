@@ -271,3 +271,66 @@ Backlog / prossimi obiettivi:
   euro. Da verificare con Giorgia se le tranche esistenti sono state migrate al campo
   amount_remaining prima del cutover di settembre. Non bloccante ora, ma da chiudere
   prima del lancio.
+
+## Sessione 11 — Blocco B (spostamento) + Blocco C (wallet euro profilo)
+HEAD fine S11: `5dead34`. Commit: `7b8bc7b` (Blocco B), `5dead34` (Blocco C).
+
+### Blocco B — Opzione A (spostamento) nella card sotto-soglia
+- RPC `resolve_subthreshold_reschedule(p_decision_id, p_target_schedule_id)` → json,
+  SECURITY DEFINER, chiamabile DIRETTA dal client (come il refund).
+- Flusso interno: `refund_booking_full(originale)` → `is_cancelled=true` sull'originale
+  → `book_lesson(target)`. ATOMICO: ogni fallimento di book_lesson è `raise exception`
+  → rollback dell'intera transazione. Nessuno stato intermedio incoerente.
+- Enforcement (≥12h, capienza, credito, prezzo) tutto dentro `book_lesson`. Il
+  pre-filtro UI serve solo a UX (non offrire target che falliranno), non a sicurezza.
+- Codici errore mappati (da book_lesson): full, booking_closed, already_booked,
+  no_credits, schedule_cancelled, schedule_past, price_not_set + same_schedule.
+- DECISIONI PRODOTTO (locked): filtro stessa `class_id` (no cross-disciplina a
+  settembre); nessun prezzo nel selettore. Modello: A = scorciatoia stessa disciplina,
+  C = valvola universale (+ default automatico alla scadenza).
+- Filtro posti liberi (`current_bookings < max_spots`) NON esprimibile in PostgREST
+  → fatto in JS dopo il fetch.
+- Query target in page.tsx include `.eq('is_cancelled', false)`.
+- GAP NOTO (non urgente): il fetch target non esclude lezioni dove la cliente è già
+  iscritta (rete = errore `already_booked`).
+- COPY FUTURO: quando targets è vuoto la card mostra solo "Annulla e riaccredita" —
+  valutare riga "Nessuna lezione disponibile per lo spostamento".
+
+### Blocco C — saldo wallet euro nel profilo
+- BUG risolto: profilo mostrava `credits_total - credits_used` da client_packages —
+  non "fermo" ma SBAGLIATO: book_lesson scala `amount_remaining`, non tocca mai
+  credits_used. Il numero era scollegato dalla realtà.
+- Sostituito con saldo euro = somma `amount_remaining` su tranche vive, STESSE
+  condizioni di book_lesson (is_active, non scaduta, > 0). Aggiunto `.gt('amount_remaining', 0)`.
+- VALUTA VERIFICATA: amount_remaining è in EURO interi con decimali (100 = 100€,
+  addebito Matwork -16 non -1600) → nessun bug ×100. Formato it-IT con virgola OK (es. 84,50 €).
+- `amount_initial` nel type/query ma non usato nel JSX → pulizia opzionale.
+- Il profilo ora SMASCHERA i wallet euro vuoti invece di nasconderli → rende visibile
+  il campanello "migrazione credito reale" prima del lancio.
+
+### Migrazione credito reale (emerso in S11) — cantiere agosto
+- NON inserimento manuale cliente per cliente (lento + pericoloso su campo denaro).
+- Conversione una-tantum via SCRIPT (le lezioni residue legacy esistono ancora in
+  client_packages: credits_total/credits_used).
+- DECISIONE APERTA per Giorgia: formula lezioni→euro (valore storico pagato /
+  prezzo corrente per disciplina / caso per caso su pacchetti misti).
+- Da eseguire PRIMA di mettere il profilo davanti alle clienti reali (altrimenti €0,00
+  corretto ma allarmante).
+
+### Ricetta test riusabile (semina decisione pending)
+- Credito: insert client_packages (package_id NOT NULL → riusa pacchetto esistente),
+  amount_initial/amount_remaining.
+- Schedule a now()+12h05 (book_lesson la accetta) → book_lesson → insert
+  subthreshold_decisions (studio_id, schedule_id, booking_id, client_id, state='pending',
+  bookings_at_check, detected_at, decision_deadline).
+- Per Blocco B: aggiungere schedule target stessa class_id, is_cancelled=false ESPLICITO
+  (altrimenti .eq('is_cancelled', false) non lo pesca), posti liberi.
+- Marcatori pulizia: location 'TEST originale'/'TEST target', tranche con amount_initial=100.
+
+### Manutenzione
+- Project Guide CORRETTA: repo `meetoo_app` (underscore, non trattino — scoperto dal push),
+  URL Supabase con `g` (lcyexugqinabjoinrsku), stack Next.js 16, fonte verità = CLAUDE.md.
+- Master Doc pinnato contiene API key in chiaro (Supabase service_role + anon, Resend)
+  → RIGENERARE + archiviare (finestra agosto). Il service_role bypassa l'RLS.
+- Micro-pulizia futura: `grep credits_used` per stanare altri punti col conteggio legacy
+  (probabile area admin).
