@@ -11,8 +11,8 @@ type Profile = {
 
 type ClientPackage = {
   id: string
-  credits_total: number
-  credits_used: number
+  amount_remaining: number
+  amount_initial: number
   expires_at: string | null
   is_active: boolean
   packages: { name: string } | null
@@ -61,6 +61,10 @@ function fmtDateLong(iso: string): string {
   })
 }
 
+function fmtEuro(n: number): string {
+  return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n)
+}
+
 export default async function ProfiloPage() {
   const supabase = await createClient()
   const {
@@ -82,13 +86,18 @@ export default async function ProfiloPage() {
   const now = new Date().toISOString()
   const { data: packagesData } = await supabase
     .from('client_packages')
-    .select('id, credits_total, credits_used, expires_at, is_active, packages:package_id(name)')
+    .select('id, amount_remaining, amount_initial, expires_at, is_active, packages:package_id(name)')
     .eq('client_id', user.id)
     .eq('is_active', true)
     .or(`expires_at.is.null,expires_at.gt.${now}`)
+    .gt('amount_remaining', 0)
     .order('expires_at', { ascending: true })
 
   const activePackages = (packagesData as unknown as ClientPackage[]) ?? []
+  const totalBalance = activePackages.reduce(
+    (sum, pkg) => sum + (pkg.amount_remaining ?? 0),
+    0
+  )
 
   // ── Storico prenotazioni (ultime 5) ─────────────────────────────────
   const { data: rawBookings } = await supabase
@@ -189,14 +198,25 @@ export default async function ProfiloPage() {
             I miei pacchetti
           </h2>
 
-          {activePackages.length === 0 ? (
-            <div className="bg-white/40 rounded-2xl border border-white/70 px-6 py-10 text-center">
-              <Package className="w-5 h-5 text-meetoo-accent-dark/20 mx-auto mb-3" />
-              <p className="font-inter font-light text-sm text-meetoo-accent-dark/40">
-                Nessun pacchetto attivo
-              </p>
-            </div>
-          ) : (
+          {/* Saldo totale in euro */}
+          <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-sm border border-white/80 px-6 sm:px-8 py-6 mb-2">
+            <p className="font-inter font-light text-[10px] uppercase tracking-widest text-meetoo-accent-dark/40 mb-1">
+              Il tuo credito
+            </p>
+            <p className="font-inter font-extrabold text-4xl text-meetoo-accent-dark leading-none">
+              {fmtEuro(totalBalance)}
+            </p>
+            {activePackages.length === 0 && (
+              <div className="flex items-center gap-2 mt-3">
+                <Package className="w-4 h-4 text-meetoo-accent-dark/20 shrink-0" />
+                <p className="font-inter font-light text-sm text-meetoo-accent-dark/40">
+                  Non hai credito attivo al momento.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {activePackages.length > 0 && (
             <div className="space-y-2">
               {activePackages.map((pkg) => (
                 <div
@@ -207,19 +227,19 @@ export default async function ProfiloPage() {
                     <p className="font-inter font-medium text-sm text-meetoo-accent-dark truncate">
                       {pkg.packages?.name ?? '—'}
                     </p>
-                    {pkg.expires_at && (
-                      <p className="font-inter font-light text-xs text-meetoo-accent-dark/40 mt-0.5">
-                        Scade il {fmtDateLong(pkg.expires_at)}
-                      </p>
-                    )}
+                    <p className="font-inter font-light text-xs text-meetoo-accent-dark/40 mt-0.5">
+                      {pkg.expires_at
+                        ? `Scade il ${fmtDateLong(pkg.expires_at)}`
+                        : 'Nessuna scadenza'}
+                    </p>
                   </div>
 
                   <div className="shrink-0 text-right">
                     <p className="font-inter font-semibold text-xl text-meetoo-accent-dark leading-none">
-                      {pkg.credits_total - pkg.credits_used} / {pkg.credits_total}
+                      {fmtEuro(pkg.amount_remaining)}
                     </p>
                     <p className="font-inter font-light text-[10px] uppercase tracking-widest text-meetoo-accent-dark/40 mt-0.5">
-                      lezioni
+                      residuo
                     </p>
                   </div>
                 </div>
