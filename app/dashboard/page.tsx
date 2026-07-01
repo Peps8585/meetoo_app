@@ -103,14 +103,16 @@ export default async function DashboardPage() {
     .maybeSingle()
 
   let decision: { id: string; className: string; startsAt: string } | null = null
+  let targets: { id: string; starts_at: string; className: string }[] = []
   if (decisionRow) {
     const { data: schedRow } = await supabase
       .from('schedules')
-      .select('starts_at, classes:class_id(name)')
+      .select('class_id, starts_at, classes:class_id(name)')
       .eq('id', decisionRow.schedule_id)
       .maybeSingle()
     if (schedRow) {
       const s = schedRow as unknown as {
+        class_id: string
         starts_at: string
         classes: { name: string } | null
       }
@@ -119,6 +121,36 @@ export default async function DashboardPage() {
         className: s.classes?.name ?? 'Lezione',
         startsAt: s.starts_at,
       }
+
+      // Lezioni target per lo spostamento (opzione A): stessa disciplina,
+      // oltre le 12h, diverse dall'originale. Il filtro posti-disponibili
+      // (current_bookings < max_spots) NON è esprimibile in PostgREST → in JS.
+      const targetFrom = new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString()
+      const { data: targetRows } = await supabase
+        .from('schedules')
+        .select('id, starts_at, max_spots, current_bookings, classes:class_id(name)')
+        .eq('class_id', s.class_id)
+        .gt('starts_at', targetFrom)
+        .neq('id', decisionRow.schedule_id)
+        .eq('is_cancelled', false)
+        .order('starts_at')
+
+      const rows =
+        (targetRows as unknown as {
+          id: string
+          starts_at: string
+          max_spots: number
+          current_bookings: number
+          classes: { name: string } | null
+        }[]) ?? []
+
+      targets = rows
+        .filter((r) => (r.current_bookings ?? 0) < (r.max_spots ?? 0))
+        .map((r) => ({
+          id: r.id,
+          starts_at: r.starts_at,
+          className: r.classes?.name ?? 'Lezione',
+        }))
     }
   }
 
@@ -153,6 +185,7 @@ export default async function DashboardPage() {
             decisionId={decision.id}
             className={decision.className}
             startsAt={decision.startsAt}
+            targets={targets}
           />
         )}
 
