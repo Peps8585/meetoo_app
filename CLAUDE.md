@@ -371,3 +371,29 @@ HEAD fine S11: `5dead34`. Commit: `7b8bc7b` (Blocco B), `5dead34` (Blocco C).
   non impattati). CREATE EXTENSION non ha richiesto restart, quindi fuori
   dal raggio dell'incidente. Step 2 rimandato per non far girare logica di
   rimborso su infra dichiarata instabile.
+
+### 2026-07-02 — Sessione 13 — Design landing pubblica: welcome animata + sistema logo (incremento 1)
+
+- Welcome landing (app/page.tsx = root /, landing utente non-auth): ridisegnata con lockup brand animato. Cascata a battute — anelli convergono → wordmark sale → discipline → CTA. Easing unico cubic-bezier(0.16,1,0.3,1), durate 400–600ms, nessun bounce.
+- Progressive enhancement (nuovo app/WelcomeChoreography.tsx): contenuto di default VISIBILE (no opacity:0 nel DOM); animazione = enhancement via useLayoutEffect al mount. sessionStorage 'mt_welcome_seen' → coreografia una volta per sessione, poi stato finale istantaneo. reduced-motion → solo dissolvenza. Keyframes in globals.css sotto [data-mt-animate="play"].
+- Mark ad anelli (due cerchi, dalla "OO" di TOO): due <circle> inline separati per convergenza indipendente. Asset public/brand/meetoo-mark.svg.
+- Wordmark: da PNG ricolorato → SVG VETTORIALE (public/brand/meetoo-wordmark.svg + app/WordmarkMeeToo.tsx inline, fill="currentColor" = token text-meetoo-accent-dark). Risolti insieme nitidezza (raster→vettore, ok su display 3×) e micro-scarto di colore su mobile.
+- Multi-disciplina: rimossa "PILATES" dal lockup della landing; eyebrow "Studio Pilates & Yoga" sostituita dal descrittore PILATES · YOGA · MINDFULNESS (tracking 0.12em, 11px, entro la larghezza del wordmark). Tagline "Ritrova il tuo equilibrio…" → hidden md:block (solo desktop, resta nel DOM per SEO).
+- CTA "Entra" → /registrati; link "Hai già un account? Accedi" → /login. h1 sr-only → "Mee Too — Pilates, Yoga, Mindfulness".
+- Recuperato il file vettoriale originale del logo: public/brand/MEE TOO LOGO.svg (sorgente, solo "MEE TOO"). Rimosso PNG orfano meetoo-wordmark-dark.png.
+- Commit: bd0e4b1 (welcome), aef361f (wordmark SVG + multi-disciplina), 17a5940 (rifiniture mobile).
+- Learning: il preview SVG di VS Code è più severo del browser (fallisce su clipPath/matrix annidate) → la verità è solo nel browser. Anelli tenuti separati dal wordmark per animarli in modo indipendente. File con spazi nel nome (MEE TOO LOGO.svg) da sorvegliare in build Vercel (Linux).
+
+### Backlog — aggiunte dalla Sessione 13
+
+- **Incremento 2 — sistema logo su tutta l'app**. Ordine:
+  1) favicon + icona PWA maskable (dagli anelli) in layout.tsx → vale per tutte le pagine.
+  2) componente <Logo> riutilizzabile, 3 varianti (lockup completo / inline / solo-mark).
+  3) applicazione per priorità: prima login + pagine pubbliche (impressione brand per le testers), poi header admin e area cliente.
+  Decidere a monte la proporzione mark/wordmark (mark un filo piccolo). Usare gli SVG già in public/brand/.
+- **Vista giornaliera palinsesto** (admin/istruttori): interno, non launch-blocking. Trigger: dopo S12 (pg_cron) + wallet frontend. Sessione a sé.
+- **Cliente vede le altre prenotate**: bloccata su decisione privacy di Giorgia (nome+iniziale / opt-in / solo numero). Trigger: quando decide → accorpare alla verifica RLS packages. Se non decisa entro agosto → post-lancio.
+- **Tipo prenotazione appuntamento 1:1 (nutrizionista)**: modello attuale solo classi di gruppo (max_spots). Trigger: quando Giorgia vuole vendere consulenze in app.
+- **Decisione posizionamento brand**: la landing anticipa il multi-disciplina (logo senza PILATES); il logo master con PILATES esiste ancora → scelta "Mee Too" ombrello vs "Mee Too Pilates" da chiudere con Giorgia.
+- **Nota doc**: la Project Guide cita Next.js 14, ma il progetto gira su Next.js 16.2.6 → allineare la guida.
+- **Da verificare sul telefono reale**: margine sotto "Accedi" su mobile (mt-24; se troppo → mt-20/mt-16).
