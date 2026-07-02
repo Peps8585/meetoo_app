@@ -50,7 +50,7 @@ export default function Home() {
 
             {/* Descrittore discipline: parte del lockup (gap piccolo), sale con
                 il wordmark riusando la battuta mt-wordmark (rise, stesso easing). */}
-            <p className="mt-anim mt-wordmark font-inter font-extrabold uppercase tracking-[0.3em] text-xs text-meetoo-accent-dark">
+            <p className="mt-anim mt-wordmark font-inter font-extrabold uppercase tracking-[0.12em] text-[11px] text-meetoo-accent-dark">
               PILATES · YOGA · MINDFULNESS
             </p>
           </div>
@@ -61,8 +61,9 @@ export default function Home() {
             lezione.
           </p>
 
-          {/* CTA + link: stacco medio dalla copy (mt-8), interno piccolo. */}
-          <div className="flex flex-col items-center gap-4 mt-8">
+          {/* CTA + link: stacco medio dalla copy (mt-8), interno piccolo.
+              Su mobile più aria prima del pulsante (mt-24). */}
+          <div className="flex flex-col items-center gap-4 mt-24 md:mt-8">
             <Link
               href="/registrati"
               className="mt-anim mt-cta inline-block bg-meetoo-accent-dark text-meetoo-bg-light font-inter font-normal tracking-wide text-base px-12 py-4 rounded-full transition-colors duration-300 hover:bg-meetoo-accent-light"
