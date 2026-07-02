@@ -334,3 +334,40 @@ HEAD fine S11: `5dead34`. Commit: `7b8bc7b` (Blocco B), `5dead34` (Blocco C).
   → RIGENERARE + archiviare (finestra agosto). Il service_role bypassa l'RLS.
 - Micro-pulizia futura: `grep credits_used` per stanare altri punti col conteggio legacy
   (probabile area admin).
+
+## Sessione 12 — Attivazione pg_cron (step 1 di 2)
+- S12 (2 luglio 2026) — Attivazione pg_cron, step 1 di 2.
+- Audit read-only dei due sweep confermato: produzione == file S10
+  (`20260630102720_s10_subthreshold_live.sql`), nessuna modifica a mano.
+  detect: finestra `starts_at > now() AND <= now()+12h`, filtri
+  `subthreshold_checked=false` e `is_cancelled=false`; soglie 0 (cancella +
+  decisione `cancelled_empty`) / 1 (decisione `pending`, deadline +1h) / >=2
+  (nessuna azione). deadline: agisce SOLO su `subthreshold_decisions` pending
+  scadute, non riscansiona schedules.
+- `subthreshold_decisions` verificata VUOTA. Nessuna pending scaduta → nessun
+  rischio di refund automatico al primo giro di deadline.
+- pg_cron 1.6.4 abilitato via dashboard (schema pg_catalog) e verificato
+  dal DB. Schema cron interrogabile, `cron.job` = 0 righe. Nessun job ancora
+  schedulato.
+- BACKFILL NON eseguito: scelta deliberata. Con cron acceso su dati di test
+  PRIMA che esistano prenotazioni reali, non c'è avvio-a-freddo-su-dati-caldi;
+  vogliamo anzi che detect VEDA i dati di test. Il backfill torna rilevante
+  SOLO se il free tier non tiene sveglio il progetto (vedi rischio sotto).
+- schedules = solo dati di test, app non ancora in uso.
+- Step 2 (prossima sessione, a incidente Supabase rientrato): esecuzione
+  MANUALE singola di `sweep_subthreshold_detect()` e `sweep_subthreshold_deadline()`
+  come ruolo postgres, per confermare che il ruolo li esegua nonostante le
+  REVOKE (sono SECURITY DEFINER, owner postgres); poi i due `cron.schedule`
+  (detect */10, deadline */5) in un blocco solo.
+
+- RISCHIO NUOVO da verificare: free tier Supabase si mette in pausa su
+  inattività. Un progetto in pausa NON esegue pg_cron. Da appurare
+  empiricamente dopo lo scheduling via `cron.job_run_details`: buchi nelle
+  ore di inattività = free tier insufficiente per un motore automatico
+  T-12h/T-1h → decisione tier a pagamento prima di settembre. Se il tier
+  non tiene sveglio, il backfill diventa necessario a ogni risveglio.
+- CONTESTO OPERATIVO: attivazione fatta durante un incidente Supabase
+  ("Project status change failures in multiple regions", running projects
+  non impattati). CREATE EXTENSION non ha richiesto restart, quindi fuori
+  dal raggio dell'incidente. Step 2 rimandato per non far girare logica di
+  rimborso su infra dichiarata instabile.
