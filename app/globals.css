@@ -145,3 +145,110 @@
     @apply font-sans;
   }
 }
+
+/* ============================================================
+   Welcome landing choreography — SOLO presentazione.
+   Stato di default (no data-mt-animate): elementi visibili e in posizione
+   finale (nessun opacity:0 nel markup). Le keyframes si attivano SOLO quando
+   il wrapper client aggiunge [data-mt-animate="play"] — enhancement al mount.
+   Easing unico: cubic-bezier(0.16, 1, 0.3, 1). Nessun bounce.
+   ============================================================ */
+
+@keyframes mt-ring-left {
+  from {
+    opacity: 0;
+    transform: translateX(-13px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes mt-ring-right {
+  from {
+    opacity: 0;
+    transform: translateX(13px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes mt-rise {
+  from {
+    opacity: 0;
+    transform: translateY(11px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes mt-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+[data-mt-animate="play"] .mt-anim {
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: both;
+}
+
+/* Battuta 1 — anelli che convergono (0 → 0.7s) */
+[data-mt-animate="play"] .mt-ring-left {
+  animation-name: mt-ring-left;
+  animation-duration: 0.7s;
+  animation-delay: 0s;
+}
+[data-mt-animate="play"] .mt-ring-right {
+  animation-name: mt-ring-right;
+  animation-duration: 0.7s;
+  animation-delay: 0s;
+}
+
+/* Battuta 2 — wordmark (delay 0.5s, durata 0.55s) */
+[data-mt-animate="play"] .mt-wordmark {
+  animation-name: mt-rise;
+  animation-duration: 0.55s;
+  animation-delay: 0.5s;
+}
+
+/* Ponte — eyebrow + tagline, tra wordmark e CTA (mantiene la cascata) */
+[data-mt-animate="play"] .mt-copy {
+  animation-name: mt-rise;
+  animation-duration: 0.5s;
+  animation-delay: 0.85s;
+}
+
+/* Battuta 3 — CTA (delay 1.2s) e link Accedi (delay 1.4s) */
+[data-mt-animate="play"] .mt-cta {
+  animation-name: mt-rise;
+  animation-duration: 0.5s;
+  animation-delay: 1.2s;
+}
+[data-mt-animate="play"] .mt-login {
+  animation-name: mt-rise;
+  animation-duration: 0.5s;
+  animation-delay: 1.4s;
+}
+
+/* Reduced motion: niente transform, solo dissolvenza breve su tutti gli
+   elementi. Sovrascrive nome/delay/durata delle battute (stessa specificità,
+   più avanti nel sorgente → vince). */
+@media (prefers-reduced-motion: reduce) {
+  [data-mt-animate="play"] .mt-anim {
+    animation-name: mt-fade;
+    animation-duration: 0.3s;
+    animation-delay: 0s;
+    animation-timing-function: ease;
+    animation-fill-mode: both;
+    transform: none !important;
+  }
+}
