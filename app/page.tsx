@@ -1,6 +1,5 @@
 import Link from 'next/link'
-import Image from 'next/image'
-import wordmark from '../public/brand/meetoo-wordmark-dark.png'
+import WordmarkMeeToo from './WordmarkMeeToo'
 import WelcomeChoreography from './WelcomeChoreography'
 
 export default function Home() {
@@ -8,7 +7,7 @@ export default function Home() {
     <main className="flex flex-1 flex-col items-center justify-center min-h-screen bg-meetoo-bg-light px-6 py-24">
       {/* h1 reale per accessibilità/SEO: la landing non resta senza intestazione
           testuale anche se il wordmark è un'immagine. */}
-      <h1 className="sr-only">Mee Too Pilates</h1>
+      <h1 className="sr-only">Mee Too — Pilates, Yoga, Mindfulness</h1>
 
       <WelcomeChoreography>
         <div className="text-center flex flex-col items-center">
@@ -43,28 +42,24 @@ export default function Home() {
               />
             </svg>
 
-            {/* Wordmark lockup MEE/TOO/PILATES: PNG ritagliato a filo (619x544).
-                Proporzione preservata da h-auto sulle dimensioni intrinseche del
-                static import → nessuno stiramento. */}
-            <Image
-              src={wordmark}
-              alt="Mee Too Pilates"
-              priority
-              sizes="(max-width: 768px) 240px, 300px"
-              className="mt-anim mt-wordmark w-60 md:w-75 h-auto"
-            />
-          </div>
+            {/* Wordmark MEE/TOO: SVG inline, currentColor eredita dal contenitore
+                (text-meetoo-accent-dark = token scuro di palette). */}
+            <div className="mt-anim mt-wordmark text-meetoo-accent-dark w-60 md:w-75 h-auto">
+              <WordmarkMeeToo />
+            </div>
 
-          {/* eyebrow + tagline: stacco medio dal brand (mt-10), interno piccolo. */}
-          <div className="mt-anim mt-copy flex flex-col items-center gap-3 mt-10">
-            <span className="font-inter font-extrabold uppercase tracking-[0.3em] text-xs text-meetoo-accent-dark">
-              Studio Pilates &amp; Yoga
-            </span>
-            <p className="font-inter font-light text-lg md:text-xl text-meetoo-accent-dark max-w-md leading-relaxed">
-              Ritrova il tuo equilibrio. Corpo, respiro e consapevolezza in ogni
-              lezione.
+            {/* Descrittore discipline: parte del lockup (gap piccolo), sale con
+                il wordmark riusando la battuta mt-wordmark (rise, stesso easing). */}
+            <p className="mt-anim mt-wordmark font-inter font-extrabold uppercase tracking-[0.3em] text-xs text-meetoo-accent-dark">
+              PILATES · YOGA · MINDFULNESS
             </p>
           </div>
+
+          {/* Tagline: solo desktop (resta nel DOM), stacco medio dal lockup (mt-10). */}
+          <p className="mt-anim mt-copy hidden md:block font-inter font-light text-lg md:text-xl text-meetoo-accent-dark max-w-md leading-relaxed mt-10">
+            Ritrova il tuo equilibrio. Corpo, respiro e consapevolezza in ogni
+            lezione.
+          </p>
 
           {/* CTA + link: stacco medio dalla copy (mt-8), interno piccolo. */}
           <div className="flex flex-col items-center gap-4 mt-8">
