@@ -31,7 +31,12 @@
 - `@supabase/ssr`: 0.10.3 (peer dep: supabase-js ^2.105.3 — compatibile)
 - `next`: 16.2.6
 
-## Stato attuale (aggiornato: 19 giugno 2026 — sessione 4)
+## Stato attuale (aggiornato: 7 luglio 2026 — S14 incr.2 blocco 1)
+
+**Ultimo chiuso:** S14 incremento 2 (sistema logo) — blocco 1: favicon + PWA icons + manifest ✅ (commit f3fb486, deploy Vercel Ready, validato in produzione). Dettaglio completo nel log "S14 — incremento 2 … BLOCCO 1" in fondo al file.
+**Prossimo kickoff:** S14 incr.2 blocco 2 — proporzione mark-nel-lockup → stroke canonico anelli → componente `<Mark>` → componente `<Logo>` a 3 varianti (mark/wordmark/lockup).
+
+_Nota: la sezione "Fatto / Da fare" qui sotto è storica (sessione 4, migrazione API key Supabase) — conservata, non più lo stato corrente._
 
 ### Fatto
 - Migrate alle nuove API key Supabase: `sb_publishable_*` (anon) e `sb_secret_*` (service role) create e sostituite in `.env.local` e nelle env Vercel. Redeploy su `meetoo-app-ntls` completato.
@@ -397,3 +402,28 @@ HEAD fine S11: `5dead34`. Commit: `7b8bc7b` (Blocco B), `5dead34` (Blocco C).
 - **Decisione posizionamento brand**: la landing anticipa il multi-disciplina (logo senza PILATES); il logo master con PILATES esiste ancora → scelta "Mee Too" ombrello vs "Mee Too Pilates" da chiudere con Giorgia.
 - **Nota doc**: la Project Guide cita Next.js 14, ma il progetto gira su Next.js 16.2.6 → allineare la guida.
 - **Da verificare sul telefono reale**: margine sotto "Accedi" su mobile (mt-24; se troppo → mt-20/mt-16).
+
+## S14 — incremento 2 (sistema logo), BLOCCO 1: favicon + PWA icons + manifest ✅
+
+Commit f3fb486 su main (9 file, +107). Deploy Vercel Ready, validato in produzione.
+
+Decisioni bloccate:
+- Fonte canonica mark = componente <Mark> (circle JSX, currentColor, className per animazione), NON il file .svg [DA CREARE nel blocco successivo]
+- Mark monocromatico via currentColor (no bicromia); bicromia+convergenza solo nella welcome
+- Geometria favicon DEDICATA (diversa dal lockup): centri 1.35×r, stroke 0.35×r, fondo pieno #f5f0e8 — leggibilità 16-32px
+- Due master separati in public/brand/: meetoo-favicon.svg (tab ~90% canvas), meetoo-maskable.svg (PWA safe-zone 80%)
+- theme_color + background_color = #f5f0e8 (audit-based: top-viewport chiaro ovunque tranne admin-mobile)
+- Raster single-source via scripts/generate-icons.mjs (sharp + png-to-ico), eseguito offline, raster committati statici. sharp NON in package.json
+
+File aggiunti: app/icon.svg, app/apple-icon.png (180), app/favicon.ico (16/32/48, sostituisce default Next), public/icon-{192,512}.png (any), public/icon-maskable-{192,512}.png (maskable), app/manifest.ts, scripts/generate-icons.mjs
+
+Validato in browser: favicon tab OK, manifest servito in prod OK, maskable in safe-zone OK, apple-icon home iPhone OK (alone inferiore = ombra iOS, non difetto file)
+
+APERTO / prossimo blocco:
+- Componente <Logo> a 3 varianti (mark/wordmark/lockup) che compone WordmarkMeeToo + <Mark>
+- SCARTO STROKE ANELLI: nella welcome gli anelli sono ~metà del peso delle lettere MEE TOO. Fix ancorato al fianco-O della wordmark (~18u nel suo viewBox); valore reso dipende dalla proporzione mark-nel-lockup, da definire. Kickoff: proporzione mark → stroke canonico → <Mark> → <Logo>
+- Mark responsive in lockstep con wordmark (un solo stroke per tutti i breakpoint)
+
+PARCHEGGIATO:
+- Service worker / installabilità PWA reale (manca; "Aggiungi a Home" iOS ok ma no prompt install) + campo screenshots nel manifest
+- Pulizia public/: rimuovere file.svg, globe.svg, next.svg, vercel.svg (default create-next-app), commit separato
