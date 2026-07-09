@@ -450,3 +450,31 @@ PARCHEGGIATO:
 1. **Trigger signup mancante nel dev:** `handle_new_user` presente ma il trigger su `auth.users` (es. `on_auth_user_created`) non è nel dump (il pull esporta solo schema `public`). Da ricreare con migration + verifica sul dev. Senza, il signup non popola `profiles`.
 2. **Riconciliazione cronologia migrazioni su PROD:** prod ha applicato i timestamp di giugno ma non il baseline. Serve `supabase migration repair` per marcare il baseline come già applicato su prod, così non venga rieseguito lì. Da fare con calma, un comando guidato, quando pronti. Tocca prod → hotspot + massima cautela.
 3. **Push su GitHub** dei 2 commit locali: ancora da fare.
+
+## S16 — Trigger signup + seed tenant-radice sul dev (9 lug 2026)
+
+**Obiettivo:** chiudere l'open item S16.1 (trigger signup mancante sul dev) e rendere la catena signup riproducibile in ogni ambiente ricostruito da zero.
+
+**Workflow dev/prod attivato:**
+- **MeeToo_Dev** (ref `szxnyjosyiyqkgeqpzxh`) rispecchia **prod** (`MeeToo_Pilates`, ref `lcyexugqinabjoinrsku`) via baseline versionato. Scritture su prod SOLO via migration. Code autonomo sul dev; Peps fa login/auth e comandi verso prod.
+
+**Trigger `on_auth_user_created` ricreato sul dev:**
+- Il baseline S15 (dump del solo schema `public`) NON includeva i trigger su `auth.users` → il signup non popolava `profiles`.
+- Migration idempotente (`drop trigger if exists` + `create`) con nome funzione qualificato (`public.handle_new_user`). File: `supabase/migrations/20260709110000_recreate_on_auth_user_created_trigger.sql`.
+- Prima di procedere: verificata la def di `public.handle_new_user` sul dev **IDENTICA a prod** (`pg_get_functiondef`), per escludere drift dal baseline.
+
+**Seed tenant-radice versionato:**
+- Creato `supabase/seed.sql` col tenant-radice (studio Mee Too), id hardcoded **IDENTICO a prod** (`58b3d7bb-ada6-4818-b80e-0e45acdafb43`). Insert idempotente (`on conflict (id) do nothing`), solo campi valorizzati (id, name, slug, email).
+- Ragione: ogni ambiente ricostruito da zero (dev usa-e-getta, rehearsal di agosto) nasce col tenant giusto e il trigger popola `profiles.studio_id` via lookup `slug='meetoo'`. NON è comodità: è **coerenza dev/prod sul dato fondante** del sistema single-tenant.
+- Applicato sul dev via `supabase db query --linked --file supabase/seed.sql` (NO `db reset`, per non azzerare lo stato del dev). Solo dev, nessun comando verso prod.
+
+**Validazione catena signup end-to-end (dev):**
+- `INSERT auth.users` → trigger → profilo creato con `studio_id = 58b3d7bb-…-fb43` (**NON null**), `role='client'`.
+- Test in transazione con **ROLLBACK**: nessun artefatto residuo (auth.users 0 / profiles 0 dopo il rollback).
+- `pg_trigger` conferma l'oggetto, ma il ground truth è il **profilo creato correttamente** con lo studio_id giusto.
+
+**GATED / non fatto in S16:**
+- **Riconciliazione cronologia migrazioni su prod** (`supabase migration repair`): comando guidato, richiede hotspot, da fare separatamente (già open item S15.2).
+
+### Risk register / open items (aggiunto in S16)
+- **`profiles.studio_id` è NULLABLE** (dev e prod). Combinato con l'`EXCEPTION WHEN OTHERS` dentro `handle_new_user` (inghiotte gli errori e fa `RETURN NEW`), se il seed `studios` mancasse in un ambiente il signup creerebbe profili **ORFANI con `studio_id=NULL`, silenziosamente**. Oggi tappato dal seed sul dev. **Trigger di resolution:** valutare `profiles.studio_id NOT NULL` durante la finestra di rehearsal di agosto (rende l'errore rumoroso invece che muto).
