@@ -427,3 +427,26 @@ APERTO / prossimo blocco:
 PARCHEGGIATO:
 - Service worker / installabilità PWA reale (manca; "Aggiungi a Home" iOS ok ma no prompt install) + campo screenshots nel manifest
 - Pulizia public/: rimuovere file.svg, globe.svg, next.svg, vercel.svg (default create-next-app), commit separato
+
+## S15 — Dev environment & CLI workflow (9 lug 2026)
+
+**Obiettivo:** ridurre il lavoro manuale (copia/incolla chat→Code, SQL Editor a mano) dando a Code autonomia su un ambiente dev separato, con la produzione protetta dietro migration versionate.
+
+**Assetto adottato:**
+- Nuovo progetto Supabase **MeeToo_Dev** (free, ref `szxnyjosyiyqkgeqpzxh`, region Ireland) come ambiente dev usa-e-getta. Prod (`MeeToo_Pilates`, ref `lcyexugqinabjoinrsku`) resta intatta.
+- Supabase CLI installata via **brew** (globale, non in package.json), v2.109.1. Login CLI fatto (token account-level tenuto lato Peps, MAI passato a Code).
+- **Docker Desktop** installato (necessario per `db dump`/`db pull`). Sblocca in futuro anche il dev in locale (→ eliminazione hotspot/auto-pausa dal quotidiano).
+- Confermato: **prod gira su Postgres 17** (`major_version=17` in config.toml è corretto).
+
+**Baseline schema:**
+- `supabase db dump --linked` da prod → `supabase/migrations/20260709103000_baseline_prod_schema.sql` (1749 righe: 17 tabelle, 10 funzioni, 35 policy, indici, constraint. Solo struttura, nessun dato/ruolo custom).
+- **Opzione A** (flatten storico): baseline = fonte unica; le 6 migration pre-S10 spostate in `supabase/migrations-archive/` (fuori dalla catena CLI).
+- `db push` sul **dev** riuscito: dev ora rispecchia prod (verificato in Table Editor). Warning `pg-delta` in fase di caching = rumore innocuo, schema applicato correttamente.
+- Commit: `a7136fe` (config CLI) + `e908b0c` (baseline + archivio). Working tree pulito, 2 commit avanti su origin (non ancora pushati).
+
+**Divisione ruoli confermata:** Code autonomo su dev; Peps fa login/auth e comandi che toccano prod; scritture prod solo via migration, mai via MCP/autonomia diretta.
+
+**Open item (in agenda, gated):**
+1. **Trigger signup mancante nel dev:** `handle_new_user` presente ma il trigger su `auth.users` (es. `on_auth_user_created`) non è nel dump (il pull esporta solo schema `public`). Da ricreare con migration + verifica sul dev. Senza, il signup non popola `profiles`.
+2. **Riconciliazione cronologia migrazioni su PROD:** prod ha applicato i timestamp di giugno ma non il baseline. Serve `supabase migration repair` per marcare il baseline come già applicato su prod, così non venga rieseguito lì. Da fare con calma, un comando guidato, quando pronti. Tocca prod → hotspot + massima cautela.
+3. **Push su GitHub** dei 2 commit locali: ancora da fare.
