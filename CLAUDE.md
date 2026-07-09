@@ -25,16 +25,18 @@
 
 - **`wallet_transactions` ≠ crediti-lezioni**: la tabella `wallet_transactions` è il wallet monetario (gift card, shop — feature non ancora costruita). Il credito-lezioni è gestito interamente da `client_packages.credits_used` via le RPC `book_lesson`/`cancel_booking`. Le due cose sono separate per design. Non integrare `wallet_transactions` nelle RPC di prenotazione senza una decisione esplicita.
 
+- **SEO local + GEO (Generative Engine Optimization) — principio trasversale permanente**: da tenere presenti su tutto ciò che si costruisce. Le leve reali NON stanno nel component layer: stanno in metadata di pagina (title/description/OG), dati strutturati (JSON-LD Organization/LocalBusiness), struttura semantica (h1/h2) e contenuto in prosa citabile. L'unico contributo del logo è il nome accessibile del wordmark (path muto → serve un nome reale nel DOM, es. `h1` sr-only). Primo cantiere reale = public funnel. Nota aperta: l'`h1` sr-only della welcome elenca "Pilates, Yoga, Mindfulness" — da rivedere per la chiarezza-entità GEO (entità unica "Mee Too"), da fare alla funnel/metadata, NON nel logo.
+
 ## Dipendenze chiave
 
 - `@supabase/supabase-js`: 2.106.0
 - `@supabase/ssr`: 0.10.3 (peer dep: supabase-js ^2.105.3 — compatibile)
 - `next`: 16.2.6
 
-## Stato attuale (aggiornato: 7 luglio 2026 — S14 incr.2 blocco 1)
+## Stato attuale (aggiornato: 9 luglio 2026 — S17 sistema <Logo>)
 
-**Ultimo chiuso:** S14 incremento 2 (sistema logo) — blocco 1: favicon + PWA icons + manifest ✅ (commit f3fb486, deploy Vercel Ready, validato in produzione). Dettaglio completo nel log "S14 — incremento 2 … BLOCCO 1" in fondo al file.
-**Prossimo kickoff:** S14 incr.2 blocco 2 — proporzione mark-nel-lockup → stroke canonico anelli → componente `<Mark>` → componente `<Logo>` a 3 varianti (mark/wordmark/lockup).
+**Ultimo chiuso:** S17 (DESIGN) — sistema `<Logo>` creato e bakato (commit `0db052c` su main). Due file nuovi: `app/Mark.tsx` + `app/Logo.tsx`. API finale e valori bakati nel log "S17" in fondo al file. NOTA: `<Logo>` NON è ancora consumato da nessuna pagina (la welcome usa ancora i `<circle>` inline).
+**Prossimo kickoff:** applicazione di `<Logo>` a login + pagine pubbliche (prima impressione brand per le testers), poi header admin e area cliente.
 
 _Nota: la sezione "Fatto / Da fare" qui sotto è storica (sessione 4, migrazione API key Supabase) — conservata, non più lo stato corrente._
 
@@ -449,7 +451,6 @@ PARCHEGGIATO:
 **Open item (in agenda, gated):**
 1. **Trigger signup mancante nel dev:** `handle_new_user` presente ma il trigger su `auth.users` (es. `on_auth_user_created`) non è nel dump (il pull esporta solo schema `public`). Da ricreare con migration + verifica sul dev. Senza, il signup non popola `profiles`.
 2. **Riconciliazione cronologia migrazioni su PROD:** prod ha applicato i timestamp di giugno ma non il baseline. Serve `supabase migration repair` per marcare il baseline come già applicato su prod, così non venga rieseguito lì. Da fare con calma, un comando guidato, quando pronti. Tocca prod → hotspot + massima cautela.
-3. **Push su GitHub** dei 2 commit locali: ancora da fare.
 
 ## S16 — Trigger signup + seed tenant-radice sul dev (9 lug 2026)
 
@@ -478,3 +479,31 @@ PARCHEGGIATO:
 
 ### Risk register / open items (aggiunto in S16)
 - **`profiles.studio_id` è NULLABLE** (dev e prod). Combinato con l'`EXCEPTION WHEN OTHERS` dentro `handle_new_user` (inghiotte gli errori e fa `RETURN NEW`), se il seed `studios` mancasse in un ambiente il signup creerebbe profili **ORFANI con `studio_id=NULL`, silenziosamente**. Oggi tappato dal seed sul dev. **Trigger di resolution:** valutare `profiles.studio_id NOT NULL` durante la finestra di rehearsal di agosto (rende l'errore rumoroso invece che muto).
+
+## S17 — Sistema `<Logo>` (DESIGN) (9 lug 2026)
+
+**Creato il sistema `<Logo>` del brand Mee Too.** Committato `0db052c` su main. Due file nuovi:
+- `app/Mark.tsx` — mark canonico (due `<circle>`, single source of truth), export **nominato** `Mark`.
+- `app/Logo.tsx` — composizione mark + wordmark, export **nominato** `Logo` (compone `WordmarkMeeToo` default + `{ Mark }`).
+
+**API FINALE di `<Logo>` (nient'altro):**
+- `variant?: 'full' | 'mark' | 'compact'` (default `'full'`) — asse FORMATO.
+- `descriptor?: string` — asse ORTOGONALE (prop, NON varianti hardcoded). Renderizzato SOLO da `variant='full'`; ignorato silenziosamente su `'mark'`/`'compact'`. **Una singola disciplina per volta** (decisione brand Giorgia), non liste. Layout a tracking fisso + centrato, pensato per lunghezza variabile (4→11 lettere).
+- `label?: string` — nome accessibile.
+- `className?: string` — sul root (colore, taglia, opt-in animazione).
+
+**Taglia — sorgente unica:** guidata dalla CSS var `--mt-logo-w` sul consumer (fallback 240px). Mark, gap e descrittore derivano TUTTI da W via `calc()` → lockstep responsive con un solo valore, senza width per-breakpoint sul mark.
+
+**Valori bakati** (in `TUNE` di Logo.tsx / default di `<Mark>`): stroke anelli **9**, `descTracking` **0.32em**, `descWeight` **600**, `descGap` **0.06**, `descFont` **0.046**, `fullMarkGap` **0.076**, `compactGap` **0.15**, `MARK_RATIO` **0.499** (strutturale).
+
+**a11y unificata:** `<Logo>` è decorativo di default (root `aria-hidden`); con prop `label` → root `role="img"` + `aria-label`, contenuto interno decorativo. **Sana la divergenza** trovata in audit tra `meetoo-mark.svg` (aveva `role="img"`) e la copia inline della welcome (`aria-hidden`).
+
+**Verificato in browser** (localhost) su tutte le variant + descrittori PILATES / YOGA / MINDFULNESS. Font **Inter confermato risolto** (next/font).
+
+**NOTA STATO:** `<Logo>` NON è ancora consumato da nessuna pagina — la welcome usa ancora i `<circle>` inline. Applicazione a login / pagine pubbliche = prossima sessione (poi admin / client).
+
+### DECISIONE CRITICA — stroke anelli = 9, NON ripristinare 18.234
+- Lo stroke canonico degli anelli è **9** (filo fine). Questo **SUPERA DELIBERATAMENTE** la parità geometrica **18.234u** (fianco-O) ancorata in S14: corretta come geometria ma otticamente **troppo pesante e "appiccicata"**. Scelta a occhio dal designer, **browser = ground truth**.
+- **NON ripristinare 18.234** "riparando" all'indietro verso la parità geometrica: è una regressione, non un fix.
+- Il diametro esterno (**85.172**) e l'**interlock** restano invarianti perché **r è derivato dallo stroke**: `r = 42.586 - strokeWidth/2`.
+- La prop `strokeWidth` resta esposta su `<Mark>` per contesti che richiedono un peso diverso (es. favicon — che ha comunque geometria dedicata separata, già shippata).
