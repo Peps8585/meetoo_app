@@ -33,10 +33,10 @@
 - `@supabase/ssr`: 0.10.3 (peer dep: supabase-js ^2.105.3 — compatibile)
 - `next`: 16.2.6
 
-## Stato attuale (aggiornato: 9 luglio 2026 — S17 sistema <Logo>)
+## Stato attuale (aggiornato: 13 luglio 2026 — S18 <Logo> su welcome + auth)
 
-**Ultimo chiuso:** S17 (DESIGN) — sistema `<Logo>` creato e bakato (commit `0db052c` su main). Due file nuovi: `app/Mark.tsx` + `app/Logo.tsx`. API finale e valori bakati nel log "S17" in fondo al file. NOTA: `<Logo>` NON è ancora consumato da nessuna pagina (la welcome usa ancora i `<circle>` inline).
-**Prossimo kickoff:** applicazione di `<Logo>` a login + pagine pubbliche (prima impressione brand per le testers), poi header admin e area cliente.
+**Ultimo chiuso:** S18 — sistema `<Logo>` applicato a welcome e auth (commit `a23c5d2` welcome, `c3b5bda` auth, su main). `<Logo>` è ora consumato davvero: welcome, login, registrati (form + success). Coreografia della welcome ricablata sugli hook del componente. Dettagli nel log "S18" in fondo al file.
+**Prossimo kickoff:** S19 — header admin (`AdminNav.tsx`, sidebar + top bar mobile) e header area cliente su sistema `<Logo>`. Primo test del mark in negativo (bianco su fondo scuro) e primo consumo reale della variant `'compact'`.
 
 _Nota: la sezione "Fatto / Da fare" qui sotto è storica (sessione 4, migrazione API key Supabase) — conservata, non più lo stato corrente._
 
@@ -507,3 +507,39 @@ PARCHEGGIATO:
 - **NON ripristinare 18.234** "riparando" all'indietro verso la parità geometrica: è una regressione, non un fix.
 - Il diametro esterno (**85.172**) e l'**interlock** restano invarianti perché **r è derivato dallo stroke**: `r = 42.586 - strokeWidth/2`.
 - La prop `strokeWidth` resta esposta su `<Mark>` per contesti che richiedono un peso diverso (es. favicon — che ha comunque geometria dedicata separata, già shippata).
+
+## S18 — Applicazione sistema `<Logo>` a welcome e auth (13 lug 2026)
+
+**`<Logo>` smette di essere un componente sullo scaffale e diventa il brand reso.** Due commit su main: `a23c5d2` (welcome), `c3b5bda` (auth).
+
+### Welcome (`a23c5d2`)
+- Il lockup ad-hoc (svg inline con due `<circle>` + div wordmark) è sostituito da `<Logo variant="full">`, taglia **240px mobile / 300px da `md`** via `--mt-logo-w`. Rimosso l'import ormai inutile di `WordmarkMeeToo` dalla pagina.
+- **Coreografia ricablata sugli hook del componente:** battuta 1 → `.mt-mark-ring-left/right` (i `<circle>` del `<Mark>`), battuta 2 → `.mt-logo-wordmark`. Hook nuovi aggiunti in `Logo.tsx` sui container della variant `'full'`: `mt-logo-wordmark` + `mt-logo-descriptor` (solo classi, nessuna prop nuova, API invariata).
+- **Perché le regole CSS di questi hook dichiarano da sé `animation-timing-function` e `animation-fill-mode`:** gli elementi vivono dentro `<Logo>`/`<Mark>` e NON portano la classe `.mt-anim`, che è ciò che prima forniva easing e fill-mode a tutti. Chi tocca queste regole non le deduplichi "spostando tutto su `.mt-anim`": il componente non ha quella classe.
+- **Override `prefers-reduced-motion` esteso esplicitamente ai nuovi hook.** Il blocco reduced-motion selezionava solo `.mt-anim`: senza l'estensione, anelli e wordmark avrebbero continuato a **traslare anche in reduced-motion** — esattamente il bug che quel blocco esiste per prevenire.
+- Nomi dei `@keyframes` (`mt-ring-left/right`, `mt-rise`, `mt-fade`), delay e durate: **invariati**. `.mt-copy`/`.mt-cta`/`.mt-login` intatte. `WelcomeChoreography.tsx` e `Mark.tsx` non toccati.
+
+### DECISIONE BRAND — tripletta discipline ELIMINATA dalla welcome
+Il `<p>` "PILATES · YOGA · MINDFULNESS" sotto il wordmark è stato **rimosso, non spostato**. Coerenza con la decisione Giorgia di S17: il descrittore è **una disciplina singola per volta**, e compare **solo nelle sezioni dedicate** — non come lista nel lockup di apertura. Le keyword non si perdono per SEO/GEO: restano nell'`h1` sr-only della welcome (che resta comunque da rivedere per la chiarezza-entità GEO, vedi "Decisioni di design").
+
+### Auth (`c3b5bda`)
+- Login e registrati: il blocco brand testuale (eyebrow `<p>` "Studio Pilates & Yoga" + `<h1>` "MEE TOO") è sostituito da `<Logo variant="full">` a **180px**. L'eyebrow è **eliminata**, non riposizionata.
+- **`h1` sr-only per pagina** — "Accedi a Mee Too" / "Registrati su Mee Too": il `<Logo>` è decorativo (`aria-hidden` di default, path muto), quindi il nome accessibile lo porta l'intestazione. Il titolo della card resta `<h2>` → gerarchia h1→h2 pulita su ogni schermata.
+- **Stato success di registrati ora brandizzato**: prima non aveva alcun brand e apriva con un `<h2>` orfano (nessun `h1` in pagina). Ora ha `h1` sr-only + lockup sopra la card di conferma.
+- **Gerarchia taglie deliberata: welcome 240/300 > auth 180.** La welcome è la prima impressione, le auth sono già dentro il funnel: il logo scala giù.
+- Nessuna modifica a form, logica submit, gestione errori, redirect. Nessuna animazione sulle auth (niente `WelcomeChoreography`): il logo è statico.
+
+### TRADE-OFF NOTO — NON "RIPARARE"
+Sulla welcome c'è un **flash di ~100ms**: il contenuto è visibile in posizione finale, poi l'animazione lo riporta a zero e lo rigioca. È il **costo strutturale del progressive enhancement scelto in S13** (contenuto visibile di default nel DOM, play al mount via `useLayoutEffect`). L'alternativa — nascondere tutto finché non parte il JS — dà **schermo vuoto su rete lenta**: peggio. Il comportamento è **identico a prima di S18**: non è una regressione introdotta dal `<Logo>`.
+
+### Validazioni
+- **Browser locale**: coreografia campionata frame per frame (anelli in convergenza (primo frame campionato ±10.3px; keyframe da ±13px) → 0 in ~0.7s, opacity 0.21→1; wordmark rise da `translateY 11px` a partire da ~0.5s, chiude ~1.05s; easing `cubic-bezier(0.16,1,0.3,1)` su entrambi). Reduced-motion confermato: entrambi passano a `mt-fade` con `transform: none`. Stato success di registrati ispezionato via DevTools. Zero errori console su tutte le schermate.
+- **Produzione Vercel**: verificata — gli hook (`mt-mark-ring-*`, `mt-logo-wordmark`) sono presenti nell'HTML servito.
+
+### Kickoff S19 — header admin e area cliente su `<Logo>`
+Perimetro già mappato:
+1. **Sidebar admin** (`AdminNav.tsx`): eyebrow "Pannello Admin" + `h1` "MEE TOO", **bianco su fondo scuro** → **primo test del mark in negativo**.
+2. **Top bar mobile admin** (stesso file): candidata a `variant="mark"` da solo — a quella taglia il wordmark è illeggibile.
+3. **Header dashboard cliente**: eyebrow + `h1`.
+
+È il **primo consumo reale della variant `'compact'`** → serve una validazione ottica dedicata (in `'compact'` il mark sborda un filo sopra le lettere, scelta di design commentata in Logo.tsx (S17)).
