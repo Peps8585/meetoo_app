@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
+import { Logo } from '../../Logo'
 
 const links = [
   { href: '/admin/dashboard', label: 'Dashboard' },
@@ -72,9 +73,7 @@ export default function AdminNav() {
         >
           <Menu className="w-5 h-5" />
         </button>
-        <span className="font-inter font-extrabold uppercase tracking-widest text-sm text-white">
-          MEE TOO
-        </span>
+        <Logo variant="mark" className="text-white [--mt-logo-w:56px]" />
         <span className="ml-auto font-inter font-light text-xs uppercase tracking-widest text-white/40 truncate">
           {activeLabel}
         </span>
@@ -104,12 +103,13 @@ export default function AdminNav() {
         {/* Brand */}
         <div className="px-6 py-8 border-b border-white/10 flex items-start justify-between gap-3">
           <div>
-            <p className="font-inter font-normal uppercase tracking-[0.3em] text-xs text-white/40 mb-1">
+            <Logo
+              variant="full"
+              className="text-white [--mt-logo-w:120px] md:[--mt-logo-w:132px]"
+            />
+            <p className="font-inter font-normal uppercase tracking-[0.3em] text-xs text-white/40 mt-5">
               Pannello Admin
             </p>
-            <h1 className="font-inter font-extrabold uppercase tracking-widest text-xl leading-none text-white">
-              MEE TOO
-            </h1>
           </div>
           {/* Chiudi — solo mobile */}
           <button
