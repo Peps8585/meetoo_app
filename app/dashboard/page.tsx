@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Calendar, User, Play } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { Logo } from '../Logo'
 import DecisionCard from './DecisionCard'
 
 type Profile = {
@@ -156,18 +157,15 @@ export default async function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-meetoo-bg-light px-4 sm:px-6 py-8 sm:py-12">
+      <h1 className="sr-only">La tua area Mee Too</h1>
       <div className="max-w-2xl mx-auto">
 
         {/* ── Header ── */}
-        <div className="flex items-start justify-between mb-10">
-          <div>
-            <p className="font-inter font-extrabold uppercase tracking-[0.3em] text-[10px] text-meetoo-accent-dark/50 mb-1">
-              Studio Pilates &amp; Yoga
-            </p>
-            <h1 className="font-inter font-extrabold uppercase tracking-widest text-3xl sm:text-4xl text-meetoo-accent-dark leading-none">
-              MEE TOO
-            </h1>
-          </div>
+        <div className="flex items-center justify-between mb-10">
+          <Logo
+            variant="compact"
+            className="text-meetoo-accent-dark [--mt-logo-w:96px] sm:[--mt-logo-w:112px]"
+          />
 
           <form action={logout}>
             <button
