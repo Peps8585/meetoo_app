@@ -33,10 +33,10 @@
 - `@supabase/ssr`: 0.10.3 (peer dep: supabase-js ^2.105.3 — compatibile)
 - `next`: 16.2.6
 
-## Stato attuale (aggiornato: 13 luglio 2026 — S18 <Logo> su welcome + auth)
+## Stato attuale (aggiornato: 13 luglio 2026 — S19 <Logo> su AdminNav + dashboard cliente)
 
-**Ultimo chiuso:** S18 — sistema `<Logo>` applicato a welcome e auth (commit `a23c5d2` welcome, `c3b5bda` auth, su main). `<Logo>` è ora consumato davvero: welcome, login, registrati (form + success). Coreografia della welcome ricablata sugli hook del componente. Dettagli nel log "S18" in fondo al file.
-**Prossimo kickoff:** S19 — header admin (`AdminNav.tsx`, sidebar + top bar mobile) e header area cliente su sistema `<Logo>`. Primo test del mark in negativo (bianco su fondo scuro) e primo consumo reale della variant `'compact'`.
+**Ultimo chiuso:** S19 — sistema `<Logo>` applicato ad `AdminNav.tsx` (sidebar `'full'` + top bar mobile `'mark'`) e all'header della dashboard cliente (`'compact'`). Due commit su main (`a848be8` AdminNav, `9745862` dashboard). Primo test del mark in **negativo** (bianco su fondo scuro): superato. Sanato il doppio `h1` delle pagine admin. Dettagli nel log "S19" in fondo al file.
+**Prossimo kickoff:** S20 — **prima di tutto**: `.env.local` locale punta a **produzione**, va ripuntato su MeeToo_Dev (vedi risk register S19). Poi triage dei due errori 400 su `/admin/clienti` a env corretto. Se puliti, si apre il fronte **wallet frontend** (saldo + tranche + scadenze sul profilo cliente).
 
 _Nota: la sezione "Fatto / Da fare" qui sotto è storica (sessione 4, migrazione API key Supabase) — conservata, non più lo stato corrente._
 
@@ -543,3 +543,39 @@ Perimetro già mappato:
 3. **Header dashboard cliente**: eyebrow + `h1`.
 
 È il **primo consumo reale della variant `'compact'`** → serve una validazione ottica dedicata (in `'compact'` il mark sborda un filo sopra le lettere, scelta di design commentata in Logo.tsx (S17)).
+
+## S19 — `<Logo>` su AdminNav e dashboard cliente (13 lug 2026)
+
+Due commit su main: **AdminNav** (`a848be8` — sidebar `'full'` + top bar mobile `'mark'`) e **dashboard cliente** (`9745862` — header `'compact'`). **Primo test del mark in NEGATIVO** (bianco su `bg-meetoo-accent-dark`): **validato**, lo stroke 9 resta leggibile a tutte le taglie in uso.
+
+### AdminNav — sidebar
+- `<Logo variant="full">`, `text-white`, `--mt-logo-w` **120px mobile / 132px da `md`**.
+- **DECISIONE DESIGN — il kickoff prevedeva `'compact'`, ROVESCIATA in browser.** Nel `'compact'` il wordmark parte **~57px indentato** rispetto al bordo sinistro (è il mark a occupare quella colonna), finendo **fuori asse** rispetto al ritmo verticale di eyebrow e voci nav, tutte allineate a `px-6`. Il `'full'` riporta il wordmark **a filo sinistro** e replica il lockup già visto su welcome/auth. **Browser = ground truth**, come in S14 e S17.
+- Eyebrow "Pannello Admin" spostata **SOTTO** il logo, `mt-5` (**20px**): lo spazio *fuori* dal lockup deve **superare il gap interno mark–wordmark** (~10px), altrimenti l'eyebrow si legge come **terza riga del logo** invece che come contesto funzionale.
+
+### AdminNav — top bar mobile
+- `<Logo variant="mark">` da solo, `--mt-logo-w:56px` (mark reso **~28px**). A quella taglia il wordmark sarebbe illeggibile. Lo `<span>` `activeLabel` a destra resta invariato.
+
+### SANATO — doppio `h1` nelle pagine admin
+L'`h1` "MEE TOO" della sidebar è **rimosso e NON sostituito** (nemmeno da uno sr-only): ogni pagina admin ha **già il proprio `h1`**. Prima ce n'erano **due per pagina** — la sidebar è cornice, non contenuto.
+
+### Dashboard cliente (`app/dashboard/page.tsx`)
+- **Primo consumo reale di `variant='compact'`**, nel suo contesto giusto: riga orizzontale con il bottone logout a destra. `text-meetoo-accent-dark`, `--mt-logo-w` **96px mobile / 112px da `sm`**.
+- Eyebrow "Studio Pilates & Yoga" **ELIMINATA**, non riposizionata (coerenza con la decisione brand S18).
+- **`h1` sr-only "La tua area Mee Too"** come primo figlio del `<main>`: il `<Logo>` è decorativo (path muto, `aria-hidden` di default) → il nome accessibile della pagina lo porta l'intestazione.
+- Header da `items-start` a **`items-center`**: baricentro ottico tra logo e bottone.
+
+### Gerarchia taglie — CONSOLIDATA
+**welcome 240/300 > auth 180 > admin sidebar 120/132 > dashboard cliente 96/112 > top bar mobile 56.** Il logo **scala giù man mano che si entra nel prodotto**: massimo alla prima impressione, minimo dentro la navigazione quotidiana.
+
+### Validazioni
+Browser locale desktop + DevTools mobile 390px: top bar, drawer aperto **senza collisione logo/X**, focus management invariato.
+
+### Risk register / open items (aggiunti in S19)
+- **CRITICO — `.env.local` locale punta a PRODUZIONE** (`lcyexugqinabjoinrsku`), **non** a MeeToo_Dev (`szxnyjosyiyqkgeqpzxh`). Rilevato in console durante S19. **Da correggere PRIMA di qualsiasi sessione con scritture dati**: finché resta così, ogni test manuale in locale **tocca dati veri**.
+- **Due errori 400** su chiamate Supabase in `/admin/clienti` (rilevati con l'env puntato a prod). Da triagiare **DOPO** lo switch dell'env: potrebbero dipendere dal mismatch di ambiente.
+
+### Kickoff S20
+1. **Fix `.env.local` → MeeToo_Dev** + riavvio dev server + verifica login.
+2. **Triage dei due 400** su `/admin/clienti` a env corretto.
+3. Se puliti: si apre il fronte **wallet frontend** (saldo + tranche + scadenze sul profilo cliente) — richiede **hotspot** + resume del progetto dev.
