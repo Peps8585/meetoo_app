@@ -1,6 +1,9 @@
 // <Logo> — composizione canonica del brand Mee Too: anelli (<Mark/>) + wordmark
 // (<WordmarkMeeToo/>). Questo file è SOLO composizione + layout + a11y; nessuna
-// animazione (gli hook mt-mark-ring-* vivono già sui <circle> del Mark).
+// animazione. I container della variant 'full' portano hook di classe stabili
+// (mt-logo-wordmark, mt-logo-descriptor) che affiancano gli mt-mark-ring-* già
+// sui <circle> del Mark: le coreografie (es. welcome, in globals.css sotto
+// [data-mt-animate="play"]) si agganciano lì, senza che <Logo> sappia nulla.
 //
 // SORGENTE DI TAGLIA UNICA — W = larghezza resa del wordmark, passata dal consumer
 // come CSS var `--mt-logo-w` sul root (responsiva via Tailwind arbitrary variants,
@@ -122,12 +125,15 @@ export function Logo({
       <div style={{ width: MARK_WIDTH }}>
         <Mark className="block h-auto w-full" decorative />
       </div>
-      <div style={{ width: W, marginTop: mul(TUNE.fullMarkGap) }}>
+      <div
+        className="mt-logo-wordmark"
+        style={{ width: W, marginTop: mul(TUNE.fullMarkGap) }}
+      >
         <WordmarkMeeToo />
       </div>
       {descriptor ? (
         <p
-          className="font-inter uppercase leading-none"
+          className="mt-logo-descriptor font-inter uppercase leading-none"
           style={{
             marginTop: mul(TUNE.descGap),
             fontSize: mul(TUNE.descFont),

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import WordmarkMeeToo from './WordmarkMeeToo'
+import { Logo } from './Logo'
 import WelcomeChoreography from './WelcomeChoreography'
 
 export default function Home() {
@@ -11,49 +11,16 @@ export default function Home() {
 
       <WelcomeChoreography>
         <div className="text-center flex flex-col items-center">
-          {/* Lockup brand: anelli + wordmark leggono come UN'unità → gap piccolo. */}
-          <div className="flex flex-col items-center gap-4">
-            {/* Anelli del brand: due <circle> separati nel DOM così ognuno converge
-                per conto suo. Decorativi → aria-hidden. */}
-            <svg
-              className="text-meetoo-accent-dark"
-              width="120"
-              height="90"
-              viewBox="0 0 134 101"
-              fill="none"
-              aria-hidden="true"
-              focusable="false"
-            >
-              <circle
-                className="mt-anim mt-ring-left"
-                cx="48"
-                cy="50"
-                r="33"
-                stroke="currentColor"
-                strokeWidth="10"
-              />
-              <circle
-                className="mt-anim mt-ring-right"
-                cx="86"
-                cy="50"
-                r="33"
-                stroke="currentColor"
-                strokeWidth="10"
-              />
-            </svg>
-
-            {/* Wordmark MEE/TOO: SVG inline, currentColor eredita dal contenitore
-                (text-meetoo-accent-dark = token scuro di palette). */}
-            <div className="mt-anim mt-wordmark text-meetoo-accent-dark w-60 md:w-75 h-auto">
-              <WordmarkMeeToo />
-            </div>
-
-            {/* Descrittore discipline: parte del lockup (gap piccolo), sale con
-                il wordmark riusando la battuta mt-wordmark (rise, stesso easing). */}
-            <p className="mt-anim mt-wordmark font-inter font-extrabold uppercase tracking-[0.12em] text-[11px] text-meetoo-accent-dark">
-              PILATES · YOGA · MINDFULNESS
-            </p>
-          </div>
+          {/* Lockup brand = sistema <Logo> (single source of truth: anelli +
+              wordmark, taglia guidata da --mt-logo-w). Decorativo: il nome
+              accessibile è già nell'h1 sr-only sopra. Nessun descriptor — la
+              disciplina singola compare solo nelle sezioni dedicate. Gli hook
+              di animazione (mt-mark-ring-*, mt-logo-wordmark) sono interni al
+              componente: la coreografia li aggancia da globals.css. */}
+          <Logo
+            variant="full"
+            className="text-meetoo-accent-dark [--mt-logo-w:240px] md:[--mt-logo-w:300px]"
+          />
 
           {/* Tagline: solo desktop (resta nel DOM), stacco medio dal lockup (mt-10). */}
           <p className="mt-anim mt-copy hidden md:block font-inter font-light text-lg md:text-xl text-meetoo-accent-dark max-w-md leading-relaxed mt-10">

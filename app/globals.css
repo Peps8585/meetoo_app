@@ -152,6 +152,12 @@
    finale (nessun opacity:0 nel markup). Le keyframes si attivano SOLO quando
    il wrapper client aggiunge [data-mt-animate="play"] — enhancement al mount.
    Easing unico: cubic-bezier(0.16, 1, 0.3, 1). Nessun bounce.
+
+   Battute 1 e 2 si agganciano agli hook strutturali del sistema <Logo>
+   (mt-mark-ring-left/right sui <circle> del <Mark>, mt-logo-wordmark sul
+   container del wordmark): il componente NON porta la classe .mt-anim, quindi
+   queste regole dichiarano da sé timing-function e fill-mode. Gli elementi di
+   pagina (copy, CTA, link) restano su .mt-anim + hook di battuta.
    ============================================================ */
 
 @keyframes mt-ring-left {
@@ -201,23 +207,31 @@
   animation-fill-mode: both;
 }
 
-/* Battuta 1 — anelli che convergono (0 → 0.7s) */
-[data-mt-animate="play"] .mt-ring-left {
+/* Battuta 1 — anelli che convergono (0 → 0.7s).
+   Hook = i <circle> del <Mark>, che non hanno .mt-anim → easing e fill-mode qui. */
+[data-mt-animate="play"] .mt-mark-ring-left {
   animation-name: mt-ring-left;
   animation-duration: 0.7s;
   animation-delay: 0s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: both;
 }
-[data-mt-animate="play"] .mt-ring-right {
+[data-mt-animate="play"] .mt-mark-ring-right {
   animation-name: mt-ring-right;
   animation-duration: 0.7s;
   animation-delay: 0s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: both;
 }
 
-/* Battuta 2 — wordmark (delay 0.5s, durata 0.55s) */
-[data-mt-animate="play"] .mt-wordmark {
+/* Battuta 2 — wordmark (delay 0.5s, durata 0.55s).
+   Hook = container wordmark di <Logo>, anch'esso senza .mt-anim. */
+[data-mt-animate="play"] .mt-logo-wordmark {
   animation-name: mt-rise;
   animation-duration: 0.55s;
   animation-delay: 0.5s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: both;
 }
 
 /* Ponte — eyebrow + tagline, tra wordmark e CTA (mantiene la cascata) */
@@ -241,9 +255,13 @@
 
 /* Reduced motion: niente transform, solo dissolvenza breve su tutti gli
    elementi. Sovrascrive nome/delay/durata delle battute (stessa specificità,
-   più avanti nel sorgente → vince). */
+   più avanti nel sorgente → vince). Gli hook del sistema <Logo> vanno elencati
+   esplicitamente: non portano .mt-anim, quindi non sarebbero coperti. */
 @media (prefers-reduced-motion: reduce) {
-  [data-mt-animate="play"] .mt-anim {
+  [data-mt-animate="play"] .mt-anim,
+  [data-mt-animate="play"] .mt-mark-ring-left,
+  [data-mt-animate="play"] .mt-mark-ring-right,
+  [data-mt-animate="play"] .mt-logo-wordmark {
     animation-name: mt-fade;
     animation-duration: 0.3s;
     animation-delay: 0s;
