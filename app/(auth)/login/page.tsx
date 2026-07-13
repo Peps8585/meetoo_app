@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Logo } from '@/app/Logo'
 import { createClient } from '@/lib/supabase/client'
 import { destinationForUser } from '@/lib/supabase/destination'
 
@@ -43,14 +44,16 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen bg-meetoo-bg-light flex items-center justify-center px-6 py-12">
       <div className="w-full max-w-md">
-        {/* Logo / Brand */}
+        {/* h1 reale della pagina: il <Logo> è decorativo (path muto), il nome
+            accessibile lo porta questa intestazione. */}
+        <h1 className="sr-only">Accedi a Mee Too</h1>
+
+        {/* Logo / Brand — sistema <Logo>, statico (nessuna coreografia qui). */}
         <div className="text-center mb-10">
-          <p className="font-inter font-extrabold uppercase tracking-[0.3em] text-xs text-meetoo-accent-dark mb-2">
-            Studio Pilates &amp; Yoga
-          </p>
-          <h1 className="font-inter font-extrabold uppercase tracking-widest text-5xl text-meetoo-accent-dark leading-none">
-            MEE TOO
-          </h1>
+          <Logo
+            variant="full"
+            className="text-meetoo-accent-dark [--mt-logo-w:180px]"
+          />
         </div>
 
         {/* Card */}

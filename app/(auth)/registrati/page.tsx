@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { Logo } from '@/app/Logo'
 import { createClient } from '@/lib/supabase/client'
 
 export default function RegistratiPage() {
@@ -54,6 +55,18 @@ export default function RegistratiPage() {
     return (
       <main className="min-h-screen bg-meetoo-bg-light flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-md text-center">
+          {/* h1 reale della pagina: il <Logo> è decorativo (path muto), il nome
+              accessibile lo porta questa intestazione. */}
+          <h1 className="sr-only">Registrati su Mee Too</h1>
+
+          {/* Logo / Brand — presente anche in conferma: la pagina resta brandizzata. */}
+          <div className="text-center mb-10">
+            <Logo
+              variant="full"
+              className="text-meetoo-accent-dark [--mt-logo-w:180px]"
+            />
+          </div>
+
           <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-sm border border-white/80 px-8 py-12">
             <div className="w-16 h-16 rounded-full bg-meetoo-bg-dark/20 flex items-center justify-center mx-auto mb-6">
               <svg
@@ -92,14 +105,16 @@ export default function RegistratiPage() {
   return (
     <main className="min-h-screen bg-meetoo-bg-light flex items-center justify-center px-6 py-12">
       <div className="w-full max-w-md">
-        {/* Logo / Brand */}
+        {/* h1 reale della pagina: il <Logo> è decorativo (path muto), il nome
+            accessibile lo porta questa intestazione. */}
+        <h1 className="sr-only">Registrati su Mee Too</h1>
+
+        {/* Logo / Brand — sistema <Logo>, statico (nessuna coreografia qui). */}
         <div className="text-center mb-10">
-          <p className="font-inter font-extrabold uppercase tracking-[0.3em] text-xs text-meetoo-accent-dark mb-2">
-            Studio Pilates &amp; Yoga
-          </p>
-          <h1 className="font-inter font-extrabold uppercase tracking-widest text-5xl text-meetoo-accent-dark leading-none">
-            MEE TOO
-          </h1>
+          <Logo
+            variant="full"
+            className="text-meetoo-accent-dark [--mt-logo-w:180px]"
+          />
         </div>
 
         {/* Card */}
