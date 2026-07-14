@@ -11,7 +11,8 @@ type Schedule = {
   max_spots: number
   current_bookings: number
   location: string | null
-  classes: { name: string; color: string | null } | null
+  price_override: number | null
+  classes: { name: string; color: string | null; price: number | null } | null
   profiles: { first_name: string | null; last_name: string | null } | null
 }
 
@@ -50,6 +51,14 @@ function addDays(d: Date, n: number): Date {
 
 function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
+}
+
+function fmtEuro(n: number): string {
+  return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n)
+}
+
+function effectivePrice(s: Schedule): number | null {
+  return s.price_override ?? s.classes?.price ?? null
 }
 
 const DAYS_IT = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica']
@@ -98,8 +107,8 @@ export default function PalinsestoPage() {
     const { data: schData, error: schErr } = await supabase
       .from('schedules')
       .select(
-        `id, starts_at, ends_at, max_spots, current_bookings, location,
-         classes:class_id(name, color),
+        `id, starts_at, ends_at, max_spots, current_bookings, location, price_override,
+         classes:class_id(name, color, price),
          profiles:instructor_id(first_name, last_name)`
       )
       .eq('studio_id', studioId)
@@ -328,6 +337,8 @@ export default function PalinsestoPage() {
                       const within24h =
                         new Date(s.starts_at).getTime() - Date.now() < 24 * 60 * 60 * 1000
                       const busy = busyIds.has(s.id)
+                      const price = effectivePrice(s)
+                      const showPrice = price !== null && price > 0
 
                       return (
                         <div
@@ -369,9 +380,16 @@ export default function PalinsestoPage() {
 
                           {/* Right: spots + action */}
                           <div className="shrink-0 flex flex-col items-end gap-2">
-                            <span className="font-inter font-light text-[10px] uppercase tracking-widest text-meetoo-accent-dark/45">
-                              {freeSpots}/{s.max_spots}
-                            </span>
+                            <div className="flex flex-col items-end gap-0.5">
+                              {showPrice && (
+                                <span className="font-inter font-normal text-xs text-meetoo-accent-dark/70">
+                                  {fmtEuro(price)}
+                                </span>
+                              )}
+                              <span className="font-inter font-light text-[10px] uppercase tracking-widest text-meetoo-accent-dark/45">
+                                {freeSpots}/{s.max_spots}
+                              </span>
+                            </div>
 
                             {isBooked ? (
                               <button
