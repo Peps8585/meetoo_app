@@ -33,10 +33,10 @@
 - `@supabase/ssr`: 0.10.3 (peer dep: supabase-js ^2.105.3 — compatibile)
 - `next`: 16.2.6
 
-## Stato attuale (aggiornato: 14 luglio 2026 — S20 env fix, wallet validato, prezzo lezione)
+## Stato attuale (aggiornato: 14 luglio 2026 — S21 storico movimenti wallet + pg_cron su dev)
 
-**Ultimo chiuso:** S20 — fix critico `.env.local` → MeeToo_Dev (i test locali non toccano più produzione), triage 400 su `/admin/clienti` chiuso (mismatch env), wallet saldo/tranche/scadenze validato con dati, costo lezione su card palinsesto (`efadca6`). Dettagli nel log "S20" in fondo.
-**Prossimo kickoff:** S21 — storico movimenti wallet sul profilo cliente (`wallet_transactions`, oggi non consumata dal frontend); richiede seed movimenti su dev. In coda: verifica pg_cron su dev via `cron.job_run_details`.
+**Ultimo chiuso:** S21 — sezione "Movimenti" sul profilo cliente (`wallet_transactions`, ultimi 10, `d5970b7`), seed 12 movimenti su dev con sanatoria del ledger (le tranche S20 avevano consumo pregresso senza righe a ledger), pg_cron finalmente schedulato **sul dev** (detect */10, deadline */5, prime run verificate, continuità notturna da verificare in apertura S22). Dettagli nel log "S21" in fondo.
+**Prossimo kickoff:** S22 — vista giornaliera palinsesto per admin/istruttori (il trigger a backlog è soddisfatto: pg_cron + wallet frontend completi). In apertura: verificare se il rischio "migrazioni S8 non versionate" è stale (grep sul baseline `20260709`).
 
 _Nota: la sezione "Fatto / Da fare" qui sotto è storica (sessione 4, migrazione API key Supabase) — conservata, non più lo stato corrente._
 
@@ -620,3 +620,75 @@ Browser locale desktop + DevTools mobile 390px: top bar, drawer aperto **senza c
    su dev.
 2. Poi in coda: verifica pg_cron su dev (`cron.job_run_details`) — status
    scheduling ancora non confermato da S12.
+
+## S21 — 14 luglio 2026 · Storico movimenti wallet + pg_cron attivato su dev
+
+### Fatto
+1. **Seed 12 movimenti wallet su dev** per Maria Test (SQL manuale, NON in
+   seed.sql). **SCOPERTA:** le tranche seminate in S20 erano nate con 112€
+   di consumo pregresso **senza righe a ledger** (residuo 32 su iniziale
+   160) → l'estratto conto non poteva quadrare col saldo. Sanato con 7
+   debit retrodatati da 16€ (giu–lug). **Quadratura verificata: somma
+   ledger = saldo tranche = 192€.**
+   **PRINCIPIO:** il ledger deve raccontare il saldo, anche nei dati di
+   test — un estratto conto che non quadra è un bug percepito.
+2. **feat(profilo): sezione "Movimenti"** (`d5970b7`) tra "I miei
+   pacchetti" e "Storico prenotazioni" in `app/profilo/page.tsx`. Server
+   component puro (zero 'use client'), ultimi 10 da `wallet_transactions`
+   (RLS `client_id = auth.uid()` già in piedi, nessuna policy nuova).
+3. **pg_cron su dev: ATTIVATO.** `cron.job` era **VUOTO** — le
+   `cron.schedule` di S12 non erano **mai state eseguite** (rimandate per
+   l'incident Supabase e mai riprese). **Non era auto-pause del free tier**
+   (i job non erano mai esistiti, quindi il tier non era mai stato messo
+   alla prova). La domanda S12 — la pausa congela i job tra le sessioni? —
+   resta APERTA: si legge domattina in `cron.job_run_details` (buco
+   notturno = tier insufficiente). Test manuale delle due sweep prima
+   di schedulare (0/0, nessun errore), poi:
+   `sweep-subthreshold-detect` **\*/10**, `sweep-subthreshold-deadline`
+   **\*/5**, entrambi `active`. Prime run confermate via
+   `cron.job_run_details`.
+
+### DECISIONI DESIGN — sezione Movimenti
+- **Niente verde/rosso semantico.** La palette è a 4 toni caldi: un semaforo
+  ci entrerebbe come corpo estraneo. La gerarchia entrate/uscite è resa dal
+  **peso** (`font-semibold` entrate / `font-light` uscite), non dal colore.
+- **Il segno è comandato da `amount >= 0`, NON dal `type`.** Conseguenza
+  voluta: un `refund` (positivo) mostra **+**. Il type dice *perché*,
+  l'importo dice *da che parte va il denaro*.
+- **Convenzione di segno verificata sul baseline**, non assunta: le funzioni
+  di prenotazione scrivono i `debit` **già negativi**.
+- Segno meno **tipografico U+2212** (non hyphen) + `tabular-nums` per
+  l'allineamento in colonna delle cifre.
+
+### Validazione
+- Desktop: 12 movimenti reali a DB, `limit 10` taglia correttamente i 2 più
+  vecchi; refund **+20,00 €** reso in semibold.
+- **Empty state** provato via login **admin** su `/profilo` (URL diretto):
+  la pagina non ha role-gating, l'RLS filtra per uid → **doppia conferma
+  dell'isolamento dati** oltre allo stato vuoto.
+- Mobile 390px: layout ok.
+
+### Risk register / open items (aggiornati in S21)
+- **pg_cron su PRODUZIONE ancora da schedulare** (su dev è fatto). Da fare
+  nel **rito di agosto**, insieme a `migration repair` e rigenerazione
+  chiavi.
+- **`/profilo` senza role-gating esplicito lato pagina** — innocuo (l'RLS
+  copre, verificato), ma un admin ci atterra su un profilo vuoto anziché
+  essere rediretto → backlog polish.
+- **Raggruppamento movimenti per `booking_id`**: un debit split su più
+  tranche produce più righe a ledger per la stessa prenotazione → in futuro
+  aggregarle in una riga sola. Backlog polish.
+- **DA VERIFICARE — il rischio "migrazioni S8 non versionate" (S9, punto 3)
+  potrebbe essere STALE:** il baseline `20260709103000_baseline_prod_schema.sql`
+  è un dump completo di prod e dovrebbe **già contenere** `credit_amount`,
+  `classes.price`, `schedules.price_override`, `client_packages.amount_*`.
+  Check in apertura S22 (grep sul baseline): se confermato, il rischio si
+  chiude senza lavoro.
+
+### Kickoff S22
+1. **Vista giornaliera palinsesto** per admin/istruttori — il trigger a
+   backlog (S13) è **soddisfatto**: pg_cron e wallet frontend sono completi.
+2. **In apertura:** (a) `cron.job_run_details` su dev — verificare la
+   continuità notturna dei job (domanda S12, buco notturno = tier
+   insufficiente); (b) verifica staleness del rischio S8 (grep sul
+   baseline).
