@@ -33,10 +33,10 @@
 - `@supabase/ssr`: 0.10.3 (peer dep: supabase-js ^2.105.3 — compatibile)
 - `next`: 16.2.6
 
-## Stato attuale (aggiornato: 13 luglio 2026 — S19 <Logo> su AdminNav + dashboard cliente)
+## Stato attuale (aggiornato: 14 luglio 2026 — S20 env fix, wallet validato, prezzo lezione)
 
-**Ultimo chiuso:** S19 — sistema `<Logo>` applicato ad `AdminNav.tsx` (sidebar `'full'` + top bar mobile `'mark'`) e all'header della dashboard cliente (`'compact'`). Due commit su main (`a848be8` AdminNav, `9745862` dashboard). Primo test del mark in **negativo** (bianco su fondo scuro): superato. Sanato il doppio `h1` delle pagine admin. Dettagli nel log "S19" in fondo al file.
-**Prossimo kickoff:** S20 — **prima di tutto**: `.env.local` locale punta a **produzione**, va ripuntato su MeeToo_Dev (vedi risk register S19). Poi triage dei due errori 400 su `/admin/clienti` a env corretto. Se puliti, si apre il fronte **wallet frontend** (saldo + tranche + scadenze sul profilo cliente).
+**Ultimo chiuso:** S20 — fix critico `.env.local` → MeeToo_Dev (i test locali non toccano più produzione), triage 400 su `/admin/clienti` chiuso (mismatch env), wallet saldo/tranche/scadenze validato con dati, costo lezione su card palinsesto (`efadca6`). Dettagli nel log "S20" in fondo.
+**Prossimo kickoff:** S21 — storico movimenti wallet sul profilo cliente (`wallet_transactions`, oggi non consumata dal frontend); richiede seed movimenti su dev. In coda: verifica pg_cron su dev via `cron.job_run_details`.
 
 _Nota: la sezione "Fatto / Da fare" qui sotto è storica (sessione 4, migrazione API key Supabase) — conservata, non più lo stato corrente._
 
@@ -579,3 +579,44 @@ Browser locale desktop + DevTools mobile 390px: top bar, drawer aperto **senza c
 1. **Fix `.env.local` → MeeToo_Dev** + riavvio dev server + verifica login.
 2. **Triage dei due 400** su `/admin/clienti` a env corretto.
 3. Se puliti: si apre il fronte **wallet frontend** (saldo + tranche + scadenze sul profilo cliente) — richiede **hotspot** + resume del progetto dev.
+
+## S20 — 14 luglio 2026 · Env fix, triage 400, dev popolato, prezzo lezione
+
+### Fatto
+1. **FIX CRITICO — `.env.local` → MeeToo_Dev.** Il file (fermo al 17/6)
+   puntava a produzione: ogni test locale scriveva su dati veri. Riscritto
+   via heredoc con URL/anon/service_role di dev, verificato a runtime
+   (Request URL = szxnyjosyiyqkgeqpzxh). Nota: la service_role di PROD
+   viveva anche in questo file locale — rafforza l'urgenza della
+   rigenerazione chiavi di agosto.
+2. **Utenti dev creati via flusso reale** (registrazione app, non dashboard):
+   - Maria Test client: `d79404a4-fa3c-4139-87aa-de2dc207e04c` (≠ id prod)
+   - `mat_peps@hotmail.it` admin (promosso via UPDATE su profiles)
+   - Trigger `handle_new_user` VERIFICATO su dev: studio_id valorizzato,
+     zero orfani.
+3. **Triage 400 su /admin/clienti: CHIUSO.** A env corretto, zero errori —
+   erano figli del mismatch ambiente. Riserva: dev ha 1 cliente, se erano
+   data-dependent non riproducibili qui; si riapre solo se ricompaiono.
+4. **Wallet frontend saldo+tranche+scadenze: GIÀ ESISTENTE e ora VALIDATO**
+   con dati (2 tranche, saldo 208€, ordinamento per scadenza ok). Backlog
+   era stale. Error codes IT già mappati (DecisionCard, palinsesto).
+   Restava solo il prezzo.
+5. **feat: costo lezione su card palinsesto** — select estesa
+   (price_override + classes.price), prezzo effettivo
+   `price_override ?? classes.price`, nascosto se null/≤0 (backend gestisce
+   price_not_set). Validati entrambi i rami in browser (16€ base /
+   20€ override).
+6. **Seed di test su dev** (SQL manuale, non in seed.sql): 1 pacchetto,
+   2 tranche per Maria Test, 1 classe Pilates Matwork 16€, 3 schedules
+   (1 con override 20€).
+
+### Note
+- `date_trunc('day', now())` in SQL è UTC; UI renderizza Europe/Rome (+2).
+  Irrilevante per test, promemoria per creazione lezioni reali.
+
+### Kickoff S21
+1. **Storico movimenti wallet** sul profilo cliente (`wallet_transactions`,
+   oggi non consumata da nessun file frontend) — richiede seed movimenti
+   su dev.
+2. Poi in coda: verifica pg_cron su dev (`cron.job_run_details`) — status
+   scheduling ancora non confermato da S12.
