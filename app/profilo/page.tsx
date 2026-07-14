@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Package, Clock } from 'lucide-react'
+import { ArrowLeft, Package, Clock, Wallet } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 
 type Profile = {
@@ -16,6 +16,14 @@ type ClientPackage = {
   expires_at: string | null
   is_active: boolean
   packages: { name: string } | null
+}
+
+type WalletTransaction = {
+  id: string
+  amount: number
+  type: 'credit' | 'debit' | 'refund'
+  description: string | null
+  created_at: string
 }
 
 type BookingRow = {
@@ -98,6 +106,16 @@ export default async function ProfiloPage() {
     (sum, pkg) => sum + (pkg.amount_remaining ?? 0),
     0
   )
+
+  // ── Movimenti wallet (ultimi 10) ────────────────────────────────────
+  const { data: transactionsData } = await supabase
+    .from('wallet_transactions')
+    .select('id, amount, type, description, created_at')
+    .eq('client_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(10)
+
+  const transactions = (transactionsData as WalletTransaction[]) ?? []
 
   // ── Storico prenotazioni (ultime 5) ─────────────────────────────────
   const { data: rawBookings } = await supabase
@@ -242,6 +260,50 @@ export default async function ProfiloPage() {
                       residuo
                     </p>
                   </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* ── Movimenti ── */}
+        <section className="mb-8">
+          <h2 className="font-inter font-extrabold uppercase tracking-widest text-[11px] text-meetoo-accent-dark mb-4">
+            Movimenti
+          </h2>
+
+          {transactions.length === 0 ? (
+            <div className="bg-white/40 rounded-2xl border border-white/70 px-6 py-10 text-center">
+              <Wallet className="w-5 h-5 text-meetoo-accent-dark/20 mx-auto mb-3" />
+              <p className="font-inter font-light text-sm text-meetoo-accent-dark/40">
+                Nessun movimento registrato.
+              </p>
+            </div>
+          ) : (
+            <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-sm border border-white/80 px-5 sm:px-6 divide-y divide-meetoo-accent-dark/5">
+              {transactions.map((tx) => (
+                <div
+                  key={tx.id}
+                  className="flex items-center justify-between gap-4 py-4"
+                >
+                  <div className="min-w-0">
+                    <p className="font-inter font-medium text-sm text-meetoo-accent-dark truncate">
+                      {tx.description ?? '—'}
+                    </p>
+                    <p className="font-inter font-light text-xs text-meetoo-accent-dark/40 mt-0.5">
+                      {fmtDateLong(tx.created_at)}
+                    </p>
+                  </div>
+
+                  <p
+                    className={[
+                      'shrink-0 font-inter text-sm text-meetoo-accent-dark tabular-nums',
+                      tx.amount >= 0 ? 'font-semibold' : 'font-light',
+                    ].join(' ')}
+                  >
+                    {tx.amount >= 0 ? '+' : '−'}
+                    {fmtEuro(Math.abs(tx.amount))}
+                  </p>
                 </div>
               ))}
             </div>
