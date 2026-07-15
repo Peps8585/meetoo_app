@@ -33,10 +33,10 @@
 - `@supabase/ssr`: 0.10.3 (peer dep: supabase-js ^2.105.3 — compatibile)
 - `next`: 16.2.6
 
-## Stato attuale (aggiornato: 14 luglio 2026 — S21 storico movimenti wallet + pg_cron su dev)
+## Stato attuale (aggiornato: 15 luglio 2026 — S22 agenda giornaliera role-aware + continuità pg_cron verificata)
 
-**Ultimo chiuso:** S21 — sezione "Movimenti" sul profilo cliente (`wallet_transactions`, ultimi 10, `d5970b7`), seed 12 movimenti su dev con sanatoria del ledger (le tranche S20 avevano consumo pregresso senza righe a ledger), pg_cron finalmente schedulato **sul dev** (detect */10, deadline */5, prime run verificate, continuità notturna da verificare in apertura S22). Dettagli nel log "S21" in fondo.
-**Prossimo kickoff:** S22 — vista giornaliera palinsesto per admin/istruttori (il trigger a backlog è soddisfatto: pg_cron + wallet frontend completi). In apertura: verificare se il rischio "migrazioni S8 non versionate" è stale (grep sul baseline `20260709`).
+**Ultimo chiuso:** S22 — agenda giornaliera role-aware `/agenda` per admin e istruttrici (`2e95af2`), continuità notturna pg_cron su dev VERIFICATA (domanda S12 chiusa), rischio "migrazioni S8 non versionate" archiviato come stale. Dettagli nel log "S22" in fondo.
+**Prossimo kickoff:** S23 — flusso "password dimenticata" (reset via email): route dedicata + pagina di update password + email. Priorità alta pre-settembre: sblocca l'onboarding istruttrici e serve alle clienti al lancio.
 
 _Nota: la sezione "Fatto / Da fare" qui sotto è storica (sessione 4, migrazione API key Supabase) — conservata, non più lo stato corrente._
 
@@ -692,3 +692,70 @@ Browser locale desktop + DevTools mobile 390px: top bar, drawer aperto **senza c
    continuità notturna dei job (domanda S12, buco notturno = tier
    insufficiente); (b) verifica staleness del rischio S8 (grep sul
    baseline).
+
+## S22 — 15 luglio 2026 · Agenda giornaliera role-aware + continuità pg_cron verificata
+
+### Apertura
+- **(a) Continuità notturna pg_cron VERIFICATA** via `cron.job_run_details`
+  su dev: serie **14/07 19:00 → 15/07 14:00 UTC senza buchi**, 12 run/ora
+  per `deadline` (*/5) e 6/ora per `detect` (*/10), **zero falliti**. La
+  domanda aperta da S12 — la pausa da inattività congela i job tra le
+  sessioni? — è **chiusa in positivo**: il free tier ha tenuto sveglio il
+  progetto per l'intera notte. **Caveat a registro:** NON è stata testata
+  la pausa da inattività **prolungata** (~7gg) — irrilevante per prod (avrà
+  traffico reale che tiene sveglio il progetto). **pg_cron su PROD resta da
+  schedulare nel rito di agosto.**
+- **(b) Rischio "migrazioni S8 non versionate" (S9, punto 3) ARCHIVIATO come
+  stale.** Verificato a grep che il baseline
+  `20260709103000_baseline_prod_schema.sql` contiene già `credit_amount`,
+  `classes.price`, `schedules.price_override`,
+  `client_packages.amount_initial`/`amount_remaining` e
+  `wallet_transactions` col CHECK completo. Il dump di prod di S15 aveva già
+  assorbito lo schema euro → nessun lavoro di recupero, rischio chiuso.
+
+### Feature `/agenda` (`2e95af2`)
+- **Layout server di gating** (`app/agenda/layout.tsx`): legge `profiles.role`,
+  ammette `admin` e `instructor`, altrimenti `redirect('/dashboard')`
+  (anonimo → `/login`). Specchia `app/admin/layout.tsx`.
+- **Vista giornaliera** (`app/agenda/page.tsx`, client component): giorno
+  selezionato (default oggi, tz locale) con navigazione **← Oggi →**; query
+  `schedules` sul range `[00:00, 24:00)` locale convertito in ISO, filtro
+  `studio_id`, ordine `starts_at`, con embed classi/istruttrice/bookings.
+- **Conteggio confermati calcolato dalle `bookings`** (status `confirmed`),
+  **NON dal counter `current_bookings`** — l'agenda è la vista operativa di
+  verità. Le `cancelled` non si mostrano mai.
+- **Liste confermati e waitlist ordinate per `booked_at`** crescente prima
+  della numerazione; waitlist resa visivamente distinta (blocco tratteggiato).
+- **Filtro `instructor_id = uid` per le istruttrici** (l'admin vede tutte le
+  lezioni); enforcement lato query, non solo UI.
+- `destination.ts` instrada `instructor` → `/agenda` (admin → `/admin`,
+  default → `/dashboard`). Voce **"Agenda"** aggiunta in `AdminNav`. Link
+  **"← Home" solo per admin** (verso `/admin/dashboard`); per l'istruttrice
+  il pulsante non compare.
+- **Validata in browser su entrambi i ruoli**, mobile 390px ok.
+
+### SCOPERTA DI SESSIONE — account istruttrice inaccessibili
+- Il CRUD admin istruttori **crea già veri account auth** (server action con
+  service role, password temporanea casuale, `email_confirm`), ma il flusso
+  **"password dimenticata" NON esiste nell'app** → gli account istruttrice
+  sono **inaccessibili**: nessuno conosce la password temporanea e non c'è
+  modo di resettarla. Da qui il **kickoff S23** (reset password).
+
+### Seed dev
+- Creata **Giulia Istruttrice** (`giulia.istruttrice@test.it`, `role`
+  `instructor`, assegnataria della Pilates Matwork) per validare `/agenda`
+  col filtro istruttrice. Password riscritta via `update` su `auth.users`
+  con `crypt`/`gen_salt` — **gesto lecito SOLO su dev, mai in produzione.**
+
+### Backlog aggiunti
+- **Render degli status `attended`/`no_show` in agenda**: da decidere
+  insieme alla futura UI presenze (oggi l'agenda mostra solo
+  `confirmed`/`waitlist`).
+- **Test istruttrice con flusso reale di onboarding** quando esisterà il
+  reset password (S23) — oggi validata solo con seed manuale.
+
+### Kickoff S23
+1. **Flusso "password dimenticata"** (reset via email): route dedicata +
+   pagina di update password + email. Sblocca l'onboarding istruttrici
+   (account già creati ma inaccessibili) e serve alle clienti al lancio.
+   Priorità alta pre-settembre.
