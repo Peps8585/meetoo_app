@@ -38,10 +38,10 @@
 - `@supabase/ssr`: 0.10.3 (peer dep: supabase-js ^2.105.3 — compatibile)
 - `next`: 16.2.6
 
-## Stato attuale (aggiornato: 15 luglio 2026 — S22 agenda giornaliera role-aware + continuità pg_cron verificata)
+## Stato attuale (aggiornato: 18 luglio 2026 — S23 flusso password dimenticata)
 
-**Ultimo chiuso:** S22 — agenda giornaliera role-aware `/agenda` per admin e istruttrici (`2e95af2`), continuità notturna pg_cron su dev VERIFICATA (domanda S12 chiusa), rischio "migrazioni S8 non versionate" archiviato come stale. Dettagli nel log "S22" in fondo.
-**Prossimo kickoff:** S23 — flusso "password dimenticata" (reset via email): route dedicata + pagina di update password + email. Priorità alta pre-settembre: sblocca l'onboarding istruttrici e serve alle clienti al lancio.
+**Ultimo chiuso:** S23 — flusso "password dimenticata" costruito e validato app-side su dev (`ab74243`): `/password-dimenticata` + `/reimposta-password` + callback con `next` + link sul login. GATE aperto: allowlist redirect sul progetto Supabase remoto (dev E prod) + SMTP vero (l'email built-in Supabase non arriva su Gmail). Dettagli nel log "S23" in fondo.
+**Prossimo kickoff:** S24 — email transazionali con Resend (benvenuto + conferma prenotazione) **e SMTP custom Resend anche per le email di Auth** (reset password, conferma signup: la deliverability built-in è inservibile, vedi S23). In apertura: applicare l'allowlist redirect al progetto dev (`supabase config push`, già pronta in config.toml) e chiudere il test E2E email reale del reset.
 
 _Nota: la sezione "Fatto / Da fare" qui sotto è storica (sessione 4, migrazione API key Supabase) — conservata, non più lo stato corrente._
 
@@ -764,3 +764,32 @@ Browser locale desktop + DevTools mobile 390px: top bar, drawer aperto **senza c
    pagina di update password + email. Sblocca l'onboarding istruttrici
    (account già creati ma inaccessibili) e serve alle clienti al lancio.
    Priorità alta pre-settembre.
+
+## S23 — 18 luglio 2026 · Flusso "password dimenticata" (build + validazione app-side)
+
+Due commit su main: `ab74243` (feature), `56cb1a9` (config.toml allowlist, NON ancora applicata al remoto).
+
+### Costruito
+- **`/password-dimenticata`** (nel gruppo `(auth)`): form email → `resetPasswordForEmail` con `redirectTo: {origin}/auth/callback?next=/reimposta-password`. Server page + form client separato (`useSearchParams` richiede Suspense per il prerender). Stato success brandizzato.
+- **`/reimposta-password`** (client page): 3 stati — `checking` / `missing` (link non valido → CTA "richiedi nuovo link") / `ok` (form nuova password + conferma). `updateUser({password})` → redirect via `destinationForUser`.
+- **`/auth/callback`**: parametro `next` onorato solo per path interni (`/` sì, `//` no — guardia open redirect). Exchange fallito con `next=/reimposta-password` → `/password-dimenticata?error=link` (messaggio "link scaduto, richiedine uno nuovo") invece del generico `/login?error=auth`.
+- **Login**: link "Password dimenticata?" sotto il campo password.
+
+### DECISIONI ARCHITETTURA — non "riparare"
+- **`/reimposta-password` vive FUORI dal gruppo `(auth)` di proposito**: chi arriva dal link di recovery HA una sessione, e il layout `(auth)` redirige chi ha sessione → dentro il gruppo la pagina sarebbe irraggiungibile. Non spostarla "per coerenza".
+- **Anti user-enumeration**: la risposta della richiesta reset è identica esista o no l'account. Unico errore mostrato: rate limit (~60s tra richieste).
+- **Copy**: l'avviso "il link va aperto sullo stesso dispositivo della richiesta" è nel success state — è il vincolo PKCE (code verifier nel browser richiedente), non una scelta UX.
+
+### Validazione (browser su dev, desktop + mobile 390px)
+- Tutti i rami provati con utente di test reale: richiesta reset → success; callback senza code → messaggio link scaduto; guardia open redirect (`next=//evil.com` → rifiutato); form con sessione → password non coincidenti / uguale alla vecchia (errori IT corretti) / cambio reale → redirect dashboard; **vecchia password rifiutata al login, nuova password entra**. Gerarchia (auth) confermata: da loggato `/password-dimenticata` redirige alla dashboard.
+- Utente di test su dev: `petrinmattia+meetoodev@gmail.com` (id da81d580-…, profilo con studio_id corretto dal trigger). Credenziali note dalla sessione; resettabili via admin API.
+
+### GATE APERTI (bloccano il test E2E email reale, NON il codice)
+1. **Allowlist redirect sul progetto Supabase remoto**: senza, Supabase riscrive `redirect_to` sul Site URL nudo e il link email atterra sulla welcome col `?code=` orfano. Config pronta in `supabase/config.toml` (site_url localhost + wildcard `/**`): da applicare su **dev** con `supabase config push` (bloccato da permission del harness in S23 — rilanciare con approvazione o da terminale). Su **PROD** serve l'equivalente col dominio Vercel (dashboard → Auth → URL Configuration), da fare nel rito di agosto o in S24.
+2. **Deliverability email built-in Supabase = inservibile**: `recovery_sent_at` valorizzato ma l'email NON è mai arrivata su Gmail (attesa >5 min, controllato anche spam). Conseguenza per S24: Resend non solo per le transazionali, ma come **SMTP custom di Auth** (reset + conferma signup). Al lancio le clienti riceveranno email di reset: senza SMTP vero il flusso è morto.
+3. Test onboarding istruttrice con flusso reale (backlog S22) resta gated sui punti 1+2.
+
+### Apprendimenti tecnici
+- Il client PKCE (`createBrowserClient`) **ignora i token hash del flusso implicito** (link generati da `generate_link` admin): la pagina mostra correttamente "link non valido". Il percorso reale è solo email → verify → `?code=` → callback.
+- `type='email'` degli input: `form_input`/click del browser-pane a volte non innescano il submit React al primo colpo — pattern "primo click a vuoto"; per i test è affidabile `form.requestSubmit()`. Nessun impatto sul comportamento con utenti reali (Enter/tap funzionano).
+- ROADMAP.md (v1, 14/7) indica per S23 "form pacchetti + scrollIntoView": stale, il form pacchetti è chiuso da S9. La fonte viva della sequenza sessioni è questo file. Il fix `scrollIntoView` (risk register S9.1) resta a backlog.
