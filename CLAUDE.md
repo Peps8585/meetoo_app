@@ -12,6 +12,11 @@
 - Lavorare a piccoli step, spiegare il ragionamento, committare dopo ogni milestone.
 - `CLAUDE.md` viene committato su GitHub: trattarlo come PUBBLICO. Nessun segreto (niente password, niente API key, niente ID hardcodati stantii).
 - Gli ID (studio_id, istruttori, ecc.) si ricavano a runtime con query, non hardcodati.
+- Prima di ogni commit, review del diff: `git --no-pager diff` (per file NUOVI: `git add -N . && git --no-pager diff`, altrimenti non compaiono).
+- Commit separati per tema: codice e aggiornamento CLAUDE.md non si mischiano mai nello stesso commit.
+- La validazione visiva si fa nel BROWSER (incluso mobile 390px), non nelle preview dell'editor (la preview SVG di VS Code sbaglia i transform annidati).
+- Blocchi SQL nel SQL Editor: uno alla volta; migrazioni in transazione; sempre query di verifica post-esecuzione (i fallimenti silenziosi esistono: storico `handle_new_user` che ingoia eccezioni → profili orfani con studio_id NULL).
+- Stile: raccomandazione ferma motivata dai dati (codice, browser, metriche), non menù di opzioni. Per decisioni da validare: prima spiegazione in linguaggio semplice, poi conferma di Mattia, poi implementazione.
 
 ## Stack
 
