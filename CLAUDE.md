@@ -40,8 +40,8 @@
 
 ## Stato attuale (aggiornato: 18 luglio 2026 — S23 flusso password dimenticata)
 
-**Ultimo chiuso:** S23 — flusso "password dimenticata" costruito e validato app-side su dev (`ab74243`): `/password-dimenticata` + `/reimposta-password` + callback con `next` + link sul login. GATE aperto: allowlist redirect sul progetto Supabase remoto (dev E prod) + SMTP vero (l'email built-in Supabase non arriva su Gmail). Dettagli nel log "S23" in fondo.
-**Prossimo kickoff:** S24 — email transazionali con Resend (benvenuto + conferma prenotazione) **e SMTP custom Resend anche per le email di Auth** (reset password, conferma signup: la deliverability built-in è inservibile, vedi S23). In apertura: applicare l'allowlist redirect al progetto dev (`supabase config push`, già pronta in config.toml) e chiudere il test E2E email reale del reset.
+**Ultimo chiuso:** S23 — flusso "password dimenticata" COMPLETO e verificato E2E su dev (`ab74243` + test reale di Mattia via Hotmail: richiesta → email → link → nuova password → login). Il finto gate "allowlist redirect" è stato ridimensionato (era una sonda malformata; same-hostname del Site URL è sempre valido). Dettagli nel log "S23" in fondo.
+**Prossimo kickoff:** S24 — email con Resend: transazionali (benvenuto + conferma prenotazione, `RESEND_API_KEY` in Vercel) **e SMTP custom di Auth** (reset password + conferma signup: l'email built-in Supabase non arriva MAI a Gmail, a Outlook sì — vedi S23). Dopo lo SMTP: test onboarding istruttrice col flusso reale (backlog S22, ora sbloccato).
 
 _Nota: la sezione "Fatto / Da fare" qui sotto è storica (sessione 4, migrazione API key Supabase) — conservata, non più lo stato corrente._
 
