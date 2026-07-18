@@ -97,6 +97,14 @@ export default function LoginPage() {
                 className="w-full bg-meetoo-bg-light border-0 border-b border-meetoo-accent-dark/30 px-0 py-2 font-inter font-light text-meetoo-accent-dark placeholder:text-meetoo-accent-dark/40 focus:outline-none focus:border-meetoo-accent-light transition-colors"
                 placeholder="••••••••"
               />
+              <p className="text-right pt-1">
+                <Link
+                  href="/password-dimenticata"
+                  className="font-inter font-light text-xs text-meetoo-accent-dark/70 underline underline-offset-4 hover:text-meetoo-accent-light transition-colors"
+                >
+                  Password dimenticata?
+                </Link>
+              </p>
             </div>
 
             {error && (
