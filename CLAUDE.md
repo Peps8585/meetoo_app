@@ -793,3 +793,6 @@ Due commit su main: `ab74243` (feature), `56cb1a9` (config.toml allowlist, NON a
 - Il client PKCE (`createBrowserClient`) **ignora i token hash del flusso implicito** (link generati da `generate_link` admin): la pagina mostra correttamente "link non valido". Il percorso reale è solo email → verify → `?code=` → callback.
 - `type='email'` degli input: `form_input`/click del browser-pane a volte non innescano il submit React al primo colpo — pattern "primo click a vuoto"; per i test è affidabile `form.requestSubmit()`. Nessun impatto sul comportamento con utenti reali (Enter/tap funzionano).
 - ROADMAP.md (v1, 14/7) indica per S23 "form pacchetti + scrollIntoView": stale, il form pacchetti è chiuso da S9. La fonte viva della sequenza sessioni è questo file. Il fix `scrollIntoView` (risk register S9.1) resta a backlog.
+
+### Backlog aggiunto (post-S23, dal test di Mattia)
+- **Logout per l'istruttrice**: su `/agenda` non esiste un bottone Esci (l'admin ha "← Home", l'istruttrice niente). Oggi l'unica via è passare da `/dashboard` (che non ha gate di ruolo) e usare ESCI lì, o pulire i cookie. Fix piccolo, da accorpare al fix `scrollIntoView` del form pacchetti (risk register S9.1) in una micro-sessione polish UI pre-lancio.
