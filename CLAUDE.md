@@ -782,7 +782,7 @@ Due commit su main: `ab74243` (feature), `56cb1a9` (config.toml allowlist, NON a
 
 ### Validazione (browser su dev, desktop + mobile 390px)
 - Tutti i rami provati con utente di test reale: richiesta reset → success; callback senza code → messaggio link scaduto; guardia open redirect (`next=//evil.com` → rifiutato); form con sessione → password non coincidenti / uguale alla vecchia (errori IT corretti) / cambio reale → redirect dashboard; **vecchia password rifiutata al login, nuova password entra**. Gerarchia (auth) confermata: da loggato `/password-dimenticata` redirige alla dashboard.
-- Utente di test su dev: `petrinmattia+meetoodev@gmail.com` (id da81d580-…, profilo con studio_id corretto dal trigger). Credenziali note dalla sessione; resettabili via admin API.
+- Utente di test su dev: creato via admin API con un plus-address Gmail di Mattia (tag `meetoodev`; profilo con studio_id corretto dal trigger). Identificarlo a runtime con query sull'email, non da id hardcodato; credenziali resettabili via admin API.
 
 ### GATE APERTI (bloccano il test E2E email reale, NON il codice)
 1. **Allowlist redirect sul progetto Supabase remoto**: senza, Supabase riscrive `redirect_to` sul Site URL nudo e il link email atterra sulla welcome col `?code=` orfano. Config pronta in `supabase/config.toml` (site_url localhost + wildcard `/**`): da applicare su **dev** con `supabase config push` (bloccato da permission del harness in S23 — rilanciare con approvazione o da terminale). Su **PROD** serve l'equivalente col dominio Vercel (dashboard → Auth → URL Configuration), da fare nel rito di agosto o in S24.
