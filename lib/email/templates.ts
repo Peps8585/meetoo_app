@@ -1,7 +1,10 @@
 // Template email transazionali Mee Too.
 // HTML a tabelle con stili inline: i client di posta non caricano CSS esterni
-// né supportano gli SVG del sistema <Logo> → il brand è reso col wordmark
-// tipografico (stesse scelte della UI: uppercase, tracking largo, palette a 4 toni).
+// né supportano gli SVG del sistema <Logo> → il lockup ufficiale è reso come PNG
+// @2x (public/brand/email-logo.png, generato da scripts con la stessa geometria
+// di Logo.tsx: MARK_RATIO 0.499, stroke 9, gap 0.076, sfondo #f5f0e8 bakato per
+// restare leggibile anche nei client in dark mode). L'immagine è servita
+// dall'app deployata: gli URL devono essere ASSOLUTI e pubblici, mai localhost.
 
 const BG = '#f5f0e8' // meetoo-bg-light
 const INK = '#2c2c2c' // meetoo-accent-dark
@@ -9,6 +12,10 @@ const ACCENT = '#a8876a' // meetoo-accent-light
 const SAGE = '#7d8b78' // meetoo-bg-dark
 
 const FONT = "font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;"
+
+// Base pubblica degli asset email (il PNG del lockup). Deve essere raggiungibile
+// dal client di posta del destinatario → produzione, MAI l'origin locale.
+const ASSETS_BASE = process.env.EMAIL_ASSETS_URL ?? 'https://meetoo-app-ntls.vercel.app'
 
 function layout(bodyHtml: string): string {
   return `<!doctype html>
@@ -20,9 +27,8 @@ function layout(bodyHtml: string): string {
       <td align="center" style="padding:40px 16px;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;">
           <tr>
-            <td align="center" style="padding-bottom:32px;">
-              <div style="${FONT} font-size:26px; font-weight:800; letter-spacing:0.3em; color:${INK};">MEE&nbsp;TOO</div>
-            </td>
+            <td align="center" style="padding-bottom:28px;">
+              <img src="${ASSETS_BASE}/brand/email-logo.png" width="150" alt="MEE TOO" style="${FONT} display:block; width:150px; height:auto; border:0; font-size:24px; font-weight:800; letter-spacing:0.3em; color:${INK};"></td>
           </tr>
           <tr>
             <td style="background-color:#ffffff; border-radius:16px; padding:36px 32px;">
