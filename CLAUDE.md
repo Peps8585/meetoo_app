@@ -38,10 +38,10 @@
 - `@supabase/ssr`: 0.10.3 (peer dep: supabase-js ^2.105.3 — compatibile)
 - `next`: 16.2.6
 
-## Stato attuale (aggiornato: 18 luglio 2026 — S23 flusso password dimenticata)
+## Stato attuale (aggiornato: 20 luglio 2026 — S24 email Resend)
 
-**Ultimo chiuso:** S23 — flusso "password dimenticata" COMPLETO e verificato E2E su dev (`ab74243` + test reale di Mattia via Hotmail: richiesta → email → link → nuova password → login). Il finto gate "allowlist redirect" è stato ridimensionato (era una sonda malformata; same-hostname del Site URL è sempre valido). Dettagli nel log "S23" in fondo.
-**Prossimo kickoff:** S24 — email con Resend: transazionali (benvenuto + conferma prenotazione, `RESEND_API_KEY` in Vercel) **e SMTP custom di Auth** (reset password + conferma signup: l'email built-in Supabase non arriva MAI a Gmail, a Outlook sì — vedi S23). Dopo lo SMTP: test onboarding istruttrice col flusso reale (backlog S22, ora sbloccato).
+**Ultimo chiuso:** S24 — email con Resend COMPLETA su dev: transazionali (benvenuto + conferma prenotazione) costruite e verificate E2E, SMTP custom di Auth configurato su MeeToo_Dev e provato (reset password ARRIVA a Gmail, mittente "Mee Too" — il problema deliverability di S23 è risolto). Logo ufficiale nelle email (PNG @2x da `scripts/generate-email-logo.sh`). Dettagli nel log "S24" in fondo.
+**Prossimo kickoff:** S25 — (a) decisione DOMINIO con Giorgia: il sandbox `onboarding@resend.dev` consegna SOLO all'email dell'account Resend → per le clienti vere serve dominio verificato su Resend (2 record DNS), prerequisito del lancio; (b) test onboarding istruttrice col flusso reale (bloccato dal sandbox: serve indirizzo consegnabile); (c) nel rito di agosto: `RESEND_API_KEY` + `EMAIL_FROM` nelle env Vercel e SMTP custom sul progetto PROD (oggi le email in produzione vengono SALTATE in silenzio, by design del wrapper best-effort).
 
 _Nota: la sezione "Fatto / Da fare" qui sotto è storica (sessione 4, migrazione API key Supabase) — conservata, non più lo stato corrente._
 
@@ -796,3 +796,73 @@ Due commit su main: `ab74243` (feature), `56cb1a9` (config.toml allowlist, NON a
 
 ### Backlog aggiunto (post-S23, dal test di Mattia)
 - **Logout per l'istruttrice**: su `/agenda` non esiste un bottone Esci (l'admin ha "← Home", l'istruttrice niente). Oggi l'unica via è passare da `/dashboard` (che non ha gate di ruolo) e usare ESCI lì, o pulire i cookie. Fix piccolo, da accorpare al fix `scrollIntoView` del form pacchetti (risk register S9.1) in una micro-sessione polish UI pre-lancio.
+
+## S24 — 20 luglio 2026 · Email con Resend: transazionali + SMTP custom Auth (CHIUSA su dev)
+
+Tre commit su main: `b66eb58` (transazionali), `72f87dc` (logo email), + docs.
+
+### Costruito — transazionali (Resend API, lato app)
+- **`lib/email/send.ts`** — wrapper best-effort: key da `RESEND_API_KEY`, mittente
+  da `EMAIL_FROM` (fallback sandbox `onboarding@resend.dev`). Un'email che
+  fallisce NON blocca mai il flusso chiamante: nessun throw, solo log. Key
+  assente → invio saltato con warn (stato attuale di produzione, deliberato).
+- **`lib/email/templates.ts`** — template HTML a tabelle con stili inline
+  (i client di posta non caricano CSS esterni né SVG). Palette 4 toni, date
+  SEMPRE con `timeZone: 'Europe/Rome'` esplicita (i server girano in UTC).
+  `<meta charset="utf-8">` nel layout: senza, accenti e € diventano mojibake.
+- **Benvenuto**: server action fire-and-forget dopo `signUp` riuscito in
+  registrati (al signup non c'è sessione → l'action non può verificare il
+  chiamante; contenuto fisso, rischio accettato e annotato).
+- **Conferma prenotazione**: server action dopo `book_lesson` riuscito nel
+  palinsesto. Il client passa SOLO lo scheduleId: il server verifica sotto RLS
+  che esista la prenotazione confermata dell'utente autenticato e rilegge
+  lezione/istruttrice/prezzo (`price_override ?? classes.price`, stessa logica
+  della RPC). Riepilogo: lezione, giorno, ora, istruttrice, sala, addebito,
+  promemoria disdetta 24h.
+
+### Logo nelle email — PNG del lockup ufficiale
+- I client di posta non supportano SVG → `public/brand/email-logo.png`, lockup
+  'full' @2x con la geometria ESATTA di Logo.tsx (MARK_RATIO 0.499, stroke 9,
+  gap 0.076). Sfondo #f5f0e8 BAKATO nel PNG: leggibile anche in dark mode.
+- Generatore riproducibile `scripts/generate-email-logo.sh` (Chrome headless,
+  pattern S14: eseguito offline, PNG committato statico).
+- URL immagine ASSOLUTO verso produzione (`EMAIL_ASSETS_URL`, fallback dominio
+  Vercel) — mai l'origin locale: l'email la legge il client del destinatario.
+  Alt-text brandizzato ("MEE TOO" tracking largo) se le immagini sono bloccate.
+
+### SMTP custom Auth (gate 2) — CONFIGURATO su MeeToo_Dev e PROVATO
+- Dashboard → Project Settings → Authentication → SMTP: host `smtp.resend.com`,
+  port 465, user `resend`, password = API key Resend, sender "Mee Too".
+- **Validazione E2E: l'email di reset password ARRIVA a Gmail** (mittente
+  "Mee Too") — chiuso il problema S23 "built-in Supabase a Gmail mai".
+
+### Validazione E2E completa (dev, flussi reali dall'app)
+- Signup reale → profilo con studio_id corretto dal trigger + benvenuto arrivato.
+- Prenotazione reale dal palinsesto (lezione seed "TEST S24", 21/7 18:00,
+  Matwork 16€): debit −16 a ledger, residuo tranche 100→84 (quadratura ok),
+  conferma arrivata con riepilogo completo.
+- Reset password → email via SMTP custom arrivata a Gmail. Tutte e 3 le email
+  verificate da Mattia nella sua inbox Gmail (l'indirizzo account Resend).
+
+### Scoperte / decisioni di sessione
+- **Sul dev `enable_confirmations` è OFF**: il signup auto-conferma e apre la
+  sessione (niente email di conferma). Il copy del success di registrati
+  ("controlla la tua email per confermare") è quindi impreciso sul dev.
+  Verificare il setting su PROD nel rito di agosto e allineare il copy.
+- **Sandbox Resend = solo email dell'account**: per clienti vere serve dominio
+  verificato (decisione Giorgia, prerequisito lancio). Il test onboarding
+  istruttrice (backlog S22) resta bloccato da questo: serve un indirizzo
+  consegnabile per l'istruttrice.
+- **Rete**: oggi Supabase dev era raggiungibile senza hotspot dichiarato.
+  La regola hotspot resta (non è chiaro se la rete fosse già hotspot o se il
+  blocco TIM sia intermittente): verificare sempre con un curl prima di
+  assumere il blocco.
+- Utente di test client su dev con l'email Gmail di Mattia (identificarlo a
+  runtime per email, credenziali note a Mattia / resettabili via admin API).
+  Restano a DB: tranche di test (residuo 84€) e lezione "TEST S24" prenotata.
+
+### GATE produzione (rito di agosto, insieme a pg_cron prod + migration repair + chiavi)
+1. `RESEND_API_KEY` (+ eventuale `EMAIL_FROM`, `EMAIL_ASSETS_URL`) nelle env
+   Vercel — oggi in prod le email vengono saltate in silenzio.
+2. SMTP custom sul progetto PROD (stessi valori del dev).
+3. Dominio verificato su Resend prima del lancio (→ aggiornare `EMAIL_FROM`).
