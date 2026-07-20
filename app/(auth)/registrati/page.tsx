@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Logo } from '@/app/Logo'
 import { createClient } from '@/lib/supabase/client'
+import { sendWelcomeEmail } from './actions'
 
 export default function RegistratiPage() {
   const [success, setSuccess] = useState(false)
@@ -47,6 +48,8 @@ export default function RegistratiPage() {
           last_name: cognome,
         })
       }
+      // Fire-and-forget: il benvenuto non deve ritardare né bloccare la UI.
+      void sendWelcomeEmail(formData.get('email') as string, nome)
       setSuccess(true)
     }
   }

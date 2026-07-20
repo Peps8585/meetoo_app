@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import { sendBookingConfirmationEmail } from './actions'
 
 type Schedule = {
   id: string
@@ -177,6 +178,9 @@ export default function PalinsestoPage() {
       toggleBusy(scheduleId, false)
       return
     }
+
+    // Fire-and-forget: la conferma email non deve ritardare né bloccare la UI.
+    void sendBookingConfirmationEmail(scheduleId)
 
     await loadSchedules(true)
     toggleBusy(scheduleId, false)
