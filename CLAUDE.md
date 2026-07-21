@@ -40,8 +40,8 @@
 
 ## Stato attuale (aggiornato: 21 luglio 2026 — S25 polish UI pre-lancio)
 
-**Ultimo chiuso:** S25 — micro-sessione di polish UI pre-lancio (i titoli originali di S25 erano tutti bloccati su Giorgia/agosto, vedi sotto). Due fix validati E2E in browser reale sul dev: (1) bottone "Esci" per l'istruttrice su `/agenda` (prima nessuna via d'uscita se non passando da `/dashboard`); (2) `scrollIntoView` sul form pacchetti (risk register S9.1). Commit codice `a6aa0c2`. **Dominio deciso: `meetoopilates.com`** (comunicato da Mattia) → sblocca il "quale dominio", resta la verifica DNS su Resend. Dettagli nel log "S25" in fondo.
-**Prossimo kickoff:** S26 / rito di agosto — gli item di S24 restano aperti perché gated: (a) verifica dominio `meetoopilates.com` su Resend (2 record DNS, azione dashboard di Mattia — brief nel log S25); (b) test onboarding istruttrice col flusso reale (sbloccato solo dopo il dominio verificato); (c) rito di agosto: `RESEND_API_KEY` + `EMAIL_FROM` nelle env Vercel, SMTP custom su PROD, pg_cron su PROD, `migration repair`, rigenerazione chiavi. Altri polish autonomi ancora a backlog: 12 issue a11y sui form (S9.4), pulizia `public/` default create-next-app (S14), role-gating `/profilo` (S21), raggruppamento movimenti per `booking_id` (S21).
+**Ultimo chiuso:** S25 — micro-sessione di polish UI pre-lancio (i titoli originali di S25 erano tutti bloccati su Giorgia/agosto, vedi sotto). Due fix validati E2E in browser reale sul dev: (1) bottone "Esci" per l'istruttrice su `/agenda` (prima nessuna via d'uscita se non passando da `/dashboard`); (2) `scrollIntoView` sul form pacchetti (risk register S9.1). Commit codice `a6aa0c2`. **Dominio `send.meetoopilates.com` VERIFICATO su Resend** (DKIM+SPF+MX tutti Verified, region Ireland eu-west-1) — fatto oggi 21/7 aggiungendo i 3 record nel DNS Aruba. Dettagli nel log "S25" in fondo.
+**Prossimo kickoff:** S26 / rito di agosto — con il dominio verificato, restano gated su PROD/agosto: (a) ~~verifica dominio su Resend~~ **FATTA**; (b) test onboarding istruttrice col flusso reale ora **SBLOCCATO** (c'è un indirizzo consegnabile) — si può fare appena si vuole; (c) rito di agosto: `RESEND_API_KEY` + `EMAIL_FROM=…@send.meetoopilates.com` nelle env Vercel, SMTP custom su PROD, pg_cron su PROD, `migration repair`, rigenerazione chiavi. Altri polish autonomi ancora a backlog: 12 issue a11y sui form (S9.4), pulizia `public/` default create-next-app (S14), role-gating `/profilo` (S21), raggruppamento movimenti per `booking_id` (S21).
 
 _Nota: la sezione "Fatto / Da fare" qui sotto è storica (sessione 4, migrazione API key Supabase) — conservata, non più lo stato corrente._
 
@@ -888,21 +888,30 @@ sul dev. S25 è stata quindi dirottata su una **micro-sessione di polish** coere
    → per rendere il bug riproducibile ho seminato 12 pacchetti dummy "ZZ TEST scroll"
    via REST admin (service_role dev), validato, poi **cancellati tutti** (0 residui).
 
-### Dominio DECISO — `meetoopilates.com`
-Sblocca il "quale dominio" del gate email. Resta la **verifica su Resend** (azione
-dashboard di Mattia, non codice). Brief dei passi:
-1. Resend → **Domains → Add Domain** → `meetoopilates.com` (o sottodominio, es.
-   `mail.meetoopilates.com`, se si vuole isolare la posta transazionale dal dominio radice).
-2. Resend genera i record da pubblicare nel **DNS del dominio** (dove è gestito il
-   DNS di meetoopilates.com): tipicamente **SPF** (TXT), **DKIM** (CNAME/TXT) e
-   opzionale **DMARC** (TXT). Copiarli 1:1.
-3. Aggiungerli nel pannello DNS del registrar/provider → attendere propagazione →
-   **Verify** su Resend (stato "Verified").
-4. Solo allora `EMAIL_FROM` può diventare `noreply@meetoopilates.com` (o simile) e
-   le email arrivano a QUALSIASI destinatario (fine del limite sandbox = solo email
-   dell'account Resend). Aggiornare `EMAIL_FROM` in env Vercel al cutover.
-Finché non è verificato, il test onboarding istruttrice col flusso reale (backlog S22)
-resta bloccato: serve un indirizzo consegnabile per l'istruttrice.
+### Dominio VERIFICATO su Resend — `send.meetoopilates.com` (fatto 21/7, guidando Mattia)
+Il gate email "quale dominio + verifica" è **CHIUSO**. Dominio di invio scelto:
+**sottodominio** `send.meetoopilates.com` (non il root), region **Ireland (eu-west-1)**.
+Scelta del sottodominio deliberata: il root `meetoopilates.com` ha già SPF Aruba+Brevo
+(`v=spf1 include:_spf.aruba.it ~all` + verifica Brevo) e le caselle email dello studio
+→ un sottodominio isola la posta transazionale e non tocca nulla di esistente.
+
+**DNS gestito da Aruba** (NS technorail/arubadns; credenziali area clienti note a Mattia,
+non riportate qui — repo pubblico). 3 record aggiunti in **Pannello di Controllo → Gestione DNS**:
+- **DKIM** (TXT) — scheda "Record": host `resend._domainkey.send` (Aruba appende `.meetoopilates.com` da sé), valore `p=…QIDAQAB`.
+- **SPF** (TXT) — scheda "Record": host `send.send`, valore `v=spf1 include:amazonses.com ~all`.
+- **MX** — scheda "Record MX" → **"Gestione avanzata" → "Aggiungi su sottodominio"** (NON "Sostituisci record", che cancellerebbe l'MX Aruba esistente): host `send.send`, valore `feedback-smtp.eu-west-1.amazonses.com`, priorità 10.
+
+**GOTCHA imparati (per la prossima volta / altri clienti Aruba):**
+- Aruba mostra il nome host relativo al root e appende `.meetoopilates.com` in un campo grigio a parte → NON includere il dominio nel "Nome host" (doppione).
+- L'MX di Resend su sottodominio si aggiunge SOLO via "Gestione avanzata → Aggiungi su sottodominio"; il pulsante principale è "Sostituisci record" ed è pericoloso.
+- **Editare a mano il valore DKIM (218 char base64) è una trappola**: due volte l'edit manuale ha inserito caratteri spuri (`ecco`, poi `fa`) → Resend "Invalid DKIM". Regola: **svuotare il campo e incollare col pulsante copia di Resend, senza digitare**.
+- Aruba pubblica i record con **~5 min di ritardo** e i suoi 4 NS authoritative si allineano tra loro con sfasamento; i resolver pubblici cachano il vecchio valore per il TTL (1h). Verificare col DNS (`dig TXT resend._domainkey.send.meetoopilates.com @8.8.8.8`) PRIMA di cliccare "restart verification" su Resend, altrimenti fallisce ripescando la cache vecchia.
+
+Esito: DKIM+SPF+MX tutti **Verified**, banner "Domain verified: ready to send emails".
+
+**Resta per il rito di agosto (PROD):** `EMAIL_FROM=…@send.meetoopilates.com` + SMTP custom
+Auth su PROD (stessi valori del dev, host smtp.resend.com:465). Il test onboarding istruttrice
+col flusso reale (backlog S22) è ora **SBLOCCATO** (c'è un indirizzo consegnabile).
 
 ### Backlog invariato (polish autonomi ancora aperti, nessuno blocca il lancio)
 12 issue a11y sui form (S9.4), pulizia `public/` default create-next-app (S14),
