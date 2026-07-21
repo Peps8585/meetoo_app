@@ -38,10 +38,10 @@
 - `@supabase/ssr`: 0.10.3 (peer dep: supabase-js ^2.105.3 — compatibile)
 - `next`: 16.2.6
 
-## Stato attuale (aggiornato: 20 luglio 2026 — S24 email Resend)
+## Stato attuale (aggiornato: 21 luglio 2026 — S25 polish UI pre-lancio)
 
-**Ultimo chiuso:** S24 — email con Resend COMPLETA su dev: transazionali (benvenuto + conferma prenotazione) costruite e verificate E2E, SMTP custom di Auth configurato su MeeToo_Dev e provato (reset password ARRIVA a Gmail, mittente "Mee Too" — il problema deliverability di S23 è risolto). Logo ufficiale nelle email (PNG @2x da `scripts/generate-email-logo.sh`). Dettagli nel log "S24" in fondo.
-**Prossimo kickoff:** S25 — (a) decisione DOMINIO con Giorgia: il sandbox `onboarding@resend.dev` consegna SOLO all'email dell'account Resend → per le clienti vere serve dominio verificato su Resend (2 record DNS), prerequisito del lancio; (b) test onboarding istruttrice col flusso reale (bloccato dal sandbox: serve indirizzo consegnabile); (c) nel rito di agosto: `RESEND_API_KEY` + `EMAIL_FROM` nelle env Vercel e SMTP custom sul progetto PROD (oggi le email in produzione vengono SALTATE in silenzio, by design del wrapper best-effort).
+**Ultimo chiuso:** S25 — micro-sessione di polish UI pre-lancio (i titoli originali di S25 erano tutti bloccati su Giorgia/agosto, vedi sotto). Due fix validati E2E in browser reale sul dev: (1) bottone "Esci" per l'istruttrice su `/agenda` (prima nessuna via d'uscita se non passando da `/dashboard`); (2) `scrollIntoView` sul form pacchetti (risk register S9.1). Commit codice `a6aa0c2`. **Dominio deciso: `meetoopilates.com`** (comunicato da Mattia) → sblocca il "quale dominio", resta la verifica DNS su Resend. Dettagli nel log "S25" in fondo.
+**Prossimo kickoff:** S26 / rito di agosto — gli item di S24 restano aperti perché gated: (a) verifica dominio `meetoopilates.com` su Resend (2 record DNS, azione dashboard di Mattia — brief nel log S25); (b) test onboarding istruttrice col flusso reale (sbloccato solo dopo il dominio verificato); (c) rito di agosto: `RESEND_API_KEY` + `EMAIL_FROM` nelle env Vercel, SMTP custom su PROD, pg_cron su PROD, `migration repair`, rigenerazione chiavi. Altri polish autonomi ancora a backlog: 12 issue a11y sui form (S9.4), pulizia `public/` default create-next-app (S14), role-gating `/profilo` (S21), raggruppamento movimenti per `booking_id` (S21).
 
 _Nota: la sezione "Fatto / Da fare" qui sotto è storica (sessione 4, migrazione API key Supabase) — conservata, non più lo stato corrente._
 
@@ -866,3 +866,45 @@ Tre commit su main: `b66eb58` (transazionali), `72f87dc` (logo email), + docs.
    Vercel — oggi in prod le email vengono saltate in silenzio.
 2. SMTP custom sul progetto PROD (stessi valori del dev).
 3. Dominio verificato su Resend prima del lancio (→ aggiornare `EMAIL_FROM`).
+
+## S25 — 21 luglio 2026 · Polish UI pre-lancio (logout istruttrice + scroll form pacchetti)
+
+Un commit codice su main: `a6aa0c2`. I tre titoli che S24 lasciava per S25
+(dominio, onboarding istruttrice, SMTP prod) erano **tutti gated** — su decisione
+Giorgia, su dominio verificato, o sul rito di agosto: nessuno era lavoro autonomo
+sul dev. S25 è stata quindi dirottata su una **micro-sessione di polish** coerente,
+100% autonoma sul dev, che chiude due buchi reali di lancio a backlog.
+
+### Fatto (entrambi validati E2E in browser reale sul dev, da Mattia)
+1. **Logout istruttrice su `/agenda`** (backlog S23). `/agenda` è un client
+   component → logout client-side (`supabase.auth.signOut()` + `router.replace('/login')`),
+   NON la server action del dashboard. Header: admin tiene "← Home", istruttrice
+   ha "Esci" (stesso stile pill), altri ruoli niente. Prima l'istruttrice non
+   aveva alcuna via d'uscita se non passando da `/dashboard` (che non ha gate di ruolo).
+2. **`scrollIntoView` sul form pacchetti** (risk register S9.1). Il form si apre
+   in testa alla lista: `useEffect([showForm])` → `formRef.scrollIntoView({behavior:'smooth',block:'start'})`
+   + `scroll-mt-6`. Da una card in fondo, "Modifica" non sembra più inerte.
+   **Nota dev:** il dev ha **1 solo pacchetto** (i 14 stavano su prod, backfill S8)
+   → per rendere il bug riproducibile ho seminato 12 pacchetti dummy "ZZ TEST scroll"
+   via REST admin (service_role dev), validato, poi **cancellati tutti** (0 residui).
+
+### Dominio DECISO — `meetoopilates.com`
+Sblocca il "quale dominio" del gate email. Resta la **verifica su Resend** (azione
+dashboard di Mattia, non codice). Brief dei passi:
+1. Resend → **Domains → Add Domain** → `meetoopilates.com` (o sottodominio, es.
+   `mail.meetoopilates.com`, se si vuole isolare la posta transazionale dal dominio radice).
+2. Resend genera i record da pubblicare nel **DNS del dominio** (dove è gestito il
+   DNS di meetoopilates.com): tipicamente **SPF** (TXT), **DKIM** (CNAME/TXT) e
+   opzionale **DMARC** (TXT). Copiarli 1:1.
+3. Aggiungerli nel pannello DNS del registrar/provider → attendere propagazione →
+   **Verify** su Resend (stato "Verified").
+4. Solo allora `EMAIL_FROM` può diventare `noreply@meetoopilates.com` (o simile) e
+   le email arrivano a QUALSIASI destinatario (fine del limite sandbox = solo email
+   dell'account Resend). Aggiornare `EMAIL_FROM` in env Vercel al cutover.
+Finché non è verificato, il test onboarding istruttrice col flusso reale (backlog S22)
+resta bloccato: serve un indirizzo consegnabile per l'istruttrice.
+
+### Backlog invariato (polish autonomi ancora aperti, nessuno blocca il lancio)
+12 issue a11y sui form (S9.4), pulizia `public/` default create-next-app (S14),
+role-gating esplicito `/profilo` (S21), raggruppamento movimenti per `booking_id` (S21),
+render status `attended`/`no_show` in agenda (S22), service worker / PWA reale (S14).
