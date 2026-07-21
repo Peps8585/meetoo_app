@@ -55,6 +55,7 @@ export default function PacchettiManager({ studioId }: { studioId: string }) {
   const [saving, setSaving] = useState(false)
   const [feedback, setFeedback] = useState<Feedback | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const formRef = useRef<HTMLDivElement | null>(null)
 
   function showFeedback(message: string, type: Feedback['type']) {
     if (timerRef.current) clearTimeout(timerRef.current)
@@ -79,6 +80,14 @@ export default function PacchettiManager({ studioId }: { studioId: string }) {
     return () => { if (timerRef.current) clearTimeout(timerRef.current) }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Il form si apre in testa alla lista: quando compare, portalo in vista
+  // (da una card in fondo alla pagina "Modifica" sembrerebbe non fare nulla).
+  useEffect(() => {
+    if (showForm) {
+      formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [showForm])
 
   function openCreate() {
     setEditingId(null)
@@ -216,7 +225,10 @@ export default function PacchettiManager({ studioId }: { studioId: string }) {
 
       {/* ── Form (create / edit) ── */}
       {showForm && (
-        <div className="mb-8 bg-white/60 backdrop-blur-sm border border-white/80 rounded-2xl px-6 sm:px-8 py-8 shadow-sm">
+        <div
+          ref={formRef}
+          className="mb-8 bg-white/60 backdrop-blur-sm border border-white/80 rounded-2xl px-6 sm:px-8 py-8 shadow-sm scroll-mt-6"
+        >
           <h2 className="font-inter font-extrabold uppercase tracking-widest text-sm text-meetoo-accent-dark mb-7">
             {editingId ? 'Modifica Pacchetto' : 'Nuovo Pacchetto'}
           </h2>

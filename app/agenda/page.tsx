@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 
@@ -67,6 +68,7 @@ const DAYS_IT = [
 ]
 
 export default function AgendaPage() {
+  const router = useRouter()
   const [schedules, setSchedules] = useState<Schedule[]>([])
   const [day, setDay] = useState<Date>(() => startOfDay(new Date()))
   const [loading, setLoading] = useState(true)
@@ -139,6 +141,12 @@ export default function AgendaPage() {
     setLoading(false)
   }
 
+  async function logout() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.replace('/login')
+  }
+
   const isToday = day.toDateString() === new Date().toDateString()
   const dayLabel = `${DAYS_IT[day.getDay()]} ${day.toLocaleDateString('it-IT', {
     day: 'numeric',
@@ -159,14 +167,21 @@ export default function AgendaPage() {
               Agenda
             </h1>
           </div>
-          {role === 'admin' && (
+          {role === 'admin' ? (
             <Link
               href="/admin/dashboard"
               className="border border-meetoo-accent-dark/30 text-meetoo-accent-dark font-inter font-normal uppercase tracking-widest text-xs px-6 py-3 rounded-full transition-colors hover:bg-meetoo-accent-dark hover:text-meetoo-bg-light"
             >
               ← Home
             </Link>
-          )}
+          ) : role === 'instructor' ? (
+            <button
+              onClick={logout}
+              className="border border-meetoo-accent-dark/30 text-meetoo-accent-dark font-inter font-normal uppercase tracking-widest text-xs px-6 py-3 rounded-full transition-colors hover:bg-meetoo-accent-dark hover:text-meetoo-bg-light"
+            >
+              Esci
+            </button>
+          ) : null}
         </div>
 
         {/* Error */}
