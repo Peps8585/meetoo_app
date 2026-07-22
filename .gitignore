@@ -40,3 +40,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .DS_Store
+
+# Impostazioni locali Claude Code (permessi/launch locali, non vanno sul repo pubblico)
+.claude/
