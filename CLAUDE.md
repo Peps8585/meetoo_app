@@ -38,10 +38,10 @@
 - `@supabase/ssr`: 0.10.3 (peer dep: supabase-js ^2.105.3 — compatibile)
 - `next`: 16.2.6
 
-## Stato attuale (aggiornato: 21 luglio 2026 — S25 polish UI pre-lancio)
+## Stato attuale (aggiornato: 22 luglio 2026 — S26 onboarding istruttrice E2E)
 
-**Ultimo chiuso:** S25 — micro-sessione di polish UI pre-lancio (i titoli originali di S25 erano tutti bloccati su Giorgia/agosto, vedi sotto). Due fix validati E2E in browser reale sul dev: (1) bottone "Esci" per l'istruttrice su `/agenda` (prima nessuna via d'uscita se non passando da `/dashboard`); (2) `scrollIntoView` sul form pacchetti (risk register S9.1). Commit codice `a6aa0c2`. **Dominio `send.meetoopilates.com` VERIFICATO su Resend** (DKIM+SPF+MX tutti Verified, region Ireland eu-west-1) — fatto oggi 21/7 aggiungendo i 3 record nel DNS Aruba. Dettagli nel log "S25" in fondo.
-**Prossimo kickoff:** S26 / rito di agosto — con il dominio verificato, restano gated su PROD/agosto: (a) ~~verifica dominio su Resend~~ **FATTA**; (b) test onboarding istruttrice col flusso reale ora **SBLOCCATO** (c'è un indirizzo consegnabile) — si può fare appena si vuole; (c) rito di agosto: `RESEND_API_KEY` + `EMAIL_FROM=…@send.meetoopilates.com` nelle env Vercel, SMTP custom su PROD, pg_cron su PROD, `migration repair`, rigenerazione chiavi. Altri polish autonomi ancora a backlog: 12 issue a11y sui form (S9.4), pulizia `public/` default create-next-app (S14), role-gating `/profilo` (S21), raggruppamento movimenti per `booking_id` (S21).
+**Ultimo chiuso:** S26 — **test onboarding istruttrice col flusso reale CHIUSO sul dev** (backlog S22): account creato come dal CRUD admin (password temporanea sconosciuta) → `/password-dimenticata` → email da `noreply@send.meetoopilates.com` arrivata in INBOX Gmail → link → nuova password → redirect automatico `/agenda` → logout → login pulito con le nuove credenziali. Per farlo: SMTP custom del dev portato sul dominio verificato via `supabase config push` (prima il sender era ancora `onboarding@resend.dev` → "Error sending recovery email" verso indirizzi terzi), `EMAIL_FROM` aggiunto al `.env.local` dev, sezione `[auth.email.smtp]` versionata in config.toml (key via `env(RESEND_API_KEY)`). Dettagli e gotcha nel log "S26" in fondo.
+**Prossimo kickoff:** S27 / rito di agosto — (a) **PENDENTE PICCOLO**: un `supabase config push` sul dev per riportare il rate limit `email_sent` da 2/h (effetto collaterale del push S26) a 30/h — config.toml già corretto, serve solo rilanciare il comando con approvazione; (b) polish autonomi a backlog: **template email Auth di Supabase sono i default inglesi ("Reset your password") → brandizzarli/tradurli** (nuovo, S26), 12 issue a11y sui form (S9.4), pulizia `public/` (S14), role-gating `/profilo` (S21), raggruppamento movimenti per `booking_id` (S21), status `attended`/`no_show` in agenda (S22); (c) rito di agosto invariato: `RESEND_API_KEY` + `EMAIL_FROM=…@send.meetoopilates.com` + `EMAIL_ASSETS_URL` nelle env Vercel, SMTP custom su PROD, pg_cron su PROD, `migration repair`, rigenerazione chiavi.
 
 _Nota: la sezione "Fatto / Da fare" qui sotto è storica (sessione 4, migrazione API key Supabase) — conservata, non più lo stato corrente._
 
@@ -917,3 +917,72 @@ col flusso reale (backlog S22) è ora **SBLOCCATO** (c'è un indirizzo consegnab
 12 issue a11y sui form (S9.4), pulizia `public/` default create-next-app (S14),
 role-gating esplicito `/profilo` (S21), raggruppamento movimenti per `booking_id` (S21),
 render status `attended`/`no_show` in agenda (S22), service worker / PWA reale (S14).
+
+## S26 — 22 luglio 2026 · Onboarding istruttrice E2E col flusso reale (CHIUSO su dev)
+
+Backlog S22 chiuso: il giro completo "l'admin crea l'account, l'istruttrice entra
+da sola via reset password" funziona end-to-end con email reali.
+
+### Flusso validato (tutto in browser reale sul dev)
+1. Account istruttrice creato replicando ESATTAMENTE la server action del CRUD
+   admin (`app/admin/istruttori/actions.ts`): `createUser` con password
+   temporanea casuale + `email_confirm`, upsert `profiles` con `role='instructor'`
+   e `studio_id` del tenant-radice. Utente: **"Sara TEST S26"**
+   (`lumadigital2026+onboarding-s26@gmail.com`) — plus-address della casella
+   agenzia perché l'MCP Gmail di Code è collegato a QUELLA casella (non alla
+   Gmail personale di Mattia): così Code legge da solo l'email di reset.
+2. `/password-dimenticata` → success state; email **arrivata in INBOX** (non spam)
+   da `noreply@send.meetoopilates.com`.
+3. Link → verify → callback PKCE → `/reimposta-password` ("Nuova password") →
+   salvataggio → **redirect automatico `/agenda`** (routing `destinationForUser`
+   per ruolo instructor corretto).
+4. "Esci" (fix S25) → `/login` → login con le credenziali nuove → di nuovo
+   `/agenda`. Account di test LASCIATO sul dev (utile per futuri test email:
+   inbox leggibile da Code; credenziali resettabili via admin API).
+
+### Cambi di configurazione (il vero lavoro della sessione)
+- **SMTP custom del dev portato sul dominio verificato**: il sender era ancora
+  `onboarding@resend.dev` (sandbox → consegna SOLO all'email dell'account
+  Resend) e il reset verso terzi falliva con "Error sending recovery email".
+  Fix via `supabase config push --project-ref szxnyjosyiyqkgeqpzxh` (approvato
+  da Mattia): sezione `[auth.email.smtp]` ora VERSIONATA in config.toml —
+  host smtp.resend.com:465, user `resend`, pass `env(RESEND_API_KEY)` (mai nel
+  file), `admin_email = noreply@send.meetoopilates.com`. Il push ha applicato
+  anche l'allowlist wildcard di S23 rimasta "non applicata al remoto".
+- **`EMAIL_FROM` aggiunto al `.env.local` dev** (`Mee Too
+  <noreply@send.meetoopilates.com>`): anche le transazionali dell'app escono
+  dal dominio verificato. Invio dal dominio verso indirizzo arbitrario provato
+  a monte con la Resend API (`last_event: delivered`).
+- Config.toml allineato al remoto anche su `storage.vector` (`false`: `true`
+  richiede piano a pagamento, il push falliva con 402) e `email_sent = 30`.
+
+### PENDENTE (piccolo) — rate limit email del dev
+Il primo push ha portato il rate limit `email_sent` del dev da 30/h a **2/h**
+(default locale del template config.toml, non nostro). Config.toml ora dice 30,
+ma il push di ripristino è stato bloccato dal permission gate di Code e va
+rilanciato con approvazione esplicita: `supabase config push --project-ref
+szxnyjosyiyqkgeqpzxh` con `RESEND_API_KEY` esportata nell'ambiente. Finché non
+si fa, il dev può inviare solo 2 email Auth l'ora (i test E2E di S26 ci sono
+passati per un pelo: 2 richieste nella stessa ora).
+
+### GOTCHA imparati
+- **I link di verify sono monouso e i prefetch li bruciano**: il primo tentativo
+  di aprire il link con la navigazione diretta del browser-pane è stato negato
+  dal gate per-origin ma ha comunque colpito il server → token consumato →
+  "link non valido o scaduto" al secondo giro. Regola per i test: aprire il link
+  SOLO con navigazione iniziata dalla pagina (`window.location.href`), una volta
+  sola. Rilevanza reale: anche gli scanner antivirus/link-preview dei client di
+  posta possono consumare il link — se una cliente segnala "link scaduto" al
+  primo click, sospettare il prefetch del suo client email.
+- Pattern S23 confermato: submit dei form via `requestSubmit()` nei test
+  browser (il click semplice va "a vuoto" al primo colpo).
+- I permission gate di Code (auto mode) bloccano modifiche a stato condiviso
+  Supabase non nominate esplicitamente da Mattia: enumerare utenti, modificare
+  record esistenti, config push. Workflow: chiedere l'ok nominando l'azione
+  esatta, oppure creare record NUOVI di sessione (come fatto per Sara).
+
+### Backlog aggiunto
+- **Template email di Supabase Auth = default inglesi** ("Reset your password"):
+  brandizzarli/tradurli in italiano (dashboard o config.toml
+  `[auth.email.template.*]` + content_path versionati). Le transazionali
+  dell'app invece sono già brandizzate (S24).
