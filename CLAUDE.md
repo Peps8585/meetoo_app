@@ -41,7 +41,7 @@
 ## Stato attuale (aggiornato: 22 luglio 2026 — S26 onboarding istruttrice E2E)
 
 **Ultimo chiuso:** S26 — **test onboarding istruttrice col flusso reale CHIUSO sul dev** (backlog S22): account creato come dal CRUD admin (password temporanea sconosciuta) → `/password-dimenticata` → email da `noreply@send.meetoopilates.com` arrivata in INBOX Gmail → link → nuova password → redirect automatico `/agenda` → logout → login pulito con le nuove credenziali. Per farlo: SMTP custom del dev portato sul dominio verificato via `supabase config push` (prima il sender era ancora `onboarding@resend.dev` → "Error sending recovery email" verso indirizzi terzi), `EMAIL_FROM` aggiunto al `.env.local` dev, sezione `[auth.email.smtp]` versionata in config.toml (key via `env(RESEND_API_KEY)`). Dettagli e gotcha nel log "S26" in fondo.
-**Prossimo kickoff:** S27 / rito di agosto — (a) **PENDENTE PICCOLO**: un `supabase config push` sul dev per riportare il rate limit `email_sent` da 2/h (effetto collaterale del push S26) a 30/h — config.toml già corretto, serve solo rilanciare il comando con approvazione; (b) polish autonomi a backlog: **template email Auth di Supabase sono i default inglesi ("Reset your password") → brandizzarli/tradurli** (nuovo, S26), 12 issue a11y sui form (S9.4), pulizia `public/` (S14), role-gating `/profilo` (S21), raggruppamento movimenti per `booking_id` (S21), status `attended`/`no_show` in agenda (S22); (c) rito di agosto invariato: `RESEND_API_KEY` + `EMAIL_FROM=…@send.meetoopilates.com` + `EMAIL_ASSETS_URL` nelle env Vercel, SMTP custom su PROD, pg_cron su PROD, `migration repair`, rigenerazione chiavi.
+**Prossimo kickoff:** S27 / rito di agosto — (a) ~~ripristino rate limit `email_sent` sul dev~~ **FATTO** (22/7, secondo push approvato: 2/h → 30/h, unico diff; config remoto dev ora = config.toml su tutta la linea); (b) polish autonomi a backlog — **candidato S27: template email Auth di Supabase sono i default inglesi ("Reset your password") → brandizzarli/tradurli** (nuovo, S26), 12 issue a11y sui form (S9.4), pulizia `public/` (S14), role-gating `/profilo` (S21), raggruppamento movimenti per `booking_id` (S21), status `attended`/`no_show` in agenda (S22); (c) rito di agosto invariato: `RESEND_API_KEY` + `EMAIL_FROM=…@send.meetoopilates.com` + `EMAIL_ASSETS_URL` nelle env Vercel, SMTP custom su PROD, pg_cron su PROD, `migration repair`, rigenerazione chiavi.
 
 _Nota: la sezione "Fatto / Da fare" qui sotto è storica (sessione 4, migrazione API key Supabase) — conservata, non più lo stato corrente._
 
@@ -956,14 +956,13 @@ da sola via reset password" funziona end-to-end con email reali.
 - Config.toml allineato al remoto anche su `storage.vector` (`false`: `true`
   richiede piano a pagamento, il push falliva con 402) e `email_sent = 30`.
 
-### PENDENTE (piccolo) — rate limit email del dev
-Il primo push ha portato il rate limit `email_sent` del dev da 30/h a **2/h**
-(default locale del template config.toml, non nostro). Config.toml ora dice 30,
-ma il push di ripristino è stato bloccato dal permission gate di Code e va
-rilanciato con approvazione esplicita: `supabase config push --project-ref
-szxnyjosyiyqkgeqpzxh` con `RESEND_API_KEY` esportata nell'ambiente. Finché non
-si fa, il dev può inviare solo 2 email Auth l'ora (i test E2E di S26 ci sono
-passati per un pelo: 2 richieste nella stessa ora).
+### Rate limit email del dev — RIPRISTINATO (22/7, chiusura S26)
+Il primo push aveva portato il rate limit `email_sent` del dev da 30/h a **2/h**
+(default locale del template config.toml, non nostro; i test E2E ci sono passati
+per un pelo: 2 richieste nella stessa ora). Secondo push approvato da Mattia a
+fine sessione: unico diff `email_sent = 2 → 30`, Auth "updated", Storage già
+allineato. Il config remoto del dev ora coincide con config.toml su tutta la
+linea (SMTP, allowlist, rate limit, vector off).
 
 ### GOTCHA imparati
 - **I link di verify sono monouso e i prefetch li bruciano**: il primo tentativo
