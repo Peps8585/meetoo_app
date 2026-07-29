@@ -98,6 +98,13 @@ export default function PalinsestoPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [weekStart, studioId, userId])
 
+  // L'avviso è un toast fisso in basso: sparisce da solo dopo qualche secondo.
+  useEffect(() => {
+    if (!feedback) return
+    const t = setTimeout(() => setFeedback(null), 5000)
+    return () => clearTimeout(t)
+  }, [feedback])
+
   async function loadSchedules(silent = false) {
     if (!studioId || !userId) return
     if (!silent) setLoading(true)
@@ -251,16 +258,27 @@ export default function PalinsestoPage() {
           </Link>
         </div>
 
-        {/* Feedback */}
+        {/* Feedback — toast fisso in basso allo schermo: visibile ovunque sia lo
+            scroll, così l'avviso compare dov'è il dito e non fuori campo (mobile). */}
         {feedback && (
-          <div className={`mb-6 rounded-xl px-4 py-3 font-inter text-sm border ${
-            feedback.type === 'error'
-              ? 'bg-red-50 border-red-200 text-red-700'
-              : feedback.type === 'success'
-              ? 'bg-green-50 border-green-200 text-green-700'
-              : 'bg-amber-50 border-amber-200 text-amber-700'
-          }`}>
-            {feedback.message}
+          <div
+            role="status"
+            aria-live="polite"
+            className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-[calc(1rem_+_env(safe-area-inset-bottom))] pointer-events-none"
+          >
+            <button
+              type="button"
+              onClick={() => setFeedback(null)}
+              className={`pointer-events-auto w-full max-w-md text-left rounded-xl px-4 py-3 font-inter text-sm border shadow-lg ${
+                feedback.type === 'error'
+                  ? 'bg-red-50 border-red-200 text-red-700'
+                  : feedback.type === 'success'
+                  ? 'bg-green-50 border-green-200 text-green-700'
+                  : 'bg-amber-50 border-amber-200 text-amber-700'
+              }`}
+            >
+              {feedback.message}
+            </button>
           </div>
         )}
 
