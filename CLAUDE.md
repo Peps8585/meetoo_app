@@ -38,10 +38,18 @@
 - `@supabase/ssr`: 0.10.3 (peer dep: supabase-js ^2.105.3 — compatibile)
 - `next`: 16.2.6
 
-## Stato attuale (aggiornato: 22 luglio 2026 — S26 onboarding istruttrice E2E)
+## Stato attuale (aggiornato: 9 settembre 2026 — S27 palinsesto in produzione)
 
-**Ultimo chiuso:** S26 — **test onboarding istruttrice col flusso reale CHIUSO sul dev** (backlog S22): account creato come dal CRUD admin (password temporanea sconosciuta) → `/password-dimenticata` → email da `noreply@send.meetoopilates.com` arrivata in INBOX Gmail → link → nuova password → redirect automatico `/agenda` → logout → login pulito con le nuove credenziali. Per farlo: SMTP custom del dev portato sul dominio verificato via `supabase config push` (prima il sender era ancora `onboarding@resend.dev` → "Error sending recovery email" verso indirizzi terzi), `EMAIL_FROM` aggiunto al `.env.local` dev, sezione `[auth.email.smtp]` versionata in config.toml (key via `env(RESEND_API_KEY)`). Dettagli e gotcha nel log "S26" in fondo.
-**Prossimo kickoff:** S27 / rito di agosto — (a) ~~ripristino rate limit `email_sent` sul dev~~ **FATTO** (22/7, secondo push approvato: 2/h → 30/h, unico diff; config remoto dev ora = config.toml su tutta la linea); (b) polish autonomi a backlog — **candidato S27: template email Auth di Supabase sono i default inglesi ("Reset your password") → brandizzarli/tradurli** (nuovo, S26), 12 issue a11y sui form (S9.4), pulizia `public/` (S14), role-gating `/profilo` (S21), raggruppamento movimenti per `booking_id` (S21), status `attended`/`no_show` in agenda (S22); (c) rito di agosto invariato: `RESEND_API_KEY` + `EMAIL_FROM=…@send.meetoopilates.com` + `EMAIL_ASSETS_URL` nelle env Vercel, SMTP custom su PROD, pg_cron su PROD, `migration repair`, rigenerazione chiavi.
+**Ultimo chiuso:** S27 — **palinsesto settembre/dicembre caricato in produzione**: 609 lezioni dal 10/9 al 19/12, generate da `scripts/genera-palinsesto.py` a partire dalla fonte di Giorgia (`dati_palinsesto.py`), la stessa da cui nascono PDF, immagine e pagina del sito. Prima di oggi la produzione aveva **zero lezioni future**: l'app non era usabile da nessuno.
+
+**Attenzione al contesto:** il progetto e' rimasto **fermo dal 29 luglio al 9 settembre**. Il lancio previsto per il 1 settembre non e' avvenuto, lo studio ha riaperto il 7 settembre e continua a lavorare con App Palestre. Il rito di agosto (chiavi, pg_cron su prod, `migration repair`, `studio_id` NOT NULL) non e' mai stato eseguito.
+
+**Prossimo kickoff:** S28 — nell'ordine che conta davvero:
+(a) **email in produzione** (l'ex S27 mai fatta): `RESEND_API_KEY` + `EMAIL_FROM=…@send.meetoopilates.com` + `EMAIL_ASSETS_URL` nelle env Vercel, SMTP custom sul progetto PROD. Finche' e' cosi', chi si registra o chiede la password non riceve nulla: e' questo che tiene chiusa la porta alle clienti, non il palinsesto;
+(b) **istruttrici**: creare i 7 profili (serve un'email per ciascuna, `profiles.id` ha FK su `auth.users`) e poi assegnarle alle lezioni con la tabella lezione→istruttrice che prepara Mattia;
+(c) **migrazione crediti**: ~30 clienti, ~90 lezioni residue, formula gia' decisa (vedi S27), serve l'export da App Palestre;
+(d) rito infrastruttura;
+(e) pulizia Vercel: i due vecchi progetti (`meetoo-app`, `meetoo-app-v1`) sfornano anteprime inutili a ogni PR.
 
 _Nota: la sezione "Fatto / Da fare" qui sotto è storica (sessione 4, migrazione API key Supabase) — conservata, non più lo stato corrente._
 
@@ -985,3 +993,87 @@ linea (SMTP, allowlist, rate limit, vector off).
   brandizzarli/tradurli in italiano (dashboard o config.toml
   `[auth.email.template.*]` + content_path versionati). Le transazionali
   dell'app invece sono già brandizzate (S24).
+
+## S27 — 9 settembre 2026 · Palinsesto settembre/dicembre in produzione
+
+Prima sessione dopo sei settimane di fermo. Include anche le decisioni del
+29 luglio, che erano rimaste fuori dal log perche' quel commit non fu mai fatto.
+
+### Decisioni del 29 luglio recuperate qui
+
+- **Conversione crediti — CHIUSA.** Le lezioni residue diventano euro **al listino
+  di oggi**. I prezzi non sono cambiati da quando quei pacchetti furono venduti,
+  quindi "listino di oggi" e "quanto ha pagato" coincidono: la cliente ritrova
+  esattamente le sue lezioni e lo studio non regala nulla. Il trade-off temuto
+  non esiste. **Scadenza**: dalla data di migrazione riparte la durata originale
+  del pacchetto (un 3 mesi resta 3 mesi, contati dalla migrazione), scelta piu'
+  equa verso chi aveva comprato da poco. Scala: ~30 clienti, ~90 lezioni.
+  Per lo script serve la **durata originale** di ciascun pacchetto dall'export.
+- **Chiusura studio anticipata** (fine luglio → settembre): ha reso ineseguibile
+  la beta "su dati veri con prenotazioni vincolanti" prevista per il 18-24 agosto,
+  perche' a studio chiuso non ci sono lezioni vere.
+- **Account admin per Giorgia** creato in produzione dalla dashboard Supabase
+  (utente + Auto Confirm, poi `role='admin'` via SQL). Login verificato: atterra
+  sul pannello admin. Nota emersa oggi: **esistono due suoi profili**, uno admin e
+  uno instructor, con le due caselle di posta scambiate tra loro. Da chiarire
+  quale sia quella vera prima di assegnarle le lezioni.
+- **Fix avviso prenotazione** (`08be39f`, PR #1): il banner di feedback era
+  in-flow in cima alla pagina e su mobile, con la lista scrollata, l'avviso
+  "credito insufficiente" finiva fuori schermo. Ora e' un toast fisso in basso.
+  Segnalato da un cliente reale, validato in browser sul dev prima del merge.
+
+### REGOLA — avvisi sempre dentro il campo visivo
+
+Ogni messaggio all'utente (errore, conferma, avviso) deve comparire **dove sta
+guardando in quel momento**, mai in un punto della pagina che richieda di
+scorrere per trovarlo. Su mobile questo significa toast ancorato al viewport,
+non elemento in flusso. Nasce dal fix di S27: un avviso che non si vede equivale
+a un'app che non risponde.
+
+### Fatto oggi
+
+- **Ricognizione produzione**: 0 lezioni future, 3 clienti, 2 admin, 2 istruttori,
+  1 sola tranche di credito (migrazione mai partita), 15 pacchetti, 5 classi.
+  Ultimo profilo creato il 29 luglio: nessuno ha toccato l'app in sei settimane.
+- **609 lezioni inserite**, dal 10/9 al 19/12, 43 a settimana su 86 giorni.
+  Si parte dal 10 e non dal 7 perche' i primi giorni erano gia' passati.
+- **Posti per sala** (da Giorgia): Reformer 4, Matwork 7, Yoga 7, Funzionale 7,
+  con l'eccezione del **circuito** del giovedi', che gira a macchine ma con 7
+  postazioni. In produzione: 395 lezioni da 4 posti, 214 da 7.
+- **Chiusure**: solo l'Immacolata, che cade di **martedi'** e porta via 10 lezioni.
+  Ognissanti cade di domenica, giorno gia' senza lezioni. Altre chiusure arriveranno.
+- **Ayuryoga** sotto la classe Yoga a 18€, con la variante in `notes`. Stessa
+  logica per livello base, intermedio, circuito, allenamento.
+- **Fuori dalla generazione**, come da palinsesto: laboratorio esperienziale e
+  workshop di somatica (date ancora da fissare con Carolina) e il funzionale del
+  sabato, che e' mensile. Vanno inseriti a mano quando ci sono le date.
+- **Pilates Mam**: classe esistente a 20€ ma tolta dal palinsesto. Probabile
+  rientro su richiesta, allora andra' riaggiunta.
+
+### GOTCHA — ora solare
+
+Il 25 ottobre 2026 rientra l'ora solare, nel mezzo del periodo. Gli orari sono
+materializzati con `at time zone 'Europe/Rome'`, quindi una lezione delle 18:00
+e' salvata come 16:00 UTC il 22 ottobre e 17:00 UTC il 29: per la cliente restano
+le 18:00 in entrambi i casi. Se si fosse generato in UTC fisso, da novembre tutte
+le lezioni sarebbero slittate di un'ora senza che nessuno se ne accorgesse subito.
+
+### GOTCHA — profili e account
+
+`profiles.id` ha una **foreign key su `auth.users`**: non esistono profili senza
+account di accesso, quindi ogni istruttrice richiede un'email. La pagina
+`/admin/istruttori` pero' legge solo da `profiles` (id, nome, cognome, telefono)
+senza toccare `auth`, quindi non serve alcun join per mostrarli.
+
+### Verifiche fatte in produzione
+
+Conteggi per giorno coincidenti col pattern (lun 8, mar 10, mer 8, gio 10, ven 3,
+sab 4 = 43); 609 righe totali; zero lezioni l'8 dicembre; distribuzione posti
+4/7 pari a 395/214; scarto UTC verificato a cavallo del cambio d'ora.
+
+### Da chiarire
+
+- Le **email delle 7 istruttrici** e i cognomi di Mariagiovanna e Laura.
+- Quale dei due profili di Giorgia tenere.
+- Mattia risulta registrato come `instructor` in produzione, probabile residuo
+  dei test di giugno.
