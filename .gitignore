@@ -43,3 +43,6 @@ next-env.d.ts
 
 # Impostazioni locali Claude Code (permessi/launch locali, non vanno sul repo pubblico)
 .claude/
+
+# Output generato da scripts/genera-palinsesto.py
+_out/
