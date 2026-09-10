@@ -3,13 +3,14 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
-import { createInstructor } from './actions'
+import { createInstructor, setInstructorActive } from './actions'
 
 type Instructor = {
   id: string
   first_name: string | null
   last_name: string | null
   phone: string | null
+  is_active: boolean | null
 }
 
 type FormState = {
@@ -36,6 +37,8 @@ export default function IstruttoriPage() {
   const [instructors, setInstructors] = useState<Instructor[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [avviso, setAvviso] = useState<string | null>(null)
+  const [busyId, setBusyId] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState<FormState>(emptyForm)
@@ -45,8 +48,9 @@ export default function IstruttoriPage() {
     const supabase = createClient()
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, first_name, last_name, phone')
+      .select('id, first_name, last_name, phone, is_active')
       .eq('role', 'instructor')
+      .order('is_active', { ascending: false })
       .order('last_name', { ascending: true })
 
     if (error) setError(error.message)
@@ -124,13 +128,41 @@ export default function IstruttoriPage() {
     setSaving(false)
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm('Eliminare questo istruttore?')) return
+  // Non si cancella nessuno: chi ha tenuto lezioni resta nello storico.
+  // Disattivare toglie dagli elenchi e dalle assegnazioni, la storia resta.
+  async function handleToggleActive(inst: Instructor) {
+    const attivo = inst.is_active !== false
+    const nome = `${inst.first_name ?? ''} ${inst.last_name ?? ''}`.trim() || 'questo istruttore'
+
+    if (
+      attivo &&
+      !confirm(
+        `Disattivare ${nome}?\n\nSparisce dagli elenchi e dalle assegnazioni. ` +
+          `Le lezioni gia\u2019 tenute restano a suo nome.`
+      )
+    )
+      return
+
     setError(null)
-    const supabase = createClient()
-    const { error } = await supabase.from('profiles').delete().eq('id', id)
-    if (error) setError(error.message)
-    else await loadInstructors()
+    setAvviso(null)
+    setBusyId(inst.id)
+    const res = await setInstructorActive(inst.id, !attivo)
+    setBusyId(null)
+
+    if (res.error) {
+      setError(res.error)
+      return
+    }
+    if (!attivo) {
+      setAvviso(`${nome} riattivato.`)
+    } else if (res.lezioniFuture) {
+      setAvviso(
+        `${nome} disattivato. Ha ancora ${res.lezioniFuture} lezioni in programma: vanno riassegnate.`
+      )
+    } else {
+      setAvviso(`${nome} disattivato.`)
+    }
+    await loadInstructors()
   }
 
   return (
@@ -159,6 +191,16 @@ export default function IstruttoriPage() {
       {error && (
         <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 font-inter text-sm">
           {error}
+        </div>
+      )}
+
+      {/* Esito dell'ultima azione: senza, una disattivazione riuscita non si vede */}
+      {avviso && (
+        <div
+          role="status"
+          className="mb-6 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-4 py-3 font-inter text-sm"
+        >
+          {avviso}
         </div>
       )}
 
@@ -263,7 +305,11 @@ export default function IstruttoriPage() {
           {instructors.map((inst) => (
             <div
               key={inst.id}
-              className="bg-white/60 backdrop-blur-sm border border-white/80 rounded-2xl px-6 py-5 flex flex-col md:flex-row md:items-center gap-4 shadow-sm"
+              className={`backdrop-blur-sm border rounded-2xl px-6 py-5 flex flex-col md:flex-row md:items-center gap-4 shadow-sm ${
+                inst.is_active === false
+                  ? 'bg-white/25 border-white/50 opacity-60'
+                  : 'bg-white/60 border-white/80'
+              }`}
             >
               {/* Avatar + info: affiancati su mobile, su md il wrapper sparisce (md:contents) */}
               <div className="flex items-center gap-4 min-w-0 md:contents">
@@ -278,6 +324,11 @@ export default function IstruttoriPage() {
                 <div className="flex-1 min-w-0">
                   <p className="font-inter font-medium text-meetoo-accent-dark md:truncate">
                     {inst.first_name} {inst.last_name}
+                    {inst.is_active === false && (
+                      <span className="ml-2 align-middle font-inter font-normal uppercase tracking-widest text-[9px] text-meetoo-accent-dark/45 border border-meetoo-accent-dark/20 rounded-full px-2 py-0.5">
+                        disattivato
+                      </span>
+                    )}
                   </p>
                   {inst.phone && (
                     <p className="font-inter font-light text-xs text-meetoo-accent-dark/50 md:truncate">
@@ -294,10 +345,15 @@ export default function IstruttoriPage() {
                 </Button>
                 <Button
                   size="sm"
-                  variant="destructive"
-                  onClick={() => handleDelete(inst.id)}
+                  variant={inst.is_active === false ? 'outline' : 'destructive'}
+                  disabled={busyId === inst.id}
+                  onClick={() => handleToggleActive(inst)}
                 >
-                  Elimina
+                  {busyId === inst.id
+                    ? '…'
+                    : inst.is_active === false
+                    ? 'Riattiva'
+                    : 'Disattiva'}
                 </Button>
               </div>
             </div>
