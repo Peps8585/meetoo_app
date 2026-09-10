@@ -38,9 +38,9 @@
 - `@supabase/ssr`: 0.10.3 (peer dep: supabase-js ^2.105.3 — compatibile)
 - `next`: 16.2.6
 
-## Stato attuale (aggiornato: 9 settembre 2026 — S27 palinsesto in produzione)
+## Stato attuale (aggiornato: 10 settembre 2026 — S28 disattivazione istruttori)
 
-**Ultimo chiuso:** S27 — **palinsesto settembre/dicembre caricato in produzione**: 609 lezioni dal 10/9 al 19/12, generate da `scripts/genera-palinsesto.py` a partire dalla fonte di Giorgia (`dati_palinsesto.py`), la stessa da cui nascono PDF, immagine e pagina del sito. Prima di oggi la produzione aveva **zero lezioni future**: l'app non era usabile da nessuno.
+**Ultimo chiuso:** S28 — il pulsante "Elimina" del pannello istruttori non funzionava e non lo diceva: mancava la policy DELETE su `profiles`. Ora si **disattiva** invece di cancellare. Prima, S27 — **palinsesto settembre/dicembre caricato in produzione**: 609 lezioni dal 10/9 al 19/12, generate da `scripts/genera-palinsesto.py` a partire dalla fonte di Giorgia (`dati_palinsesto.py`), la stessa da cui nascono PDF, immagine e pagina del sito. Prima di oggi la produzione aveva **zero lezioni future**: l'app non era usabile da nessuno.
 
 **Attenzione al contesto:** il progetto e' rimasto **fermo dal 29 luglio al 9 settembre**. Il lancio previsto per il 1 settembre non e' avvenuto, lo studio ha riaperto il 7 settembre e continua a lavorare con App Palestre. Il rito di agosto (chiavi, pg_cron su prod, `migration repair`, `studio_id` NOT NULL) non e' mai stato eseguito.
 
@@ -1077,3 +1077,72 @@ sab 4 = 43); 609 righe totali; zero lezioni l'8 dicembre; distribuzione posti
 - Quale dei due profili di Giorgia tenere.
 - Mattia risulta registrato come `instructor` in produzione, probabile residuo
   dei test di giugno.
+
+## S28 — 10 settembre 2026 · Gli istruttori si disattivano, non si cancellano
+
+Partita da una domanda di Mattia: nel pannello admin il pulsante "Elimina" su
+un istruttore non faceva niente, senza dire perche'.
+
+### Perche' non funzionava (vale la pena ricordarlo)
+
+Su `profiles` RLS e' attivo, ma le policy sono solo **INSERT, SELECT, UPDATE**:
+quella di DELETE non e' mai stata scritta, quindi il database nega la
+cancellazione. Il punto insidioso e' che **non produce un errore**: per Postgres
+una DELETE bloccata da RLS non e' un fallimento, semplicemente non trova righe
+da cancellare, ne elimina zero e risponde ok. Il codice controllava solo
+`error`, che restava null, ricaricava la lista identica e il click sembrava
+morto.
+
+Stesso schema del bug del toast di S27, in forma peggiore: li' l'avviso c'era
+ma finiva fuori schermo, qui non esisteva proprio.
+
+Altre due barriere che si sarebbero presentate subito dopo:
+- `schedules.instructor_id` e' **ON DELETE NO ACTION**: chi ha lezioni
+  assegnate non si cancella comunque, ed e' giusto cosi'.
+- `profiles.id` → `auth.users` e' CASCADE **in una direzione sola**: eliminando
+  l'utente sparisce il profilo, non viceversa. Cancellare solo il profilo
+  avrebbe lasciato un account capace di fare login su un'app senza ruolo ne'
+  studio.
+
+**Verificato che il problema e' circoscritto:** `classes`, `schedules` e
+`packages` hanno una policy ALL che copre anche la DELETE, quindi lezioni,
+palinsesto e pacchetti si cancellano regolarmente. Il vuoto riguardava solo le
+persone. La pagina clienti non ha alcun pulsante di cancellazione.
+
+### DECISIONE — le persone si disattivano
+
+Scelta di Mattia, ed e' il modello giusto: chi ha tenuto lezioni fa parte dello
+storico e le lezioni passate devono continuare a riportare chi le ha condotte.
+Il pulsante ora agisce su `is_active`; "Riattiva" riporta indietro. Vale come
+regola per le persone in generale, clienti compresi quando servira': una
+cliente con movimenti di credito non si cancella mai.
+
+### Fatto
+
+- Nuova server action `setInstructorActive`. **Passa dal server per necessita'**,
+  non per eleganza: la policy di UPDATE su `profiles` e' `id = auth.uid()`,
+  quindi dal browser un admin non puo' modificare il profilo di un'altra
+  persona e la disattivazione sarebbe fallita in silenzio come la cancellazione.
+  La action verifica che il bersaglio sia un `instructor` dello stesso studio.
+- Esito sempre visibile; se restano lezioni a calendario dice **quante** vanno
+  riassegnate. Chi e' disattivato scende in fondo, spento e con etichetta.
+- **Rimosso il profilo istruttore residuo di Mattia** (test di giugno):
+  sganciata la lezione del 25/6, eliminato l'account, il profilo e' sparito in
+  cascata. Il suo account admin e' su un'altra casella e non e' stato toccato.
+  In produzione resta Giorgia Francescato come unica istruttrice.
+
+### Note di ambiente
+
+- **`node_modules` non c'era piu'** (probabile pulizia disco). Reinstallata:
+  senza, niente typecheck e niente build. `npx tsc` prende un pacchetto
+  sbagliato dal registry: usare `node node_modules/typescript/bin/tsc --noEmit`.
+- Typecheck e `next build` passano.
+
+### Backlog
+
+- Lint: `useEffect(() => { loadInstructors() }, [])` in `/admin/istruttori`
+  viola `react-hooks/set-state-in-effect`. **Preesistente**, non toccato:
+  sistemarlo a freddo, non insieme a un fix che va in produzione.
+- Da provare in browser sul pannello vero: se `SUPABASE_SERVICE_ROLE_KEY` non
+  fosse configurata nelle env di produzione, la disattivazione lo dira' con un
+  messaggio esplicito invece di fallire muta.
