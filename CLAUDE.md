@@ -1160,3 +1160,25 @@ posto, il mercoledi' alle 14, c'e' **Pilates matwork**.
 - Le 3 lezioni gia' passate (16, 23, 30 settembre) restano com'erano: sono storico.
 - La fonte `dati_palinsesto.py` e' gia' corretta: rilanciando
   `scripts/genera-palinsesto.py` esce matwork, nessuna Ayuryoga.
+
+### Da fare PRIMA del lancio con le clienti (deciso da Mattia il 6/10/2026)
+
+Lo **yoga livello base del martedi' alle 12** non e' mai esistito: era un errore
+nel foglio di partenza. La fonte `dati_palinsesto.py` e' gia' corretta, ma in
+produzione restano 13 lezioni (15/9-15/12), tutte senza prenotazioni. La
+cancellazione del 6/10 e' stata bloccata dal permesso dello strumento e Mattia ha
+deciso di lasciarle finche' l'app non si usa. Prima del lancio vanno tolte:
+
+```sql
+delete from public.schedules s
+using public.classes c
+where c.id = s.class_id and c.name = 'Yoga' and s.notes = 'livello base'
+  and extract(isodow from s.starts_at at time zone 'Europe/Rome') = 2
+  and to_char(s.starts_at at time zone 'Europe/Rome','HH24:MI') = '12:00'
+  and s.current_bookings = 0
+  and not exists (select 1 from public.bookings b where b.schedule_id = s.id);
+```
+
+Nello stesso giorno la fonte ha perso anche il workshop di somatica del venerdi'
+e il laboratorio e' passato alle 18.30: nessuno dei due e' mai entrato nell'app,
+quindi qui non cambia niente.
