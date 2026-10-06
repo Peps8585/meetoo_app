@@ -1146,3 +1146,17 @@ cliente con movimenti di credito non si cancella mai.
 - Da provare in browser sul pannello vero: se `SUPABASE_SERVICE_ROLE_KEY` non
   fosse configurata nelle env di produzione, la disattivazione lo dira' con un
   messaggio esplicito invece di fallire muta.
+
+## S29 — 6 ottobre 2026 · L'Ayuryoga esce dal palinsesto
+
+Giorgia ha deciso di non proporre l'Ayuryoga, che non era mai partito. Al suo
+posto, il mercoledi' alle 14, c'e' **Pilates matwork**.
+
+- **Produzione**: le 11 lezioni future del mercoledi' 14:00 (dal 7/10 al 16/12)
+  passate dalla classe Yoga con nota `Ayuryoga` alla classe **Pilates Matwork**,
+  nota svuotata. Nessuna aveva prenotazioni, istruttrice o prezzo speciale, e i
+  posti erano gia' 7 come nel matwork: e' cambiata solo la classe, quindi anche
+  il prezzo (da 18 a 16 euro, quello della classe).
+- Le 3 lezioni gia' passate (16, 23, 30 settembre) restano com'erano: sono storico.
+- La fonte `dati_palinsesto.py` e' gia' corretta: rilanciando
+  `scripts/genera-palinsesto.py` esce matwork, nessuna Ayuryoga.
