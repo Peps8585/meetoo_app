@@ -1182,3 +1182,37 @@ where c.id = s.class_id and c.name = 'Yoga' and s.notes = 'livello base'
 Nello stesso giorno la fonte ha perso anche il workshop di somatica del venerdi'
 e il laboratorio e' passato alle 18.30: nessuno dei due e' mai entrato nell'app,
 quindi qui non cambia niente.
+
+## S30 — 30 ottobre 2026 · Gift card, passo 1: chi regala
+
+Progetto gift card di LUMA (dossier fuori dal repo: `LUMA DIGITAL/LUMA SAAS/GIFT CARD/STATO-PROGETTO.md`).
+Obiettivo: sostituire Gift Up con un prodotto nostro, prima per Mee Too e poi per altre attivita'.
+Tutto sul ramo **`gift-card`**, non su main: niente va online finche' non si decide.
+
+### Fatto
+- Tabelle `gift_products`, `gift_covers`, `gift_cards` (migrazione `20261030200000_gift_cards.sql`),
+  applicate **solo su MeeToo_Dev**. Dati Mee Too in `supabase/seed/gift_meetoo.sql`: 9 regali con prezzi
+  e testi del sito, 6 copertine (foto in `public/regalo/`).
+- RLS attiva, una sola policy per l'admin dello studio. Le pagine pubbliche leggono e scrivono dal server
+  con la service role (`lib/supabase/admin.ts`): il browser manda solo scelte, il prezzo si rilegge dal DB.
+- `/regala` (scelta, copertina e messaggio, consegna, riepilogo), `/regala/fatto` (chiude il pagamento),
+  `/regalo/[codice]` (il regalo che si apre; `?stampa=1` per stamparlo).
+- Pagamento con Stripe Checkout. `lib/gift/fulfill.ts`: il pagamento si chiude sia dalla pagina di ritorno
+  sia dal webhook (`/api/stripe/webhook`); lo fa una volta sola l'update pending→paid.
+- Consegna: per email (subito o programmata) o "glielo do io" (link + WhatsApp dal telefono di chi regala).
+  Validita' dalla consegna, non dall'acquisto (da confermare con Giorgia). Programmati:
+  `/api/regali/invia-programmati` con `Authorization: Bearer CRON_SECRET`, chi lo chiama si decide al lancio.
+- **Collaudo E2E superato** in locale (porta 3100, la 3000 e' del sito): 5 lezioni reformer, carta di prova
+  4242, regalo pagato e consegnato, due email partite, pagina del regalo corretta anche a 390px.
+
+### Env nuove
+`STRIPE_SECRET_KEY` (sk_test in locale), `STRIPE_WEBHOOK_SECRET`, `APP_URL`, `GIFT_STUDIO_SLUG`, `CRON_SECRET`.
+In produzione nessuna e' ancora impostata.
+
+### Aperto
+- Nelle email la copertina si carica da `EMAIL_ASSETS_URL` (produzione): finche' `public/regalo/` non e' online
+  l'immagine non si vede.
+- Nel checkout di prova compaiono carta, Apple Pay, Link, Klarna, Bancontact, EPS. Satispay non c'e': va
+  attivato nelle impostazioni Stripe. Sull'account e' acceso Stripe Climate (0,5% donato): da far sapere a Mattia.
+- "Prenota la prima lezione" oggi apre WhatsApp con lo studio e il codice: diventa attivazione nell'app al passo 2.
+- Al passo 2: il wallet e' in euro e non per disciplina, mentre il regalo vale solo per la disciplina scelta.
