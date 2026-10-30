@@ -136,3 +136,63 @@ export function bookingConfirmationEmail(params: {
     html: layout(body),
   }
 }
+
+// ── Regali (gift card) ───────────────────────────────────────────────────────
+// La copertina scelta da chi regala apre l'email: e' la stessa immagine della
+// pagina del regalo. Il messaggio personale NON sta qui: lo si legge aprendo
+// il regalo, come una busta.
+
+function giftCover(coverUrl: string, occasion: string | null, toName: string): string {
+  const caption = occasion && occasion !== 'Nessuna'
+    ? `<div style="${FONT} margin-top:12px; font-size:20px; font-weight:300; color:${INK}; text-align:center;">${escapeHtml(occasion)}, ${escapeHtml(toName)}</div>`
+    : ''
+  return `<img src="${ASSETS_BASE}${coverUrl}" width="416" alt="" style="display:block; width:100%; height:auto; border:0; border-radius:12px;">${caption}`
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
+}
+
+/** A chi riceve il regalo (consegna per email). */
+export function giftRecipientEmail(params: {
+  toName: string
+  fromName: string
+  contents: string
+  coverUrl: string
+  occasion: string | null
+  giftUrl: string
+  studioName: string
+}): { subject: string; html: string } {
+  const body = `
+    ${giftCover(params.coverUrl, params.occasion, params.toName)}
+    <p style="${FONT} margin:28px 0 12px; font-size:15px; line-height:1.7; color:${INK};">Ciao ${escapeHtml(params.toName)},</p>
+    <p style="${FONT} margin:0; font-size:15px; line-height:1.7; color:${INK};">${escapeHtml(params.fromName)} ti ha regalato ${escapeHtml(params.contents)} da ${escapeHtml(params.studioName)}. Dentro c'è anche un suo messaggio per te.</p>
+    ${ctaButton(params.giftUrl, 'Apri il regalo')}
+  `
+  return { subject: `${params.fromName} ti ha fatto un regalo`, html: layout(body) }
+}
+
+/** A chi ha regalato, appena pagato. */
+export function giftBuyerEmail(params: {
+  fromName: string
+  toName: string
+  contents: string
+  price: string
+  coverUrl: string
+  occasion: string | null
+  giftUrl: string
+  /** testo gia' pronto: "Arriva a Marta il 25 dicembre alle 8:00 per email." */
+  delivery: string
+  selfDelivery: boolean
+}): { subject: string; html: string } {
+  const body = `
+    ${giftCover(params.coverUrl, params.occasion, params.toName)}
+    <p style="${FONT} margin:28px 0 12px; font-size:15px; line-height:1.7; color:${INK};">Ciao ${escapeHtml(params.fromName)},</p>
+    <p style="${FONT} margin:0 0 12px; font-size:15px; line-height:1.7; color:${INK};">grazie, il tuo regalo per ${escapeHtml(params.toName)} è pronto: ${escapeHtml(params.contents)}, ${escapeHtml(params.price)}.</p>
+    <p style="${FONT} margin:0; font-size:15px; line-height:1.7; color:${INK};">${escapeHtml(params.delivery)}</p>
+    ${params.selfDelivery
+      ? `<p style="${FONT} margin:16px 0 0; font-size:15px; line-height:1.7; color:${INK};">Il link qui sotto è il regalo: puoi mandarlo su WhatsApp o aprirlo e stamparlo.</p>${ctaButton(params.giftUrl, 'Il regalo')}`
+      : `${ctaButton(params.giftUrl, 'Guarda il regalo')}`}
+  `
+  return { subject: `Il tuo regalo per ${params.toName}`, html: layout(body) }
+}
