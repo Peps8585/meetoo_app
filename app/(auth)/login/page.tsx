@@ -33,9 +33,14 @@ export default function LoginPage() {
       )
       setLoading(false)
     } else {
-      const dest = data.user
-        ? await destinationForUser(supabase, data.user.id)
-        : '/dashboard'
+      // ?next=/regalo/CODICE: chi e' dello studio arriva da un QR e ci torna
+      const next = new URLSearchParams(window.location.search).get('next')
+      const dest =
+        next && next.startsWith('/') && !next.startsWith('//')
+          ? next
+          : data.user
+            ? await destinationForUser(supabase, data.user.id)
+            : '/dashboard'
       router.push(dest)
       router.refresh()
     }

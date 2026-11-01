@@ -12,6 +12,7 @@ export function appUrl(): string {
 }
 
 export const giftUrl = (code: string) => `${appUrl()}/regalo/${code}`
+export const giftQrUrl = (code: string) => `${appUrl()}/api/regali/qr/${code}`
 
 /**
  * Chiude un pagamento: lo chiamano sia la pagina di ritorno da Stripe sia il
@@ -62,6 +63,8 @@ export async function deliverGift(card: GiftCard): Promise<GiftCard> {
       coverUrl: card.cover_url,
       occasion: card.occasion,
       giftUrl: giftUrl(card.code),
+      qrUrl: giftQrUrl(card.code),
+      code: card.code,
       studioName,
     })
     const { ok } = await sendEmail({ to: card.recipient_email, subject, html })

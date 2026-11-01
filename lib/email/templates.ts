@@ -149,6 +149,18 @@ function giftCover(coverUrl: string, occasion: string | null, toName: string): s
   return `<img src="${ASSETS_BASE}${coverUrl}" width="416" alt="" style="display:block; width:100%; height:auto; border:0; border-radius:12px;">${caption}`
 }
 
+// Il QR da mostrare in studio. PNG servito dall'app: i client di posta non
+// mostrano SVG ne' immagini incorporate. Serve l'indirizzo pubblico dell'app.
+function giftQr(qrUrl: string, code: string): string {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px auto 0; background-color:${BG}; border-radius:12px;">
+    <tr><td align="center" style="padding:16px 20px;">
+      <img src="${qrUrl}" width="150" height="150" alt="QR del regalo" style="display:block; width:150px; height:150px; border:0;">
+      <div style="${FONT} margin-top:10px; font-size:18px; font-weight:700; letter-spacing:0.14em; color:${INK};">${code}</div>
+      <div style="${FONT} margin-top:6px; font-size:12px; line-height:1.5; color:${SAGE}; max-width:260px;">Mostralo in studio la prima volta che vieni: lo attiviamo insieme e scegliamo il gruppo giusto.</div>
+    </td></tr>
+  </table>`
+}
+
 function escapeHtml(s: string): string {
   return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
 }
@@ -161,6 +173,8 @@ export function giftRecipientEmail(params: {
   coverUrl: string
   occasion: string | null
   giftUrl: string
+  qrUrl: string
+  code: string
   studioName: string
 }): { subject: string; html: string } {
   const body = `
@@ -168,6 +182,7 @@ export function giftRecipientEmail(params: {
     <p style="${FONT} margin:28px 0 12px; font-size:15px; line-height:1.7; color:${INK};">Ciao ${escapeHtml(params.toName)},</p>
     <p style="${FONT} margin:0; font-size:15px; line-height:1.7; color:${INK};">${escapeHtml(params.fromName)} ti ha regalato ${escapeHtml(params.contents)} da ${escapeHtml(params.studioName)}. Dentro c'è anche un suo messaggio per te.</p>
     ${ctaButton(params.giftUrl, 'Apri il regalo')}
+    ${giftQr(params.qrUrl, params.code)}
   `
   return { subject: `${params.fromName} ti ha fatto un regalo`, html: layout(body) }
 }
@@ -195,4 +210,17 @@ export function giftBuyerEmail(params: {
       : `${ctaButton(params.giftUrl, 'Guarda il regalo')}`}
   `
   return { subject: `Il tuo regalo per ${params.toName}`, html: layout(body) }
+}
+
+/** A chi ha regalato, quando il regalo viene attivato in studio. */
+export function giftActivatedEmail(params: {
+  fromName: string
+  toName: string
+  contents: string
+}): { subject: string; html: string } {
+  const body = `
+    <p style="${FONT} margin:0 0 12px; font-size:15px; line-height:1.7; color:${INK};">Ciao ${escapeHtml(params.fromName)},</p>
+    <p style="${FONT} margin:0; font-size:15px; line-height:1.7; color:${INK};">${escapeHtml(params.toName)} ha attivato in studio il tuo regalo: ${escapeHtml(params.contents)}. Da adesso le lezioni sono pronte.</p>
+  `
+  return { subject: `${params.toName} ha attivato il tuo regalo`, html: layout(body) }
 }

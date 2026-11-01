@@ -43,6 +43,11 @@ export type GiftCard = {
   valid_until: string | null
   paid_at: string | null
   delivered_at: string | null
+  redeemed_at: string | null
+  holder_name: string | null
+  holder_phone: string | null
+  studio_note: string | null
+  activated_by: string | null
 }
 
 /**
@@ -79,7 +84,7 @@ export async function getGiftCatalog(studioId: string) {
 }
 
 const GIFT_COLUMNS =
-  'id, studio_id, code, discipline, discipline_slug, product_title, lessons, price, includes_stamp_duty, cover_url, occasion, from_name, to_name, message, delivery, recipient_email, send_at, buyer_email, status, valid_months, valid_until, paid_at, delivered_at'
+  'id, studio_id, code, discipline, discipline_slug, product_title, lessons, price, includes_stamp_duty, cover_url, occasion, from_name, to_name, message, delivery, recipient_email, send_at, buyer_email, status, valid_months, valid_until, paid_at, delivered_at, redeemed_at, holder_name, holder_phone, studio_note, activated_by'
 
 export function normalizeCode(code: string) {
   return code.toUpperCase().replace(/[^A-Z0-9]/g, '').replace(/^(.{4})(.{4})$/, '$1-$2')
