@@ -48,6 +48,7 @@ export type GiftCard = {
   holder_phone: string | null
   studio_note: string | null
   activated_by: string | null
+  receipt_done_at: string | null
 }
 
 /**
@@ -84,7 +85,7 @@ export async function getGiftCatalog(studioId: string) {
 }
 
 const GIFT_COLUMNS =
-  'id, studio_id, code, discipline, discipline_slug, product_title, lessons, price, includes_stamp_duty, cover_url, occasion, from_name, to_name, message, delivery, recipient_email, send_at, buyer_email, status, valid_months, valid_until, paid_at, delivered_at, redeemed_at, holder_name, holder_phone, studio_note, activated_by'
+  'id, studio_id, code, discipline, discipline_slug, product_title, lessons, price, includes_stamp_duty, cover_url, occasion, from_name, to_name, message, delivery, recipient_email, send_at, buyer_email, status, valid_months, valid_until, paid_at, delivered_at, redeemed_at, holder_name, holder_phone, studio_note, activated_by, receipt_done_at'
 
 export function normalizeCode(code: string) {
   return code.toUpperCase().replace(/[^A-Z0-9]/g, '').replace(/^(.{4})(.{4})$/, '$1-$2')
@@ -103,9 +104,14 @@ export async function getGiftCardBySession(sessionId: string): Promise<GiftCard 
 }
 
 export async function getStudioName(studioId: string): Promise<string> {
+  return (await getStudioContact(studioId)).name
+}
+
+/** Nome ed email dello studio: l'email riceve l'avviso a ogni regalo venduto. */
+export async function getStudioContact(studioId: string): Promise<{ name: string; email: string | null }> {
   const db = createAdminClient()
-  const { data } = await db.from('studios').select('name').eq('id', studioId).maybeSingle()
-  return data?.name ?? 'lo studio'
+  const { data } = await db.from('studios').select('name, email').eq('id', studioId).maybeSingle()
+  return { name: data?.name ?? 'lo studio', email: process.env.GIFT_STUDIO_EMAIL ?? data?.email ?? null }
 }
 
 /**

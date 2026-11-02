@@ -8,7 +8,7 @@ import { giftUrl } from '@/lib/gift/fulfill'
 import { qrSvg } from '@/lib/gift/qr'
 import { getGiftStaff } from '@/lib/gift/staff'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { AttivaRegalo } from './AttivaRegalo'
+import { AttivaRegalo, SegnaRicevuta } from './AttivaRegalo'
 import { StampaRegalo } from './StampaRegalo'
 
 // il link del regalo e' personale: niente motori di ricerca
@@ -53,6 +53,8 @@ export default async function RegaloPage({
     ['Pagato', `${fmtEuro(card.price)}${card.paid_at ? ` il ${fmtDay(card.paid_at)}` : ''}`],
     [scaduto ? 'Scaduto il' : 'Vale fino al', card.valid_until ? fmtDay(card.valid_until) : 'parte dalla consegna'],
     ['Codice', card.code],
+    ['Comprato da', `${card.from_name}, ${card.buyer_email}`],
+    ['Ricevuta', card.receipt_done_at ? `fatta il ${fmtDay(card.receipt_done_at)}` : 'da fare'],
   ]
   if (card.status === 'redeemed') {
     righeStudio.push(['Attivato', `${card.redeemed_at ? fmtDay(card.redeemed_at) : ''}${attivatoDa ? `, da ${attivatoDa}` : ''}`])
@@ -93,7 +95,17 @@ export default async function RegaloPage({
                 </div>
               ))}
             </dl>
-            {attivabile && <AttivaRegalo code={card.code} toName={card.to_name} />}
+            {attivabile && <AttivaRegalo code={card.code} toName={card.to_name} receiptDone={!!card.receipt_done_at} />}
+            {!card.receipt_done_at && card.status !== 'void' && (
+              <>
+                {attivabile && (
+                  <p className="mt-5 text-[12.5px] leading-snug text-[#6f6a63]">
+                    Se chi ha comprato è già cliente e la ricevuta l&apos;avete fatta dopo il pagamento:
+                  </p>
+                )}
+                <SegnaRicevuta code={card.code} />
+              </>
+            )}
             <Link href="/studio/regali" className="mt-4 block text-center text-[13px] underline underline-offset-4">
               Tutti i regali
             </Link>

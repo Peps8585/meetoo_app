@@ -224,3 +224,39 @@ export function giftActivatedEmail(params: {
   `
   return { subject: `${params.toName} ha attivato il tuo regalo`, html: layout(body) }
 }
+
+/**
+ * Allo studio, a ogni regalo pagato. Serve a fare subito la ricevuta quando
+ * chi compra e' gia' cliente; altrimenti la si fa all'attivazione.
+ */
+export function giftSoldStudioEmail(params: {
+  fromName: string
+  toName: string
+  buyerEmail: string
+  contents: string
+  price: string
+  code: string
+  delivery: string
+  studioUrl: string
+}): { subject: string; html: string } {
+  const row = (label: string, value: string) => `
+    <tr>
+      <td style="${FONT} padding:6px 0; font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:${ACCENT}; white-space:nowrap;">${label}</td>
+      <td style="${FONT} padding:6px 0 6px 20px; font-size:15px; color:${INK}; text-align:right;">${escapeHtml(value)}</td>
+    </tr>`
+  const body = `
+    <h1 style="${FONT} margin:0 0 20px; font-size:18px; font-weight:800; letter-spacing:0.14em; text-transform:uppercase; color:${INK}; text-align:center;">Regalo venduto</h1>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${BG}; border-bottom:1px solid ${BG}; padding:8px 0;">
+      ${row('Regalo', params.contents)}
+      ${row('Pagato', params.price)}
+      ${row('Da', params.fromName)}
+      ${row('Email', params.buyerEmail)}
+      ${row('Per', params.toName)}
+      ${row('Consegna', params.delivery)}
+      ${row('Codice', params.code)}
+    </table>
+    <p style="${FONT} margin:20px 0 0; font-size:14px; line-height:1.7; color:${INK};">Se ${escapeHtml(params.fromName)} è già cliente dello studio, puoi fare subito la ricevuta e segnarla come fatta. Altrimenti si fa quando ${escapeHtml(params.toName)} viene ad attivare il regalo.</p>
+    ${ctaButton(params.studioUrl, 'Apri il regalo')}
+  `
+  return { subject: `Regalo venduto: ${params.contents}, ${params.price}`, html: layout(body) }
+}

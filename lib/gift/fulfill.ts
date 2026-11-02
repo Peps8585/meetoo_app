@@ -2,8 +2,8 @@ import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getStripe } from '@/lib/stripe'
 import { sendEmail } from '@/lib/email/send'
-import { giftBuyerEmail, giftRecipientEmail } from '@/lib/email/templates'
-import { getGiftCardByCode, getGiftCardBySession, getStudioName, type GiftCard } from './data'
+import { giftBuyerEmail, giftRecipientEmail, giftSoldStudioEmail } from '@/lib/email/templates'
+import { getGiftCardByCode, getGiftCardBySession, getStudioContact, getStudioName, type GiftCard } from './data'
 import { addMonths, fmtDayTime, fmtEuro, giftContents } from './format'
 
 /** Indirizzo pubblico dell'app, per i link nelle email. */
@@ -41,7 +41,25 @@ export async function fulfillCheckoutSession(sessionId: string): Promise<GiftCar
   const consegnaOra = card.delivery === 'self' || !card.send_at || new Date(card.send_at) <= new Date()
   const consegnato = consegnaOra ? await deliverGift(card) : card
   await sendBuyerEmail(consegnato)
+  await sendStudioEmail(consegnato)
   return consegnato
+}
+
+async function sendStudioEmail(card: GiftCard) {
+  const { email } = await getStudioContact(card.studio_id)
+  if (!email) return
+  const { subject, html } = giftSoldStudioEmail({
+    fromName: card.from_name,
+    toName: card.to_name,
+    buyerEmail: card.buyer_email,
+    contents: giftContents(card),
+    price: fmtEuro(card.price),
+    code: card.code,
+    // non deliverySentence: quella parla a chi ha comprato
+    delivery: card.delivery === 'self' ? 'la consegna chi regala' : card.send_at ? `per email, il ${fmtDayTime(card.send_at)}` : 'per email, subito',
+    studioUrl: giftUrl(card.code),
+  })
+  await sendEmail({ to: email, subject, html })
 }
 
 /**

@@ -20,6 +20,7 @@ type Riga = {
   send_at: string | null
   valid_until: string | null
   redeemed_at: string | null
+  receipt_done_at: string | null
 }
 
 const GIORNO = 24 * 3600 * 1000
@@ -56,6 +57,9 @@ function Elenco({ titolo, righe, vuoto, ora }: { titolo: string; righe: Riga[]; 
                 {giftContents(r)} · da {r.from_name}
                 {r.studio_note ? ` · ${r.studio_note}` : ''}
               </small>
+              {!r.receipt_done_at && r.status !== 'void' && (
+                <small className="mt-0.5 block text-[11.5px] font-semibold text-[#a8876a]">ricevuta da fare</small>
+              )}
             </span>
             <em className={`flex-none rounded-full px-2.5 py-1 text-[11px] font-semibold not-italic ${e.tono}`}>{e.testo}</em>
           </Link>
@@ -77,7 +81,7 @@ export default async function RegaliStudioPage() {
 
   const { data } = await createAdminClient()
     .from('gift_cards')
-    .select('code, status, discipline, lessons, from_name, to_name, holder_name, studio_note, send_at, valid_until, redeemed_at')
+    .select('code, status, discipline, lessons, from_name, to_name, holder_name, studio_note, send_at, valid_until, redeemed_at, receipt_done_at')
     .eq('studio_id', staff.studioId)
     .neq('status', 'pending')
     .order('created_at', { ascending: false })

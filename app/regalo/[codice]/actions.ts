@@ -18,6 +18,8 @@ export async function activateGift(input: {
   holderName: string
   holderPhone: string
   note: string
+  /** la ricevuta e' stata fatta adesso, in studio (chi compra non era cliente) */
+  receiptDone: boolean
 }): Promise<{ ok: true } | { error: string }> {
   const staff = await getGiftStaff()
   if (!staff) return { error: "Per attivare un regalo bisogna essere entrati con l'account dello studio." }
@@ -45,6 +47,7 @@ export async function activateGift(input: {
       holder_name: holderName,
       holder_phone: input.holderPhone.trim().slice(0, 30) || null,
       studio_note: input.note.trim().slice(0, 300) || null,
+      ...(input.receiptDone && !card.receipt_done_at ? { receipt_done_at: ora.toISOString(), receipt_done_by: staff.id } : {}),
       // regalo programmato non ancora arrivato ma gia' in studio: i mesi partono da oggi
       ...(card.valid_until ? {} : { valid_until: addMonths(ora, card.valid_months).toISOString(), delivered_at: ora.toISOString() }),
     })
@@ -57,6 +60,22 @@ export async function activateGift(input: {
   const { subject, html } = giftActivatedEmail({ fromName: card.from_name, toName: card.to_name, contents: giftContents(card) })
   await sendEmail({ to: card.buyer_email, subject, html })
 
+  revalidatePath(`/regalo/${card.code}`)
+  revalidatePath('/studio/regali')
+  return { ok: true }
+}
+
+/** Segna la ricevuta come fatta: dopo il pagamento (cliente gia' dello studio) o in qualsiasi momento dopo. */
+export async function markReceiptDone(code: string): Promise<{ ok: true } | { error: string }> {
+  const staff = await getGiftStaff()
+  if (!staff) return { error: "Bisogna essere entrati con l'account dello studio." }
+  const card = await getGiftCardByCode(code)
+  if (!card || card.studio_id !== staff.studioId || card.status === 'pending') return { error: 'Regalo non trovato.' }
+  await createAdminClient()
+    .from('gift_cards')
+    .update({ receipt_done_at: new Date().toISOString(), receipt_done_by: staff.id })
+    .eq('id', card.id)
+    .is('receipt_done_at', null)
   revalidatePath(`/regalo/${card.code}`)
   revalidatePath('/studio/regali')
   return { ok: true }
