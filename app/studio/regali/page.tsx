@@ -29,6 +29,7 @@ const scaduto = (r: Riga, ora: number) => !!r.valid_until && new Date(r.valid_un
 
 function stato(r: Riga, ora: number): { testo: string; tono: string } {
   if (r.status === 'redeemed') return { testo: 'attivato', tono: 'bg-[#dfe8da] text-[#4e5e49]' }
+  if (r.status === 'void') return { testo: 'annullato', tono: 'bg-[#ece4d8] text-[#6f6a63]' }
   if (scaduto(r, ora)) return { testo: `scaduto il ${fmtDay(r.valid_until!)}`, tono: 'bg-[#f3e3df] text-[#8a4f40]' }
   if (r.status === 'paid' && r.send_at) return { testo: `arriva il ${fmtDayTime(r.send_at)}`, tono: 'bg-[#efe1ce] text-[#7a5a3d]' }
   if (r.valid_until) {
@@ -94,6 +95,7 @@ export default async function RegaliStudioPage() {
     .sort((a, b) => (a.valid_until ?? '9').localeCompare(b.valid_until ?? '9'))
   const attivati = regali.filter((r) => r.status === 'redeemed')
   const scaduti = regali.filter((r) => r.status !== 'redeemed' && r.status !== 'void' && scaduto(r, ora))
+  const annullati = regali.filter((r) => r.status === 'void')
 
   return (
     <main className="min-h-svh bg-[#f5f0e8] px-5 pb-16 text-[#2c2c2c]">
@@ -138,6 +140,7 @@ export default async function RegaliStudioPage() {
         <Elenco titolo="Da attivare" righe={daAttivare} vuoto="Nessun regalo in attesa." ora={ora} />
         <Elenco titolo="Attivati" righe={attivati} vuoto="Ancora nessuno." ora={ora} />
         {scaduti.length > 0 && <Elenco titolo="Scaduti senza essere usati" righe={scaduti} vuoto="" ora={ora} />}
+        {annullati.length > 0 && <Elenco titolo="Annullati (rimborsati)" righe={annullati} vuoto="" ora={ora} />}
       </div>
     </main>
   )

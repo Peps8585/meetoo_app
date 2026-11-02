@@ -144,3 +144,23 @@ export async function sendDueGifts(): Promise<{ inviati: number; falliti: number
   }
   return { inviati, falliti }
 }
+
+/**
+ * Rimborso fatto dal pannello di Stripe: se e' totale, il regalo si annulla
+ * (non si apre piu' come valido e non si attiva). Un rimborso parziale lo lascia
+ * com'e': vuol dire che studio e cliente si sono accordati diversamente.
+ * Il rimborso si rilegge da Stripe, l'avviso da solo non basta.
+ */
+export async function voidRefundedGift(chargeId: string): Promise<string | null> {
+  const charge = await getStripe().charges.retrieve(chargeId)
+  if (!charge.refunded) return null
+  const paymentIntent = typeof charge.payment_intent === 'string' ? charge.payment_intent : charge.payment_intent?.id
+  if (!paymentIntent) return null
+  const { data } = await createAdminClient()
+    .from('gift_cards')
+    .update({ status: 'void' })
+    .eq('stripe_payment_intent', paymentIntent)
+    .neq('status', 'void')
+    .select('code')
+  return data?.[0]?.code ?? null
+}
