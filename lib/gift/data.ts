@@ -17,7 +17,7 @@ export type GiftProduct = {
   detail_image: string | null
 }
 
-export type GiftCover = { id: string; image_url: string; label: string | null }
+export type GiftCover = { id: string; image_url: string; label: string | null; discipline_slug: string | null }
 
 export type GiftCard = {
   id: string
@@ -73,7 +73,7 @@ export async function getGiftCatalog(studioId: string) {
       .eq('studio_id', studioId)
       .eq('is_active', true)
       .order('sort'),
-    db.from('gift_covers').select('id, image_url, label').eq('studio_id', studioId).eq('is_active', true).order('sort'),
+    db.from('gift_covers').select('id, image_url, label, discipline_slug').eq('studio_id', studioId).eq('is_active', true).order('sort'),
   ])
   if (products.error) throw products.error
   if (covers.error) throw covers.error

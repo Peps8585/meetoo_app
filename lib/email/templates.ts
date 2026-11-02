@@ -187,12 +187,14 @@ export function giftRecipientEmail(params: {
   return { subject: `${params.fromName} ti ha fatto un regalo`, html: layout(body) }
 }
 
-/** A chi ha regalato, appena pagato. */
+/**
+ * A chi ha regalato, appena pagato. Senza prezzo: chi lo consegna da se' a volte
+ * inoltra tutta l'email, e il prezzo non deve arrivare a chi riceve il regalo.
+ */
 export function giftBuyerEmail(params: {
   fromName: string
   toName: string
   contents: string
-  price: string
   coverUrl: string
   occasion: string | null
   giftUrl: string
@@ -203,7 +205,7 @@ export function giftBuyerEmail(params: {
   const body = `
     ${giftCover(params.coverUrl, params.occasion, params.toName)}
     <p style="${FONT} margin:28px 0 12px; font-size:15px; line-height:1.7; color:${INK};">Ciao ${escapeHtml(params.fromName)},</p>
-    <p style="${FONT} margin:0 0 12px; font-size:15px; line-height:1.7; color:${INK};">grazie, il tuo regalo per ${escapeHtml(params.toName)} è pronto: ${escapeHtml(params.contents)}, ${escapeHtml(params.price)}.</p>
+    <p style="${FONT} margin:0 0 12px; font-size:15px; line-height:1.7; color:${INK};">grazie, il tuo regalo per ${escapeHtml(params.toName)} è pronto: ${escapeHtml(params.contents)}.</p>
     <p style="${FONT} margin:0; font-size:15px; line-height:1.7; color:${INK};">${escapeHtml(params.delivery)}</p>
     ${params.selfDelivery
       ? `<p style="${FONT} margin:16px 0 0; font-size:15px; line-height:1.7; color:${INK};">Il link qui sotto è il regalo: puoi mandarlo su WhatsApp o aprirlo e stamparlo.</p>${ctaButton(params.giftUrl, 'Il regalo')}`

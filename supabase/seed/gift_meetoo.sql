@@ -24,16 +24,17 @@ select s.id, v.* from public.studios s, (values
 ) as v(discipline, discipline_slug, title, description, lessons, price, includes_stamp_duty, savings_note, detail_image, sort)
 where s.slug = 'meetoo';
 
--- niente foto dell'insegna: il logo sul muro si somma a quello della card
-insert into public.gift_covers (studio_id, image_url, label, sort)
+-- 2/11/2026: tre foto (una per disciplina, la copertina parte da quella del regalo scelto)
+-- e tre illustrazioni lineart generate con Higgsfield, sui colori della palette
+insert into public.gift_covers (studio_id, image_url, label, discipline_slug, sort)
 select s.id, v.* from public.studios s, (values
-  ('/regalo/copertine/studio-reformer-finestre.jpg', 'Reformer', 1),
-  ('/regalo/copertine/dettaglio-palla-borraccia.jpg', 'Un''ora per sé', 2),
-  ('/regalo/copertine/laboratorio-mani.jpg', 'Respiro', 3),
-  ('/regalo/copertine/laboratorio-sorriso.jpg', 'Leggerezza', 4),
-  ('/regalo/copertine/studio-sala.jpg', 'Luce del mattino', 5),
-  ('/regalo/copertine/yoga-rilassamento.jpg', 'Riposo', 6)
-) as v(image_url, label, sort)
+  ('/regalo/copertine/reformer.jpg', 'Reformer', 'pilates-reformer', 1),
+  ('/regalo/copertine/matwork.jpg', 'Matwork', 'pilates-matwork', 2),
+  ('/regalo/copertine/yoga.jpg', 'Yoga', 'yoga', 3),
+  ('/regalo/copertine/grafica-germoglio.jpg', 'Germoglio', null, 4),
+  ('/regalo/copertine/grafica-sassi.jpg', 'Sassi in equilibrio', null, 5),
+  ('/regalo/copertine/grafica-fiore.jpg', 'Fiore', null, 6)
+) as v(image_url, label, discipline_slug, sort)
 where s.slug = 'meetoo';
 
 commit;

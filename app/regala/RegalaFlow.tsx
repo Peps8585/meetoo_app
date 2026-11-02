@@ -146,7 +146,12 @@ export function RegalaFlow({
               <button
                 key={p.id}
                 type="button"
-                onClick={() => setProductId(p.id)}
+                onClick={() => {
+                  setProductId(p.id)
+                  // la copertina parte dalla foto della stessa disciplina; chi regala puo' cambiarla
+                  const foto = covers.find((c) => c.discipline_slug === p.discipline_slug)
+                  if (foto) setCoverId(foto.id)
+                }}
                 className={`relative mb-2.5 block w-full overflow-hidden rounded-[10px] border-2 bg-[#e6dccd] px-[18px] py-4 text-left shadow-[0_1px_2px_rgb(44_44_44/0.06),0_8px_24px_rgb(44_44_44/0.08)] transition-transform duration-200 hover:-translate-y-px ${p.id === productId ? 'border-[#2c2c2c]' : 'border-transparent'}`}
               >
                 {p.detail_image && (

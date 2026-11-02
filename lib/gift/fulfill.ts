@@ -113,7 +113,6 @@ async function sendBuyerEmail(card: GiftCard) {
     fromName: card.from_name,
     toName: card.to_name,
     contents: giftContents(card),
-    price: fmtEuro(card.price),
     coverUrl: card.cover_url,
     occasion: card.occasion,
     giftUrl: giftUrl(card.code),
