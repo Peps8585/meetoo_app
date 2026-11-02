@@ -1237,9 +1237,17 @@ la persona, quindi il regalo **si attiva in studio con un QR** invece di caricar
 - **Collaudo vero il 2/11**: lezione matwork 16 € con carta vera (KG7U-AD3K), email arrivate, avviso allo
   studio arrivato, attivato da Mattia dal telefono con il suo account admin.
 
+### Chiuso il 2/11 pomeriggio
+- **Invio programmato acceso**: job pg_cron `gift-invia-programmati` ogni 10 minuti su prod, chiave nel Vault
+  (`gift_cron_secret()`, migrazione 20261102120000; su prod lanciata da Mattia dal SQL Editor). Primo giro 200.
+  `GIFT_SCHEDULING=on` su Vercel.
+- **SMTP custom su prod** (Resend, mittente noreply@send.meetoopilates.com) acceso da Mattia: le email di
+  Supabase Auth arrivano a tutti (prova di recupero password arrivata). Redirect URL aggiunto:
+  `https://regali.meetoopilates.com/**`. Limite email Auth salito a 30/ora. Template ancora in inglese.
+- Giorgia attiva i regali con l'account admin `francescato_giorgia@...`; l'account istruttrice
+  `giorgia_francescato@...` (8 lezioni assegnate) non e' mai stato usato: doppione da decidere prima del lancio.
+
 ### Aperto
 - Riaprire il QR il giorno dopo: l'app non ha piu' il middleware che rinnova la sessione (tolto a luglio),
   rischio "Invalid Refresh Token" e rientro forzato per chi attiva.
-- Giorgia (instructor in prod) non e' mai entrata: deve impostare la password. SMTP custom su prod mai fatto:
-  le email di Supabase Auth potrebbero non arrivarle.
-- Giro dei regali programmati, Satispay su Stripe da verificare, rimborsi Stripe non collegati all'app.
+- Satispay su Stripe da verificare, rimborsi Stripe non collegati all'app, template email Auth in italiano.
