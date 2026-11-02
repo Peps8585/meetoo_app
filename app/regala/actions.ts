@@ -46,6 +46,7 @@ export async function startGiftCheckout(input: GiftOrderInput): Promise<{ url: s
 
   let sendAt: Date | null = null
   if (input.delivery === 'email' && input.sendDate) {
+    if (process.env.GIFT_SCHEDULING !== 'on') return { error: 'L’invio programmato non è ancora disponibile.' }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(input.sendDate) || !/^\d{2}:\d{2}$/.test(input.sendTime)) {
       return { error: 'Controlla il giorno e l’ora di consegna.' }
     }

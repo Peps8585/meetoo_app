@@ -19,7 +19,13 @@ export default async function RegalaPage() {
   if (!products.length || !covers.length) notFound()
   return (
     <main className="min-h-svh bg-[#f5f0e8] text-[#2c2c2c]">
-      <RegalaFlow products={products} covers={covers} validMonths={studio.validMonths} />
+      <RegalaFlow
+        products={products}
+        covers={covers}
+        validMonths={studio.validMonths}
+        // l'invio programmato si accende solo quando c'e' il giro che spedisce i regali all'ora scelta
+        scheduling={process.env.GIFT_SCHEDULING === 'on'}
+      />
     </main>
   )
 }

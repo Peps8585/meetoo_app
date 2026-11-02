@@ -39,10 +39,12 @@ export function RegalaFlow({
   products,
   covers,
   validMonths,
+  scheduling,
 }: {
   products: GiftProduct[]
   covers: GiftCover[]
   validMonths: number
+  scheduling: boolean
 }) {
   const discipline = useMemo(() => [...new Set(products.map((p) => p.discipline))], [products])
   const [passo, setPasso] = useState<Passo>('scegli')
@@ -94,7 +96,7 @@ export function RegalaFlow({
         message,
         delivery,
         recipientEmail,
-        sendDate: delivery === 'email' && programma ? sendDate : '',
+        sendDate: scheduling && delivery === 'email' && programma ? sendDate : '',
         sendTime,
         buyerEmail,
       })
@@ -248,7 +250,7 @@ export function RegalaFlow({
           <h1 className="mb-5 mt-2 text-[26px] font-light leading-[1.15] tracking-[-0.025em]">
             Come lo <b className="font-semibold">riceve</b>?
           </h1>
-          <Scelta si={delivery === 'email'} onClick={() => setDelivery('email')} titolo="Glielo mandiamo noi per email" sotto="Con la copertina e il tuo messaggio" />
+          <Scelta si={delivery === 'email'} onClick={() => setDelivery('email')} titolo="Glielo mandiamo noi per email" sotto={scheduling ? 'Con la copertina e il tuo messaggio' : 'Subito dopo il pagamento, con la copertina e il tuo messaggio'} />
           <Scelta si={delivery === 'self'} onClick={() => setDelivery('self')} titolo="Glielo do io" sotto="Ricevi il link da mandare su WhatsApp o da stampare" />
           {delivery === 'email' && (
             <>
@@ -256,10 +258,14 @@ export function RegalaFlow({
                 <span className={etichetta}>La sua email</span>
                 <input className={campo} type="email" inputMode="email" value={recipientEmail} onChange={(e) => setRecipientEmail(e.target.value)} />
               </label>
-              <span className={etichetta}>Quando</span>
-              <Scelta si={!programma} onClick={() => setProgramma(false)} titolo="Subito dopo il pagamento" />
-              <Scelta si={programma} onClick={() => setProgramma(true)} titolo="Scelgo io il giorno" sotto="Per esempio la mattina di Natale" />
-              {programma && (
+              {scheduling && (
+                <>
+                  <span className={etichetta}>Quando</span>
+                  <Scelta si={!programma} onClick={() => setProgramma(false)} titolo="Subito dopo il pagamento" />
+                  <Scelta si={programma} onClick={() => setProgramma(true)} titolo="Scelgo io il giorno" sotto="Per esempio la mattina di Natale" />
+                </>
+              )}
+              {scheduling && programma && (
                 <div className="grid grid-cols-[1fr_120px] gap-2.5">
                   <input className={campo} type="date" min={oggiARoma()} value={sendDate} onChange={(e) => setSendDate(e.target.value)} />
                   <input className={campo} type="time" step={900} value={sendTime} onChange={(e) => setSendTime(e.target.value)} />
@@ -273,7 +279,7 @@ export function RegalaFlow({
           <button
             type="button"
             className={pulsante}
-            disabled={delivery === 'email' && (!recipientEmail.trim() || (programma && !sendDate))}
+            disabled={delivery === 'email' && (!recipientEmail.trim() || (scheduling && programma && !sendDate))}
             onClick={() => vai('riepilogo')}
           >
             Avanti
@@ -296,7 +302,7 @@ export function RegalaFlow({
                 per {toName.trim()},{' '}
                 {delivery === 'self'
                   ? 'lo consegni tu'
-                  : programma
+                  : scheduling && programma
                     ? `per email il ${new Date(sendDate).toLocaleDateString('it-IT', { day: 'numeric', month: 'long' })} alle ${sendTime}`
                     : 'per email subito'}
               </div>
