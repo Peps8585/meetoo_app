@@ -14,6 +14,7 @@ const links = [
   { href: '/agenda', label: 'Agenda' },
   { href: '/admin/clienti', label: 'Clienti' },
   { href: '/admin/pacchetti', label: 'Pacchetti' },
+  { href: '/admin/gift-card', label: 'Gift card' },
 ]
 
 export default function AdminNav() {
