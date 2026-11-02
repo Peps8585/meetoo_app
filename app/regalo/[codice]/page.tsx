@@ -165,7 +165,12 @@ export default async function RegaloPage({
               </a>
             )
           )}
-          <p className="mt-6 text-center text-[13px] leading-relaxed text-[#6f6a63]">Mee Too Pilates, Pieve di Curtarolo (PD)</p>
+          <p className="mt-6 text-center text-[13px] leading-relaxed text-[#6f6a63]">
+            Mee Too Pilates, Pieve di Curtarolo (PD) ·{' '}
+            <a href="https://www.meetoopilates.com/privacy" className="underline underline-offset-4 print:no-underline">
+              Privacy
+            </a>
+          </p>
           {!staff && attivabile && (
             <Link
               href={`/login?next=${encodeURIComponent(`/regalo/${card.code}`)}`}

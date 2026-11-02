@@ -26,6 +26,13 @@ export default async function RegalaPage() {
         // l'invio programmato si accende solo quando c'e' il giro che spedisce i regali all'ora scelta
         scheduling={process.env.GIFT_SCHEDULING === 'on'}
       />
+      {/* chi compra lascia nome, email e un messaggio: la privacy deve essere a un clic */}
+      <p className="pb-10 text-center text-xs text-[#6f6a63]">
+        <a href="https://www.meetoopilates.com/privacy" className="underline underline-offset-4">
+          Privacy
+        </a>
+        {' · '}Mee Too Pilates, Pieve di Curtarolo (PD)
+      </p>
     </main>
   )
 }
