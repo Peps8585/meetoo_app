@@ -1216,3 +1216,30 @@ In produzione nessuna e' ancora impostata.
   attivato nelle impostazioni Stripe. Sull'account e' acceso Stripe Climate (0,5% donato): da far sapere a Mattia.
 - "Prenota la prima lezione" oggi apre WhatsApp con lo studio e il codice: diventa attivazione nell'app al passo 2.
 - Al passo 2: il wallet e' in euro e non per disciplina, mentre il regalo vale solo per la disciplina scelta.
+
+## S31 — 1-2 novembre 2026 · Gift card online, versione di prova con QR
+
+Cambio di piano deciso da Mattia: l'app non e' ancora in uso dalle clienti e Giorgia sceglie il gruppo con
+la persona, quindi il regalo **si attiva in studio con un QR** invece di caricare le lezioni nell'account.
+
+### Fatto
+- QR e codice su pagina del regalo, email e stampa (`lib/gift/qr.ts`, PNG per le email su
+  `/api/regali/qr/[codice]`). Attivazione per admin/istruttrici attive dello stesso studio
+  (`lib/gift/staff.ts`, `app/regalo/[codice]/actions.ts`): una volta sola, chi lo usa, telefono, gruppo.
+  Email a chi ha regalato quando viene attivato. Pagina `/studio/regali`. Login con `?next=`.
+- Ricevute: Mee Too le fa su Aruba Fatturazione, subito se chi compra e' cliente, altrimenti
+  all'attivazione. L'app avvisa lo studio a ogni vendita (`GIFT_STUDIO_EMAIL`) e tiene il segno fatta/da fare.
+- Invio programmato dietro `GIFT_SCHEDULING=on` (online spento: manca il giro ogni 10 minuti).
+- **Produzione**: tabelle create da Mattia nel SQL Editor (il classificatore blocca le migrazioni in prod),
+  file unico in `LUMA SAAS/GIFT CARD/sql/` fuori dal repo; NON risultano nella cronologia migrazioni.
+  Dominio `regali.meetoopilates.com` (CNAME su Aruba). Segreti Stripe live, webhook e Resend messi da Mattia
+  su Vercel. Pubblicato il 2/11 (main 41bd3fe).
+- **Collaudo vero il 2/11**: lezione matwork 16 € con carta vera (KG7U-AD3K), email arrivate, avviso allo
+  studio arrivato, attivato da Mattia dal telefono con il suo account admin.
+
+### Aperto
+- Riaprire il QR il giorno dopo: l'app non ha piu' il middleware che rinnova la sessione (tolto a luglio),
+  rischio "Invalid Refresh Token" e rientro forzato per chi attiva.
+- Giorgia (instructor in prod) non e' mai entrata: deve impostare la password. SMTP custom su prod mai fatto:
+  le email di Supabase Auth potrebbero non arrivarle.
+- Giro dei regali programmati, Satispay su Stripe da verificare, rimborsi Stripe non collegati all'app.
