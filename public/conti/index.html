@@ -1,0 +1,1061 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<title>Conti delle lezioni Mee Too</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+<style>
+:root{
+  --crema:#f5f0e8; --crema-fonda:#ece4d8; --carta:#fbf8f3; --scuro:#2c2c2c; --tenue:#6f6a63;
+  --bg:var(--crema); --fg:var(--scuro); --fg-2:#5a554e; --sup:var(--carta); --sup-2:var(--crema-fonda);
+  --bordo:#ddd3c4; --accent:#a8876a; --salvia:#7d8b78;
+  --ok:#317A3F; --ok-tinta:#dfe9dc; --att:#B8860B; --att-tinta:#f3e6c8; --neg:#A93226; --neg-tinta:#f1d9d4;
+  --ign:#8c857c; --ign-tinta:#ebe6de; --esempio:#9C7C96;
+  --d-macchine:#A8876A; --d-matwork:#7D8B78; --d-yoga:#B4776B; --d-funzionale:#7C8B96; --d-somatica:#9C7C96; --d-mam:#B0896F; --d-evento:#2C2C2C;
+  --r:10px; --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#262422; --fg:#f0eae0; --fg-2:#c4bcb0; --sup:#312e2b; --sup-2:#3a3633; --bordo:#4a4540; --accent:#c9a98a; --salvia:#9dae98;
+    --ok:#5CA66A; --ok-tinta:#2d3f30; --att:#D9A23A; --att-tinta:#473b22; --neg:#E0523C; --neg-tinta:#4a2b26;
+    --ign:#8c857c; --ign-tinta:#383431; --esempio:#bc9db6;
+    --d-macchine:#c9a98a; --d-matwork:#9dae98; --d-yoga:#d4978a; --d-funzionale:#9caeba; --d-somatica:#bc9db6; --d-mam:#d2b096; --d-evento:#e8e0d4;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#262422; --fg:#f0eae0; --fg-2:#c4bcb0; --sup:#312e2b; --sup-2:#3a3633; --bordo:#4a4540; --accent:#c9a98a; --salvia:#9dae98;
+  --ok:#5CA66A; --ok-tinta:#2d3f30; --att:#D9A23A; --att-tinta:#473b22; --neg:#E0523C; --neg-tinta:#4a2b26;
+  --ign:#8c857c; --ign-tinta:#383431; --esempio:#bc9db6;
+  --d-macchine:#c9a98a; --d-matwork:#9dae98; --d-yoga:#d4978a; --d-funzionale:#9caeba; --d-somatica:#bc9db6; --d-mam:#d2b096; --d-evento:#e8e0d4;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0 auto;max-width:1180px;padding-inline:16px;padding-block:10px 96px;background:var(--bg);color:var(--fg);
+  font-family:var(--font);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+.riga.tot .num{font-size:17px}
+h1,h2,h3{margin:0;text-wrap:balance;font-weight:600;letter-spacing:-.01em}
+h1{font-size:clamp(22px,3.4vw,30px)}
+h2{font-size:18px}
+h3{font-size:15px}
+p{margin:0}
+button{font:inherit;cursor:pointer}
+a{color:inherit}
+.num{font-variant-numeric:tabular-nums}
+.muto{color:var(--fg-2)}
+.piccolo{font-size:13px}
+.occhiello{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--fg-2)}
+
+/* testata */
+.testata{display:flex;align-items:flex-end;justify-content:space-between;gap:14px 24px;flex-wrap:wrap;padding-block:8px 14px}
+.logo{display:inline-flex;align-items:center;gap:7px;color:var(--fg)}
+.logo svg{display:block}
+.testata .meta{display:grid;gap:3px;text-align:right}
+@media (max-width:600px){.testata .meta{text-align:left}}
+
+/* menù */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;justify-content:space-around;gap:2px;background:var(--sup);border-top:1px solid var(--bordo);padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px))}
+.voce{flex:1 1 0;min-height:52px;border:0;background:transparent;color:var(--fg-2);display:grid;justify-items:center;align-content:center;gap:3px;font-size:12px;font-weight:600;border-radius:12px;padding:4px 2px;letter-spacing:.01em}
+.voce svg{width:22px;height:22px;display:block}
+.voce[aria-selected="true"]{color:var(--fg);background:var(--sup-2)}
+.voce.sec{display:none}
+.altro-menu{position:fixed;right:8px;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:45;background:var(--sup);border:1px solid var(--bordo);border-radius:14px;padding:6px;display:grid;gap:2px;box-shadow:0 12px 32px rgba(0,0,0,.22);min-width:180px}
+.altro-menu button{min-height:46px;border:0;background:transparent;color:var(--fg);padding:8px 16px;text-align:left;border-radius:10px;font-size:16px;font-weight:500}
+.altro-menu button[aria-selected="true"]{background:var(--sup-2)}
+.voce:focus-visible,.altro-menu button:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (min-width:960px){
+  .nav{position:sticky;top:env(safe-area-inset-top,0px);bottom:auto;border-top:0;border-bottom:1px solid var(--bordo);background:var(--bg);justify-content:flex-start;gap:6px;padding:8px 0 10px;margin-bottom:16px}
+  .voce{flex:0 0 auto;min-height:44px;padding:0 14px;grid-auto-flow:column;align-items:center;gap:8px;font-size:14px}
+  .voce svg{width:18px;height:18px}
+  .voce.sec{display:grid}.voce.altro{display:none}.altro-menu{display:none!important}
+}
+.vista{display:grid;gap:18px}
+.bottone{border:1px solid var(--fg);background:var(--fg);color:var(--bg);border-radius:8px;padding:8px 14px;font-weight:500}
+.bottone.secondario{background:transparent;color:var(--fg)}
+.bottone.piccolo{padding:5px 10px;font-size:13px}
+
+/* avvisi */
+.avviso{border-radius:var(--r);padding:12px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:space-between;border:1px solid var(--bordo);background:var(--sup)}
+.avviso.esempio{border-color:var(--esempio);background:repeating-linear-gradient(135deg,transparent 0 10px,color-mix(in srgb,var(--esempio) 12%,transparent) 10px 12px),var(--sup)}
+.avviso .testo{display:grid;gap:2px;flex:1 1 280px}
+.avviso strong{font-weight:600}
+
+/* tessere */
+.tessere{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.tessera{background:var(--sup);border:1px solid var(--bordo);border-radius:var(--r);padding:12px 14px;display:grid;gap:2px;align-content:start}
+.tessera .k{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-2);font-weight:600}
+.tessera .v{font-size:26px;font-weight:600;letter-spacing:-.02em;line-height:1.15}
+.tessera .s{font-size:13px;color:var(--fg-2)}
+.pos{color:var(--ok)} .negv{color:var(--neg)}
+
+/* settimana */
+.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{border:1px solid var(--bordo);background:var(--sup);color:var(--fg);border-radius:10px;padding:8px 11px;min-height:48px;font-weight:500;display:grid;gap:0;text-align:center;min-width:64px}
+.chip small{font-size:12px;color:var(--fg-2);font-weight:400}
+.chip[aria-selected="true"]{border-color:var(--fg);background:var(--sup-2)}
+.settimana{display:grid;grid-template-columns:1fr;gap:14px}
+.giorno{display:grid;gap:8px;align-content:start}
+.giorno.off{display:none}
+.giorno header{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding-inline:2px}
+.giorno header h3{font-size:14px;font-weight:600}
+@media (min-width:960px){
+  .chips{display:none}
+  .settimana{grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+  .giorno.off{display:grid}
+}
+.lez{--st:var(--ign);display:grid;grid-template-columns:1fr auto;gap:1px 8px;align-items:baseline;text-align:left;width:100%;
+  padding:9px 11px 9px 10px;border-radius:var(--r);background:var(--sup);border:1px solid var(--bordo);border-left:5px solid var(--st);color:var(--fg)}
+.lez[data-st="ok"]{--st:var(--ok);background:var(--ok-tinta)}
+.lez[data-st="att"]{--st:var(--att);background:var(--att-tinta)}
+.lez[data-st="neg"]{--st:var(--neg);background:var(--neg-tinta)}
+.lez[data-st="fuori"]{opacity:.6;border-style:dashed}
+.lez .ora{font-weight:600;font-size:14px}
+.lez .marg{font-weight:600;font-size:16px;text-align:right;white-space:nowrap}
+.lez .nome{grid-column:1/-1;font-weight:500;display:flex;align-items:center;gap:6px;min-width:0}
+.lez .nome span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lez .nome .sotto{color:var(--fg-2);font-weight:400;font-size:13px}
+.lez .meta{grid-column:1/-1;font-size:13px;color:var(--fg-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pallino{width:9px;height:9px;border-radius:50%;flex:none;display:inline-block}
+.lez .stato{grid-column:1/-1;font-size:13px;color:var(--fg-2);display:flex;align-items:center;gap:6px;min-width:0}
+.lez .stato span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.glifo{width:15px;height:15px;border-radius:50%;background:var(--st);color:#fff;font-size:10px;font-weight:700;display:inline-grid;place-items:center;flex:none;line-height:1}
+@media (max-width:959px){.lez{grid-template-columns:auto 1fr auto;column-gap:10px}.lez .nome{grid-column:2;grid-row:1}.lez .ora{grid-row:1}.lez .marg{grid-row:1;font-size:17px}.lez .meta{grid-column:1/-1}.lez .stato{grid-column:1/-1}}
+
+/* dettaglio */
+dialog{border:0;border-radius:16px;max-width:560px;width:calc(100% - 24px);padding:0;background:var(--sup);color:var(--fg);box-shadow:0 20px 60px rgba(0,0,0,.25)}
+dialog::backdrop{background:rgba(30,25,20,.45)}
+.dlg{padding:18px 18px 20px;display:grid;gap:14px;max-height:88vh;overflow:auto}
+.dlg .intesta{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.chiudi{border:1px solid var(--bordo);background:var(--sup-2);color:var(--fg);border-radius:50%;width:32px;height:32px;display:grid;place-items:center;font-size:16px;flex:none}
+.conto{display:grid;gap:0;border-top:1px solid var(--bordo)}
+.conto .r{display:grid;grid-template-columns:1fr auto;gap:10px;padding:7px 0;border-bottom:1px solid var(--bordo);align-items:baseline}
+.conto .r small{display:block;color:var(--fg-2);font-size:13px}
+.conto .r.tot{font-weight:600;font-size:16px}
+.conto .r .v{text-align:right;font-weight:500}
+.griglia2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:420px){.griglia2{grid-template-columns:1fr}}
+.campo{display:grid;gap:4px}
+.campo label{font-size:13px;color:var(--fg-2);font-weight:500}
+input,select,textarea{font:inherit;font-size:16px;min-height:44px;padding:8px 10px;border:1px solid var(--bordo);border-radius:8px;background:var(--bg);color:var(--fg);width:100%;min-width:0}
+input[type="number"]{text-align:right;font-variant-numeric:tabular-nums}
+input[type="checkbox"]{width:18px;height:18px;accent-color:var(--fg)}
+input[type="range"]{padding:0;accent-color:var(--fg)}
+textarea{font-family:ui-monospace,Menlo,monospace;font-size:12px;min-height:140px}
+.tabellina{width:100%;border-collapse:collapse;font-size:13.5px}
+.tabellina th,.tabellina td{padding:6px 6px;border-bottom:1px solid var(--bordo);text-align:right;white-space:nowrap}
+.tabellina th:first-child,.tabellina td:first-child{text-align:left}
+.tabellina th{font-weight:600;color:var(--fg-2);font-size:12px;letter-spacing:.04em;text-transform:uppercase}
+.tabellina tr.sel td{font-weight:600}
+.tabellina td.ok{color:var(--ok)} .tabellina td.att{color:var(--att)} .tabellina td.neg{color:var(--neg)}
+.bolla{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 12px 5px 7px;font-size:13.5px;font-weight:500;background:var(--sup-2)}
+.bolla.ok{background:var(--ok-tinta)} .bolla.att{background:var(--att-tinta)} .bolla.neg{background:var(--neg-tinta)}
+
+/* tipologie */
+.carte{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.carta{background:var(--sup);border:1px solid var(--bordo);border-radius:var(--r);padding:14px 16px;display:grid;gap:12px;border-top:4px solid var(--dc)}
+.carta header{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.carta header .n{display:flex;align-items:center;gap:8px}
+.fatti{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.fatto{display:grid;gap:1px}
+.fatto .k{font-size:12px;color:var(--fg-2);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.fatto .v{font-size:17px;font-weight:600}
+.fatto .v small{font-size:13px;font-weight:400;color:var(--fg-2)}
+.grafico{width:100%;height:auto;display:block}
+.grafico text{font-family:var(--font)}
+
+/* dati */
+.blocco{background:var(--sup);border:1px solid var(--bordo);border-radius:var(--r);padding:14px 16px;display:grid;gap:10px}
+.blocco h2{font-size:16px}
+.riga{display:grid;grid-template-columns:1fr 130px;gap:10px;align-items:center}
+.riga.tre{grid-template-columns:1fr 150px 110px 44px}
+@media (max-width:560px){.riga.tre{grid-template-columns:1fr 1fr;grid-auto-rows:auto}.riga.tre .x{grid-column:2;justify-self:end}}
+.riga.tot{border-top:1px solid var(--bordo);padding-top:8px;font-weight:600}
+.riga.tot .num{text-align:right}
+.x{border:1px solid var(--bordo);background:transparent;color:var(--fg-2);border-radius:10px;width:44px;height:44px;display:grid;place-items:center}
+.mix{display:grid;grid-template-columns:repeat(auto-fit,minmax(78px,1fr));gap:8px}
+.nota{font-size:13.5px;color:var(--fg-2);line-height:1.4}
+details{border:1px solid var(--bordo);border-radius:var(--r);background:var(--sup)}
+details summary{padding:10px 14px;cursor:pointer;font-weight:500;list-style:none;display:flex;justify-content:space-between}
+details summary::-webkit-details-marker{display:none}
+details summary::after{content:"+";color:var(--fg-2)}
+details[open] summary::after{content:"–"}
+details .dentro{padding:0 14px 12px;display:grid;gap:8px}
+.slotriga{display:grid;grid-template-columns:52px 1fr 1fr 80px;gap:8px;align-items:center;font-size:14px}
+@media (max-width:560px){.slotriga{grid-template-columns:52px 1fr 80px}.slotriga select{grid-column:1/-1;grid-row:2}.slotriga input{grid-row:1;grid-column:3}}
+.dicui{border:1px solid var(--bordo);background:transparent;color:var(--fg-2);border-radius:999px;padding:6px 11px;font-size:13px;margin-left:4px;min-height:36px}
+.dicui[aria-expanded="true"]{background:var(--sup-2);color:var(--fg)}
+.slotcomp{display:flex;gap:8px;align-items:end;flex-wrap:wrap;padding:2px 0 8px 52px;border-bottom:1px dashed var(--bordo)}
+.slotcomp label{display:grid;gap:2px;color:var(--fg-2)}
+.slotcomp input{width:72px;padding:6px 6px}
+@media (max-width:560px){.slotcomp{padding-left:0}}
+.cancello{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px;overflow:auto}
+.cancello-card{width:min(100%,380px);background:var(--sup);border:1px solid var(--bordo);border-radius:16px;padding:22px 20px;display:grid;gap:12px;margin:0}
+.cancello-card .logo{justify-self:start}
+.cancello-card .bottone{min-height:48px}
+.cancello-card h2{font-size:20px}
+.ricorda{display:flex;gap:8px;align-items:center;font-size:13.5px;color:var(--fg-2)}
+.salvataggio{position:fixed;right:12px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:40;background:var(--fg);color:var(--bg);font-size:12px;padding:6px 10px;border-radius:999px;opacity:.94;max-width:min(80vw,320px)}
+.salvataggio[data-ok="1"]{background:var(--sup-2);color:var(--fg-2);border:1px solid var(--bordo)}
+@media (min-width:960px){body{padding-bottom:48px}.salvataggio{bottom:12px}}
+.insriga{display:grid;grid-template-columns:1fr 76px 108px;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--bordo)}
+.insriga span small{display:block;color:var(--fg-2);font-size:13px;font-weight:400}
+.insriga input{padding:6px 6px}
+.insriga.intesta{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-2);font-weight:600;padding-bottom:4px}
+.insriga.intesta span:not(:first-child),.insriga.tot span:last-child{text-align:right}
+.insriga.tot{font-weight:600;border-bottom:0;padding-top:10px}
+.codins{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:4px 0 10px;border-bottom:1px dashed var(--bordo)}
+.codins input{flex:1 1 180px;min-height:40px}
+.lezform{display:grid;grid-template-columns:110px 1fr 1fr 80px auto;gap:6px;align-items:center;padding-top:8px;border-top:1px dashed var(--bordo)}
+.lezform input,.lezform select{padding:6px 8px}
+@media (max-width:640px){.lezform{grid-template-columns:1fr 1fr}.lezform button{grid-column:1/-1}}
+.lezecc{display:grid;gap:2px}
+.ecc{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:2px 6px 8px}
+.ecc select{min-height:36px;width:auto;font-size:14px;padding:4px 8px;margin-left:4px}
+.dicui.on{background:var(--neg-tinta);color:var(--neg);border-color:var(--neg)}
+.lezecc.conecc .lez{opacity:.7}
+body.istruttore .nav,body.istruttore .salvataggio,body.istruttore .altro-menu,body.istruttore #avvisi{display:none!important}
+body.app .testata,body.app .solo-fuori-app{display:none!important}
+body.app{padding-top:4px}
+body.istruttore{padding-bottom:48px;position:relative;line-height:1.6}
+body.istruttore::before{content:"";position:fixed;inset:-12px;z-index:-2;background:url(sfondo-studio.jpg) center/cover no-repeat;filter:blur(2px) saturate(1.05) brightness(.95)}
+body.istruttore::after{content:"";position:fixed;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(44,44,44,.58),rgba(44,44,44,.72) 50%,rgba(44,44,44,.86))}
+body.istruttore{background:#2c2c2c}
+body.istruttore .ist-piede span{color:#d9d2c6}
+body.istruttore .testata,body.istruttore .ist-testa{background:var(--sup);border:1px solid var(--bordo);border-radius:18px;padding:16px 18px}
+body.istruttore .testata{margin-top:4px;margin-bottom:30px}
+body.istruttore .testata{padding-bottom:18px}
+#istruttore{gap:26px}
+.ist-testa{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap}
+.ist-testa h2{font-size:26px;margin:4px 0 6px}
+.ist-mese{display:flex;align-items:center;gap:10px;background:var(--sup);border:1px solid var(--bordo);border-radius:14px;padding:6px 12px}
+.ist-mese input{border:0;background:transparent;min-height:40px;padding:0;width:auto}
+.ico{width:24px;height:24px;flex:none}.ico.grande{width:34px;height:34px;color:var(--accent)}
+.ist-tessere{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.ist-tessera{display:flex;gap:14px;align-items:flex-start;background:var(--sup);box-shadow:0 6px 24px rgba(44,44,44,.08);border:1px solid var(--bordo);border-radius:18px;padding:18px 16px 16px}
+.ist-tessera>div{display:grid;gap:4px}
+.ist-tessera .k{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-2);font-weight:600}
+.ist-tessera .v{font-size:30px;font-weight:600;letter-spacing:-.02em;line-height:1.1}
+.ist-tessera .s{font-size:13px;color:var(--fg-2);line-height:1.4}
+@media (max-width:420px){.ist-tessere{grid-template-columns:1fr}}
+.ist-stato{display:flex;gap:14px;align-items:center;background:var(--att-tinta);border:1px solid var(--bordo);border-radius:16px;padding:14px 16px}
+.ist-stato.ok{background:var(--ok-tinta)}
+.ist-stato .glifo{width:26px;height:26px;font-size:13px}
+.ist-stato b{display:block;font-weight:600}.ist-stato span{display:block;color:var(--fg-2);font-size:14px}
+.ist-blocco{background:var(--sup);box-shadow:0 6px 24px rgba(44,44,44,.08);border:1px solid var(--bordo);border-radius:18px;padding:18px 18px 10px;display:grid;gap:4px}
+.ist-blocco h3{font-size:17px;margin-bottom:2px}
+.ist-blocco>.piccolo{margin-bottom:10px}
+details.tipo{border:0;border-top:1px solid var(--bordo);border-radius:0;background:transparent}
+details.tipo summary::after{content:none}
+details.tipo summary{padding-inline:4px}
+details.tipo summary{list-style:none;display:grid;grid-template-columns:auto 1fr auto auto;gap:14px;align-items:center;padding:16px 4px;cursor:pointer;min-height:56px}
+details.tipo summary::-webkit-details-marker{display:none}
+details.tipo .ico{color:var(--accent)}
+.tipo .nome{font-weight:500;font-size:16px}.tipo .nome small{display:block;color:var(--fg-2);font-size:13px;font-weight:400;margin-top:2px}
+.tipo .n{font-size:20px;font-weight:600}
+.tipo .chev{color:var(--fg-2);font-size:22px;transition:transform .15s}
+details.tipo[open] .chev{transform:rotate(90deg)}
+.giorni{display:grid;gap:0;padding:0 4px 14px 42px}
+.gio{display:grid;grid-template-columns:62px 1fr;gap:10px;align-items:start;padding:10px 0;border-top:1px dashed var(--bordo);font-size:15px}
+.gio .data{font-weight:600;padding-top:4px}
+.orari{display:flex;flex-wrap:wrap;gap:6px}
+.orach{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:999px;background:var(--sup-2);font-size:14px;font-weight:500}
+.orach small{font-weight:400;color:var(--fg-2);font-size:12px}
+.orach.no{opacity:.55;text-decoration:line-through}
+.orach.fut{background:transparent;border:1px dashed var(--bordo);color:var(--fg-2);font-weight:400}
+.orach.no small{text-decoration:none}
+.tipo.tot,.tipo.stor{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;padding:16px 4px;border-top:1px solid var(--bordo)}
+.tipo.tot .nome{font-weight:600}
+.tipo.stor .nome small{display:block;color:var(--fg-2);font-size:13px;font-weight:400}
+.ist-piede{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding-top:6px}
+.cose{display:grid;gap:8px}
+.cosa{--st:var(--ign);display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px 14px;border-radius:var(--r);background:var(--sup);border:1px solid var(--bordo);border-left:5px solid var(--st)}
+.cosa[data-st="ok"]{--st:var(--ok)}.cosa[data-st="att"]{--st:var(--att)}.cosa[data-st="neg"]{--st:var(--neg)}
+.cosa b{display:block;font-weight:600}.cosa span{display:block;color:var(--fg-2);font-size:13.5px;line-height:1.35}
+.cosa .glifo{width:22px;height:22px;font-size:12px}
+.cosa .bottone{min-height:40px;white-space:nowrap}
+@media (max-width:480px){.cosa{grid-template-columns:auto 1fr}.cosa .bottone{grid-column:2;justify-self:start}}
+.legenda{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--fg-2)}
+.legenda span{display:inline-flex;align-items:center;gap:6px}
+@media (prefers-reduced-motion:no-preference){.lez{transition:transform .12s ease}.lez:hover{transform:translateY(-1px)}}
+</style>
+
+<header class="testata">
+  <a class="logo" href="#" aria-label="Mee Too Pilates">
+    <svg viewBox="0 0 134 101" fill="none" style="height:17px;width:auto" aria-hidden="true"><circle cx="48" cy="50" r="33" stroke="currentColor" stroke-width="10"/><circle cx="86" cy="50" r="33" stroke="currentColor" stroke-width="10"/></svg>
+    <svg style="height:32px;width:auto" xmlns="http://www.w3.org/2000/svg" viewBox="68 83 256 181" fill="currentColor" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Mee Too">
+  <defs>
+    <clipPath id="mtw-clip"><rect x="0" width="266" y="0" height="142"/></clipPath>
+  </defs>
+  <g transform="matrix(1, 0, 0, 1, 60, 54)">
+    <g clip-path="url(#mtw-clip)">
+      <g transform="translate(0.839089, 111.738456)"><path d="M 82.6875 0 L 82.578125 -48.234375 L 58.921875 -8.5 L 50.53125 -8.5 L 26.984375 -47.203125 L 26.984375 0 L 9.53125 0 L 9.53125 -80.390625 L 24.921875 -80.390625 L 55.015625 -30.4375 L 84.640625 -80.390625 L 99.921875 -80.390625 L 100.140625 0 Z M 82.6875 0 "/></g>
+      <g transform="translate(110.502225, 111.738456)"><path d="M 71.78125 -14.9375 L 71.78125 0 L 9.53125 0 L 9.53125 -80.390625 L 70.28125 -80.390625 L 70.28125 -65.46875 L 28.015625 -65.46875 L 28.015625 -48 L 65.34375 -48 L 65.34375 -33.53125 L 28.015625 -33.53125 L 28.015625 -14.9375 Z M 71.78125 -14.9375 "/></g>
+      <g transform="translate(187.55349, 111.738456)"><path d="M 71.78125 -14.9375 L 71.78125 0 L 9.53125 0 L 9.53125 -80.390625 L 70.28125 -80.390625 L 70.28125 -65.46875 L 28.015625 -65.46875 L 28.015625 -48 L 65.34375 -48 L 65.34375 -33.53125 L 28.015625 -33.53125 L 28.015625 -14.9375 Z M 71.78125 -14.9375 "/></g>
+    </g>
+  </g>
+  <g transform="translate(69.577034, 260.299877)"><path d="M 25.359375 -63.15625 L 0.4375 -63.15625 L 0.4375 -77.84375 L 68.28125 -77.84375 L 68.28125 -63.15625 L 43.375 -63.15625 L 43.375 0 L 25.359375 0 Z M 25.359375 -63.15625 "/></g>
+  <g transform="translate(137.186035, 260.299877)"><path d="M 46.921875 1.328125 C 38.847656 1.328125 31.566406 -0.410156 25.078125 -3.890625 C 18.585938 -7.378906 13.507812 -12.179688 9.84375 -18.296875 C 6.175781 -24.410156 4.34375 -31.285156 4.34375 -38.921875 C 4.34375 -46.554688 6.175781 -53.429688 9.84375 -59.546875 C 13.507812 -65.660156 18.585938 -70.457031 25.078125 -73.9375 C 31.566406 -77.425781 38.847656 -79.171875 46.921875 -79.171875 C 55.003906 -79.171875 62.269531 -77.425781 68.71875 -73.9375 C 75.164062 -70.457031 80.242188 -65.660156 83.953125 -59.546875 C 87.660156 -53.429688 89.515625 -46.554688 89.515625 -38.921875 C 89.515625 -31.285156 87.660156 -24.410156 83.953125 -18.296875 C 80.242188 -12.179688 75.164062 -7.378906 68.71875 -3.890625 C 62.269531 -0.410156 55.003906 1.328125 46.921875 1.328125 Z M 46.921875 -14.015625 C 51.523438 -14.015625 55.675781 -15.066406 59.375 -17.171875 C 63.082031 -19.285156 65.992188 -22.234375 68.109375 -26.015625 C 70.222656 -29.796875 71.28125 -34.097656 71.28125 -38.921875 C 71.28125 -43.742188 70.222656 -48.039062 68.109375 -51.8125 C 65.992188 -55.59375 63.082031 -58.539062 59.375 -60.65625 C 55.675781 -62.769531 51.523438 -63.828125 46.921875 -63.828125 C 42.328125 -63.828125 38.175781 -62.769531 34.46875 -60.65625 C 30.757812 -58.539062 27.847656 -55.59375 25.734375 -51.8125 C 23.628906 -48.039062 22.578125 -43.742188 22.578125 -38.921875 C 22.578125 -34.097656 23.628906 -29.796875 25.734375 -26.015625 C 27.847656 -22.234375 30.757812 -19.285156 34.46875 -17.171875 C 38.175781 -15.066406 42.328125 -14.015625 46.921875 -14.015625 Z M 46.921875 -14.015625 "/></g>
+  <g transform="translate(231.038155, 260.299877)"><path d="M 46.921875 1.328125 C 38.847656 1.328125 31.566406 -0.410156 25.078125 -3.890625 C 18.585938 -7.378906 13.507812 -12.179688 9.84375 -18.296875 C 6.175781 -24.410156 4.34375 -31.285156 4.34375 -38.921875 C 4.34375 -46.554688 6.175781 -53.429688 9.84375 -59.546875 C 13.507812 -65.660156 18.585938 -70.457031 25.078125 -73.9375 C 31.566406 -77.425781 38.847656 -79.171875 46.921875 -79.171875 C 55.003906 -79.171875 62.269531 -77.425781 68.71875 -73.9375 C 75.164062 -70.457031 80.242188 -65.660156 83.953125 -59.546875 C 87.660156 -53.429688 89.515625 -46.554688 89.515625 -38.921875 C 89.515625 -31.285156 87.660156 -24.410156 83.953125 -18.296875 C 80.242188 -12.179688 75.164062 -7.378906 68.71875 -3.890625 C 62.269531 -0.410156 55.003906 1.328125 46.921875 1.328125 Z M 46.921875 -14.015625 C 51.523438 -14.015625 55.675781 -15.066406 59.375 -17.171875 C 63.082031 -19.285156 65.992188 -22.234375 68.109375 -26.015625 C 70.222656 -29.796875 71.28125 -34.097656 71.28125 -38.921875 C 71.28125 -43.742188 70.222656 -48.039062 68.109375 -51.8125 C 65.992188 -55.59375 63.082031 -58.539062 59.375 -60.65625 C 55.675781 -62.769531 51.523438 -63.828125 46.921875 -63.828125 C 42.328125 -63.828125 38.175781 -62.769531 34.46875 -60.65625 C 30.757812 -58.539062 27.847656 -55.59375 25.734375 -51.8125 C 23.628906 -48.039062 22.578125 -43.742188 22.578125 -38.921875 C 22.578125 -34.097656 23.628906 -29.796875 25.734375 -26.015625 C 27.847656 -22.234375 30.757812 -19.285156 34.46875 -17.171875 C 38.175781 -15.066406 42.328125 -14.015625 46.921875 -14.015625 Z M 46.921875 -14.015625 "/></g>
+</svg>
+
+  </a>
+  <div class="meta">
+    <p class="occhiello">Studio Mee Too Pilates</p>
+    <h1>I conti di ogni lezione</h1>
+    <p class="muto piccolo">Palinsesto dal 7 settembre al 19 dicembre 2026 · Listino dal 1° ottobre 2026</p>
+  </div>
+</header>
+
+<nav class="nav" aria-label="Sezioni">
+  <button class="voce" data-vista="oggi" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>Oggi</button>
+  <button class="voce" data-vista="settimana"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M8 13h3M13 13h3M8 17h3M13 17h3"/></svg>Settimana</button>
+  <button class="voce" data-vista="mese"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M6 4h12a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M9 12h6M9 16h4"/></svg>Mese</button>
+  <button class="voce" data-vista="dati"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 12h4M12 12h8M4 17h12M20 17h0"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="17" r="2"/></svg>Dati</button>
+  <button class="voce sec" data-vista="tipologie">Tipologie</button>
+  <button class="voce sec" data-vista="simulatore">Simulatore</button>
+  <button class="voce sec" data-vista="stipendio">Stipendio</button>
+  <button class="voce altro" data-az="altro" aria-expanded="false"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>Altro</button>
+</nav>
+<div class="altro-menu" id="altro-menu" hidden><button data-vista="tipologie">Tipologie</button><button data-vista="simulatore">Simulatore</button><button data-vista="stipendio">Stipendio</button></div>
+
+<div id="avvisi"></div>
+<section class="vista" id="istruttore" hidden></section>
+<section class="vista" id="oggi"></section>
+<section class="vista" id="settimana" hidden></section>
+<section class="vista" id="tipologie" hidden></section>
+<section class="vista" id="simulatore" hidden></section>
+<section class="vista" id="mese" hidden></section>
+<section class="vista" id="stipendio" hidden></section>
+<section class="vista" id="dati" hidden></section>
+<dialog id="dettaglio"></dialog>
+<div id="cancello" class="cancello">
+  <form id="c-form" class="cancello-card" novalidate>
+    <span class="logo" id="c-logo" aria-hidden="true"></span>
+    <div><p class="occhiello">Studio Mee Too Pilates</p><h2>I conti di ogni lezione</h2></div>
+    <p class="nota">Inserisci il codice per accedere alla tua area riservata.</p>
+    <div class="campo"><label for="c-codice">Codice di accesso</label><input id="c-codice" type="password" autocomplete="current-password" autocapitalize="off" spellcheck="false" inputmode="text"></div>
+    <label class="ricorda"><input id="c-ricorda" type="checkbox" checked> Ricordami su questo dispositivo</label>
+    <button class="bottone" id="c-entra" type="submit">Entra</button>
+    <p class="nota" id="c-msg" aria-live="polite"></p>
+  </form>
+  <p class="nota" id="c-app" hidden aria-live="polite"></p>
+</div>
+<div id="salvataggio" class="salvataggio" hidden></div>
+
+<script>
+'use strict';
+/* ============ DATI FISSI (palinsesto settembre-dicembre 2026, listino 01/10/2026) ============ */
+const GIORNI=[['Lun','Lunedì'],['Mar','Martedì'],['Mer','Mercoledì'],['Gio','Giovedì'],['Ven','Venerdì'],['Sab','Sabato']];
+const DISC={
+  macchine:  {nome:'Macchine',   listino:'Pilates Studio, Reformer e Chair', prezzi:{singola:23,p5:22,p10:21,p15:20.5,p20:20}},
+  matwork:   {nome:'Matwork',    listino:'Pilates Matwork',                  prezzi:{singola:16,p5:15,p10:14,p15:13.5,p20:13}},
+  yoga:      {nome:'Yoga',       listino:'Yoga',                             prezzi:{singola:18,p5:17,p10:16,p15:15.5,p20:15}},
+  funzionale:{nome:'Funzionale', listino:'come il Matwork, così è nell’app', prezzi:{singola:16,p5:15,p10:14,p15:13.5,p20:13}},
+  mam:       {nome:'Pilates MAM', listino:'solo a pacchetto: 5 lezioni 95 €, 10 lezioni 180 €', prezzi:{p5:19,p10:18}},
+  somatica:  {nome:'Laboratorio',listino:'Laboratorio esperienziale',        prezzi:{singola:30,p3:27,p6:25}},
+  evento:    {nome:'Workshop',   listino:'Workshop, da 30 €',                prezzi:{singola:30}},
+};
+const ETIC={singola:'Singola',p3:'3 incontri',p5:'Pacch. 5',p6:'6 incontri',p10:'Pacch. 10',p15:'Pacch. 15',p20:'Pacch. 20'};
+// [giorno, ora, disciplina, nome, sottotitolo, posti (dall'app), frequenza/nota]
+const PAL_BASE=[
+ ['Mar','7.00','macchine','Macchine',null,4],['Mer','7.00','yoga','Yoga',null,7],['Gio','7.00','macchine','Macchine',null,4],
+ ['Ven','7.00','macchine','Macchine',null,4],['Sab','7.00','macchine','Macchine',null,4],
+ ['Lun','8.00','matwork','Matwork',null,7],['Mar','8.00','macchine','Macchine',null,4],['Gio','8.00','matwork','Matwork',null,7],
+ ['Ven','8.00','macchine','Macchine',null,4],['Sab','8.00','macchine','Macchine',null,4],
+ ['Lun','9.00','macchine','Macchine',null,4],['Mar','9.00','macchine','Macchine',null,4],['Gio','9.00','macchine','Macchine',null,4],
+ ['Ven','9.00','macchine','Macchine',null,4],['Sab','9.00','matwork','Matwork','livello base',7],
+ ['Mar','10.00','mam','Pilates MAM',null,4],
+ ['Sab','10.00','funzionale','Funzionale','una volta al mese',7,'mensile'],
+ ['Sab','11.00','yoga','Yoga',null,7],
+['Mer','12.00','macchine','Macchine','livello base',4],['Gio','12.00','macchine','Macchine',null,4],
+ ['Ven','12.30','funzionale','Educazione funzionale',null,7],['Ven','13.30','funzionale','Allenamento funzionale',null,7],
+ ['Lun','13.00','matwork','Matwork',null,7],['Mar','13.00','yoga','Yoga','intermedio',7],['Mer','13.00','macchine','Macchine',null,4],['Gio','13.00','matwork','Matwork',null,7],
+ ['Lun','14.00','macchine','Macchine','livello base',4],['Mar','14.00','macchine','Macchine',null,4],['Mer','14.00','matwork','Matwork',null,7],['Gio','14.00','macchine','Macchine','livello base',4],
+ ['Mar','15.00','macchine','Macchine',null,4],['Gio','15.00','macchine','Macchine','livello base',4],
+ ['Lun','17.00','macchine','Macchine',null,4],['Mer','17.00','macchine','Macchine','livello base',4],
+ ['Lun','18.00','macchine','Macchine',null,4],['Mar','18.00','macchine','Macchine',null,4],['Mer','18.00','matwork','Matwork','livello base',7],['Gio','18.00','macchine','Macchine','circuito',7],
+ ['Lun','19.00','macchine','Macchine',null,4],['Mar','19.00','macchine','Macchine',null,4],['Mer','19.00','macchine','Macchine',null,4],['Gio','19.00','funzionale','Funzionale','allenamento',7],
+ ['Ven','19.00','somatica','Laboratorio','esperienziale',7,'orario da definire'],
+ ['Lun','20.00','macchine','Macchine',null,4],['Mar','20.00','matwork','Matwork',null,7],['Mer','20.00','macchine','Macchine',null,4],['Gio','20.00','yoga','Yoga',null,7],
+ ['Ven','20.00','evento','Workshop','somatica',7,'data e orario da definire'],
+].map(a=>({g:a[0],ora:a[1],disc:a[2],nome:a[3],sotto:a[4],posti:a[5],nota:a[6]||null,freq:a[6]==='mensile'?'mensile':'sett'}));
+const key=l=>l.g+'|'+l.ora;
+const oraNum=l=>parseFloat(l.ora);
+PAL_BASE.sort((a,b)=>oraNum(a)-oraNum(b));
+let PAL=[];
+function ricalcolaPAL(){ const rim=new Set(S.rimosse||[]);
+  const extra=(S.extra||[]).map(e=>({g:e.g,ora:e.ora,disc:e.disc,nome:e.nome||DISC[e.disc].nome,sotto:e.sotto||null,posti:num(e.posti)||7,nota:null,freq:'sett',extra:true}));
+  PAL=PAL_BASE.filter(l=>!rim.has(key(l))).concat(extra); PAL.sort((a,b)=>oraNum(a)-oraNum(b)); }
+
+/* ============ STATO MODIFICABILE DA GIORGIA ============ */
+const STORE='meetoo-conti-lezioni-v1';
+const MIX0=()=>({singola:0,p5:0,p10:100,p15:0,p20:0});
+const DEFAULT=()=>({
+  esempio:false,
+  spese:['Affitto','Luce e gas','Assicurazione','App Palestre','Commercialista','Pulizie','Rate o leasing macchine','POS e banca','Pubblicità'].map(v=>({voce:v,importo:null})),
+  settimaneAperte:47,
+  valoreOra:0, tasse:0, variabili:0,
+  insegnanti:[{id:'giorgia',nome:'Giorgia',tipo:'titolare',importo:0}],
+  slot:{},
+  mix:{macchine:MIX0(),matwork:MIX0(),yoga:MIX0(),funzionale:MIX0(),mam:{p5:0,p10:100},somatica:{singola:0,p3:100,p6:0},evento:{singola:100}},
+  includi:{somatica:false,evento:false},
+  fisco:{modo:'forfettario',coeff:67,imposta:15,contributi:26.07,percentuale:0},
+  piano:{bonifico:3000,riservaMensile:500},
+  mesi:[110,100,100,95,90,80,60,25,110,100,100,85],
+  extra:[], rimosse:[], chiusure:{}, eccezioni:{},
+});
+const MESI=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+function esempio(){
+  const E=DEFAULT(); E.esempio=true;
+  const imp={'Affitto':1100,'Luce e gas':220,'Assicurazione':60,'App Palestre':49,'Commercialista':120,'Pulizie':160,'Rate o leasing macchine':290,'POS e banca':35,'Pubblicità':100};
+  E.spese.forEach(s=>s.importo=imp[s.voce]);
+  E.valoreOra=25; E.tasse=30;
+  E.insegnanti=[{id:'giorgia',nome:'Giorgia',tipo:'titolare',importo:0},{id:'ins1',nome:'Insegnante A',tipo:'ora',importo:22},{id:'ins2',nome:'Insegnante B',tipo:'ora',importo:24},{id:'ins3',nome:'Insegnante yoga',tipo:'ora',importo:30}];
+  E.mix.macchine={singola:10,p5:15,p10:55,p15:10,p20:10}; E.mix.matwork={singola:10,p5:20,p10:60,p15:5,p20:5}; E.mix.yoga={singola:15,p5:25,p10:60,p15:0,p20:0}; E.mix.funzionale={singola:20,p5:30,p10:50,p15:0,p20:0};
+  let i=0;
+  PAL.forEach(l=>{ let ins='giorgia', n=3; const h=oraNum(l);
+    if(l.disc==='yoga'){ins='ins3'; n=h<12?4:(l.nome==='Ayuryoga'?2:3);}
+    else if(l.disc==='macchine'){ins=['giorgia','giorgia','ins1','ins2'][i%4]; n=h<=9?3:(h<=15?2:4); if(l.posti===7)n=5; if(l.g==='Sab'&&h===7)n=1;}
+    else if(l.disc==='matwork'){ins=i%3===0?'ins2':'giorgia'; n=h>=18?6:4;}
+    else if(l.disc==='funzionale'){ins='ins2'; n=3;}
+    else {ins='giorgia'; n=5;}
+    E.slot[key(l)]={ins,presenze:n}; i++; });
+  E.slot['Lun|8.00'].comp={singola:0,p5:0,p10:3,p15:0,p20:1}; E.slot['Lun|8.00'].presenze=4;
+  E.slot['Mar|19.00'].comp={singola:1,p5:0,p10:2,p15:0,p20:1}; E.slot['Mar|19.00'].presenze=4;
+  return E;
+}
+let S=DEFAULT(); ricalcolaPAL(); let CODICE=null; let RUOLO='titolare'; let IO=null; let VERI=null; let TIMER=null; let IN_ATTESA=false; let ULTIMO=null;
+const SUPA={url:'https://lcyexugqinabjoinrsku.supabase.co',key:'sb_publishable_NPC1pH54XM8b8RBvCeZOeQ_Mn4AlZhX',id:'meetoo'};
+const CODICE_KEY='meetoo-conti-codice';
+const APP=new URLSearchParams(location.search).get('app')==='1'; let APP_TOKEN=null;
+const FN_ADMIN={conti_salva:'conti_salva_admin',conti_cambia_codice:'conti_cambia_codice_admin',conti_istruttore_codice:'conti_istruttore_codice_admin',conti_istruttore_togli_codice:'conti_istruttore_togli_codice_admin'};
+async function rpc(fn,args,keepalive){ if(APP_TOKEN){ fn=FN_ADMIN[fn]||fn; args=Object.assign({},args); delete args.p_codice; }
+  const r=await fetch(`${SUPA.url}/rest/v1/rpc/${fn}`,{method:'POST',keepalive:!!keepalive,headers:{'Content-Type':'application/json','apikey':SUPA.key,'Authorization':'Bearer '+(APP_TOKEN||SUPA.key)},body:JSON.stringify(args)}); if(!r.ok) throw new Error('http '+r.status); return r.json(); }
+async function entraAdmin(){ const out=$('#c-app'); try{ const r=await rpc('conti_entra_admin',{p_id:SUPA.id});
+    if(!r.ok){ out.textContent=r.errore==='non_admin'?'Questa sezione è riservata all’amministrazione dello studio.':('Errore: '+r.errore); return; }
+    RUOLO='titolare'; ULTIMO=r.aggiornato_il; VERI=null;
+    if(r.dati&&typeof r.dati==='object'&&Array.isArray(r.dati.spese)){ S=Object.assign(DEFAULT(),r.dati); S.esempio=false; } else S=DEFAULT();
+    $('#cancello').hidden=true; indicatore(ULTIMO?'Salvato alle '+ora(ULTIMO):'',true); render(); }
+  catch(e){ out.textContent='Non riesco a collegarmi. Ricarica la pagina.'; } }
+function cacheLocale(){ try{ const t=localStorage.getItem(STORE); if(t){ const o=JSON.parse(t); if(o&&!o.esempio&&Array.isArray(o.spese)) return Object.assign(DEFAULT(),o); } }catch(e){} return null; }
+function salva(){ if(S.esempio||RUOLO==='istruttore') return; try{ localStorage.setItem(STORE,JSON.stringify(S)); }catch(e){} IN_ATTESA=true; indicatore('Modifiche da salvare…'); clearTimeout(TIMER); TIMER=setTimeout(()=>salvaRemoto(),900); }
+async function salvaRemoto(keepalive){ if((!CODICE&&!APP_TOKEN)||S.esempio) return; clearTimeout(TIMER); const dati=JSON.parse(JSON.stringify(S)); indicatore('Salvataggio…');
+  try{ const r=await rpc('conti_salva',{p_id:SUPA.id,p_codice:CODICE,p_dati:dati},keepalive);
+    if(r.ok){ IN_ATTESA=false; ULTIMO=r.aggiornato_il; indicatore('Salvato alle '+ora(ULTIMO),true); }
+    else if(r.errore==='codice'||r.errore==='bloccato'){ indicatore('Codice non più valido: esci e rientra'); }
+    else indicatore('Non salvato ('+r.errore+')'); }
+  catch(e){ indicatore('Non salvato: nessuna connessione, riprovo…'); TIMER=setTimeout(()=>salvaRemoto(),6000); } }
+let TIMER_IND=null;
+function indicatore(testo,ok){ const el=$('#salvataggio'); if(!el) return; el.textContent=testo||''; el.hidden=!testo; el.dataset.ok=ok?'1':'0'; clearTimeout(TIMER_IND); if(ok&&testo) TIMER_IND=setTimeout(()=>{ el.hidden=true; },4000); }
+const ora=iso=>{ try{ return new Date(iso).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}); }catch(e){ return ''; } };
+function ricordaCodice(c,persistente){ try{ sessionStorage.setItem(CODICE_KEY,c); if(persistente) localStorage.setItem(CODICE_KEY,c); else localStorage.removeItem(CODICE_KEY); }catch(e){} }
+function dimenticaCodice(){ try{ sessionStorage.removeItem(CODICE_KEY); localStorage.removeItem(CODICE_KEY); }catch(e){} }
+function codicePersistente(){ try{ return !!localStorage.getItem(CODICE_KEY); }catch(e){ return false; } }
+const MSG={codice:'Codice sbagliato. Controlla numeri e lettere.',bloccato:'Troppi tentativi sbagliati: riprova tra un quarto d’ora.',non_trovato:'Questa pagina non è ancora stata attivata.',corto:'Il codice deve avere almeno 6 caratteri.',uguale_titolare:'Questo codice è già quello della titolare: scegline un altro.',gia_usato:'Questo codice è già usato da un’altra insegnante.',insegnante_assente:'Questa insegnante non è più nell’elenco.'};
+function mostraCancello(msg){ const c=$('#cancello'); c.hidden=false; $('#c-msg').textContent=msg||''; $('#c-entra').disabled=false; setTimeout(()=>$('#c-codice').focus(),50); }
+async function entra(codice,persistente,silenzioso){ codice=(codice||'').trim(); if(!codice){ mostraCancello('Scrivi il codice.'); return; } $('#c-entra').disabled=true; if(!silenzioso) $('#c-msg').textContent='Un attimo…';
+  try{ const r=await rpc('conti_entra',{p_id:SUPA.id,p_codice:codice});
+    if(!r.ok){ if(r.errore==='codice') dimenticaCodice(); mostraCancello(silenzioso&&r.errore==='codice'?'':(MSG[r.errore]||('Errore: '+r.errore))); return; }
+    CODICE=codice; ricordaCodice(codice,persistente); ULTIMO=r.aggiornato_il; VERI=null;
+    if(r.ruolo==='istruttore'){ RUOLO='istruttore'; IO=r; S=DEFAULT(); S.insegnanti=[r.insegnante]; S.slot=r.slot||{}; S.extra=r.extra||[]; S.rimosse=r.rimosse||[]; S.eccezioni=r.eccezioni||{}; S.mix=Object.assign(S.mix,r.mix||{});
+      S.chiusure={}; for(const ym in (r.chiusure||{})){ const c=r.chiusure[ym]; S.chiusure[ym]={chiuso:!!c.chiuso,lezioni:c.lezioni!=null?{[r.insegnante.id]:c.lezioni}:{},importi:c.importo!=null?{[r.insegnante.id]:c.importo}:{},riepilogo:c.riepilogo?{perIns:{[r.insegnante.id]:c.riepilogo},chiusoIl:c.chiusoIl}:null}; }
+      document.body.classList.add('istruttore'); $('#avvisi').innerHTML=''; $('#cancello').hidden=true; $('#c-codice').value=''; ricalcolaPAL(); renderIstruttore(); return; }
+    RUOLO='titolare'; document.body.classList.remove('istruttore');
+    if(r.dati&&typeof r.dati==='object'&&Array.isArray(r.dati.spese)){ S=Object.assign(DEFAULT(),r.dati); S.esempio=false; }
+    else { const loc=cacheLocale(); S=loc||DEFAULT(); if(loc) salva(); }
+    $('#cancello').hidden=true; $('#c-codice').value=''; indicatore(ULTIMO?'Salvato alle '+ora(ULTIMO):'',true); render(); }
+  catch(e){ mostraCancello('Non riesco a collegarmi. Controlla la connessione e riprova.'); } }
+function esci(){ if(IN_ATTESA) salvaRemoto(); dimenticaCodice(); CODICE=null; S=DEFAULT(); VERI=null; IO=null; RUOLO='titolare'; document.body.classList.remove('istruttore'); $('#istruttore').hidden=true; indicatore(''); render(); mostraCancello(''); }
+async function cambiaCodice(nuovo){ nuovo=(nuovo||'').trim(); const out=$('#d-esito-codice'); if(nuovo.length<6){ out.textContent=MSG.corto; return; }
+  try{ const r=await rpc('conti_cambia_codice',{p_id:SUPA.id,p_codice:CODICE,p_nuovo:nuovo}); if(r.ok){ const pers=codicePersistente(); CODICE=nuovo; ricordaCodice(nuovo,pers); out.textContent='Codice cambiato. Da ora si entra con quello nuovo.'; $('#d-nuovo-codice').value=''; } else out.textContent=MSG[r.errore]||('Errore: '+r.errore); }
+  catch(e){ out.textContent='Non riesco a collegarmi: riprova.'; } }
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden'&&IN_ATTESA) salvaRemoto(true); });
+window.addEventListener('online',()=>{ if(IN_ATTESA) salvaRemoto(); });
+
+/* ============ CALCOLI ============ */
+const num=v=>(v===null||v===undefined||v===''||isNaN(+v))?0:+v;
+const attiva=l=>!(l.disc in S.includi)||S.includi[l.disc];
+const peso=l=>l.freq==='mensile'?0.25:1;
+const totSpese=()=>S.spese.reduce((a,s)=>a+num(s.importo),0);
+const lezioniSett=()=>PAL.filter(attiva).reduce((a,l)=>a+peso(l),0);
+const datiPronti=()=>totSpese()>0;
+function quotaFissa(){ const lz=lezioniSett(); const sa=Math.max(1,num(S.settimaneAperte)); return lz>0? totSpese()*12/(lz*sa):0; }
+function prezzoMedio(d){ const m=S.mix[d]||{}, p=DISC[d].prezzi; let t=0,s=0; for(const k in m){ if(p[k]!=null){t+=num(m[k]); s+=num(m[k])*p[k];} } if(t) return s/t; const ks=Object.keys(p); return p.singola||p[ks.includes('p10')?'p10':ks[0]]||0; }
+const insDi=l=>{ const id=(S.slot[key(l)]||{}).ins; return S.insegnanti.find(i=>i.id===id)||null; };
+const compDi=l=>{ const c=(S.slot[key(l)]||{}).comp||{}; const p=DISC[l.disc].prezzi; let t=0,s=0; for(const k in p){ const n=num(c[k]); t+=n; s+=n*p[k]; } return {tot:t,pm:t?s/t:null,c}; };
+const presenzeDi=l=>{ const c=compDi(l); if(c.tot>0) return c.tot; const pr=(S.slot[key(l)]||{}).presenze; return pr==null?null:pr; };
+const prezzoMedioLez=l=>{ const c=compDi(l); return c.tot>0?c.pm:prezzoMedio(l.disc); };
+const descIncasso=(l,c)=>{ const cd=compDi(l); if(cd.tot>0) return Object.keys(DISC[l.disc].prezzi).filter(k=>num(cd.c[k])>0).map(k=>`${num(cd.c[k])} × ${eur(DISC[l.disc].prezzi[k],2)}`).join(' + '); return `${c.n} persone × ${eur(c.pm,2)}`; };
+const lezioniDi=id=>PAL.filter(l=>attiva(l)&&(S.slot[key(l)]||{}).ins===id).reduce((a,l)=>a+peso(l),0);
+function costoIns(ins,n,inc){ if(!ins) return 0; const imp=num(ins.importo);
+  switch(ins.tipo){ case 'ora':return imp; case 'testa':return imp*n; case 'perc':return imp/100*inc;
+    case 'mese':{ const lz=lezioniDi(ins.id); return lz? imp*12/(lz*Math.max(1,num(S.settimaneAperte))):0; }
+    default:return 0; } }
+function conto(l,n,ins,pm,qf){ ins=ins===undefined?insDi(l):ins; pm=pm===undefined?prezzoMedioLez(l):pm; qf=qf===undefined?quotaFissa():qf;
+  const inc=n*pm, ci=costoIns(ins,n,inc), v=num(S.variabili), m=inc-ci-qf-v;
+  return {n,pm,inc,ins,ci,qf,v,m,soglia:(ins&&ins.tipo==='titolare')?num(S.valoreOra):0,titolare:!!(ins&&ins.tipo==='titolare')}; }
+function pareggio(l,ins,pm,qf){ for(let n=1;n<=(l.posti||7);n++){ const c=conto(l,n,ins,pm,qf); if(c.m>=c.soglia) return n; } return null; }
+function statoDi(l){ if(!attiva(l)) return {st:'fuori',testo:'fuori dal conteggio'};
+  const pr=presenzeDi(l); const p=pareggio(l);
+  if(!datiPronti()) return {st:'ign',testo:'mancano le spese'};
+  const pt=p==null?'neanche piena':'pari con '+p;
+  if(pr==null) return {st:'ign',testo:pt+' · presenze?',p};
+  const c=conto(l,pr);
+  if(c.m<0) return {st:'neg',testo:'in perdita · '+pt,p,c};
+  if(c.titolare&&c.m<c.soglia) return {st:'att',testo:'sotto il valore della tua ora',p,c};
+  if(p!=null&&pr===p) return {st:'att',testo:'sul filo · '+pt,p,c};
+  return {st:'ok',testo:pt,p,c}; }
+function totali(){ const t={m:0,inc:0,ci:0,v:0,n:0,note:0,neg:0,att:0,mie:0,altre:0,ign:0};
+  PAL.filter(attiva).forEach(l=>{ t.n++; const s=statoDi(l); if(!s.c){t.ign++;return;} t.note++; const w=peso(l);
+    t.m+=s.c.m*w; t.inc+=s.c.inc*w; t.ci+=s.c.ci*w; t.v+=s.c.v*w; if(s.c.titolare)t.mie+=s.c.m*w; else t.altre+=s.c.m*w; if(s.st==='neg')t.neg++; if(s.st==='att')t.att++; });
+  return t; }
+
+/* ============ FORMATI ============ */
+const fmt=(v,d=0)=>num(v).toLocaleString('it-IT',{minimumFractionDigits:0,maximumFractionDigits:d});
+const eur=(v,d=0)=>fmt(v,d)+' €';
+const segno=(v,d=0)=>(v>0?'+':'')+eur(v,d);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $=s=>document.querySelector(s);
+const nomeG=g=>GIORNI.find(x=>x[0]===g)[1];
+const GLIFO={ok:'✓',att:'!',neg:'✕',ign:'?',fuori:'–'};
+const pallino=d=>`<i class="pallino" style="background:var(--d-${d})"></i>`;
+
+/* ============ VISTE ============ */
+let vista='oggi';
+let giornoSel=(()=>{ const i=new Date().getDay(); return (i>=1&&i<=6)?GIORNI[i-1][0]:'Lun'; })();
+const SIM={disc:'macchine',ins:'giorgia',costo:22,n:3,pm:null,qf:null};
+
+function dopoEcc(){ render(); const dlg=$('#dettaglio'); if(dlg.open){ const l=PAL.find(x=>key(x)===dlg.dataset.k); if(l) dlg.innerHTML=htmlDettaglio(l,dlg.dataset.data||null); } }
+function vaiA(v){ vista=v; const sec=['tipologie','simulatore','stipendio'].includes(v);
+  document.querySelectorAll('.nav [data-vista],#altro-menu [data-vista]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.vista===v)));
+  const a=$('.voce.altro'); if(a){ a.setAttribute('aria-selected',String(sec)); a.setAttribute('aria-expanded','false'); } const m=$('#altro-menu'); if(m) m.hidden=true;
+  document.querySelectorAll('.vista').forEach(s=>s.hidden=s.id!==v); render(); window.scrollTo({top:0}); }
+function render(){ ricalcolaPAL(); renderAvvisi(); ({oggi:renderOggi,settimana:renderSettimana,tipologie:renderTipologie,simulatore:renderSimulatore,mese:renderMese,stipendio:renderStipendio,dati:renderDati})[vista](); }
+
+function renderAvvisi(){
+  let h='';
+  if(S.esempio) h+=`<div class="avviso esempio"><div class="testo"><strong>Stai guardando numeri di esempio.</strong><span class="piccolo">Spese, insegnanti e presenze qui dentro sono inventati per far vedere come funziona la pagina. Non sono quelli dello studio, e quello che modifichi qui non si salva.</span></div><button class="bottone piccolo" data-az="usa-miei">Torna ai tuoi dati</button></div>`;
+  else if(!datiPronti()) h+=`<div class="avviso"><div class="testo"><strong>Mancano le spese fisse.</strong><span class="piccolo">Finché non ci sono, la pagina non può dire quante persone servono per andare in pari. Inseriscile in “I tuoi dati”. Se prima vuoi vedere come funziona, guarda un esempio.</span></div><span style="display:flex;gap:8px;flex-wrap:wrap"><button class="bottone piccolo" data-az="vai-dati">Vai ai dati</button><button class="bottone secondario piccolo" data-az="esempio">Guarda un esempio</button></span></div>`;
+  $('#avvisi').innerHTML=h; $('#avvisi').style.marginBottom=h?'16px':'0';
+}
+
+function tessera(k,v,s,cls=''){ return `<div class="tessera"><span class="k">${k}</span><span class="v num ${cls}">${v}</span><span class="s">${s||''}</span></div>`; }
+
+function mesePrecedente(){ const d=new Date(); d.setDate(1); d.setMonth(d.getMonth()-1); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+function renderOggi(){
+  if(!dataSel) dataSel=oggiISO();
+  const el=$('#oggi'); const pronto=datiPronti(); const t=pronto?totali():null; const oggi=new Date(); const gi=oggi.getDay();
+  const gOggi=(gi>=1&&gi<=6)?GIORNI[gi-1][0]:null; const data=oggi.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'});
+  const cose=[];
+  if(!pronto) cose.push({t:'Inserisci le spese fisse',s:'Senza le spese la pagina non può dire quante persone servono per andare in pari.',b:'Vai ai dati',v:'dati',st:'att'});
+  else {
+    const prev=mesePrecedente(); const [pa,pm]=prev.split('-').map(Number); const nome=NOME_MESE[pm-1]+' '+pa; const C=S.chiusure[prev];
+    if(C&&C.chiuso){ const d0=new Date(); d0.setDate(1); const cur=ymDi(d0); const [ca,cm]=cur.split('-').map(Number);
+      cose.push({t:`${nome} è chiuso`,s:`Bonifico a Giorgia ${eur((C.riepilogo||{}).bonifico)} · salvadanaio tasse ${eur((C.riepilogo||{}).tasse)}. Ora è in corso ${NOME_MESE[cm-1]}: si chiude ai primi di ${NOME_MESE[cm%12]}.`,b:'Rivedi',v:'mese',ym:prev,st:'ok'}); }
+    else cose.push({t:`${nome} da chiudere`,s:'Incasso, lezioni fatte da ogni insegnante, bonifici e salvadanaio tasse.',b:'Chiudi il mese',v:'mese',ym:prev,st:'att'});
+    const senza=PAL.filter(attiva).filter(l=>presenzeDi(l)==null).length; if(senza) cose.push({t:`${senza} lezion${senza===1?'e':'i'} senza presenze`,s:'Nei conti valgono zero finché non scrivi quante persone vengono.',b:'Completa',v:'dati',st:'ign'});
+    const nonAss=PAL.filter(attiva).filter(l=>!insDi(l)).length; if(nonAss) cose.push({t:`${nonAss} lezion${nonAss===1?'e':'i'} senza insegnante`,s:'Chi la tiene decide il costo della lezione.',b:'Assegna',v:'dati',st:'ign'});
+    if(t.neg||t.att) cose.push({t:`${t.neg?t.neg+' in perdita':''}${t.neg&&t.att?', ':''}${t.att?t.att+' al limite':''}`,s:'Lezioni che con le presenze di oggi non stanno in piedi o ci stanno per un soffio.',b:'Guarda la settimana',v:'settimana',st:t.neg?'neg':'att'});
+    if(cose.length===1&&cose[0].st==='ok') cose.push({t:'Tutto in ordine',s:'Nessuna lezione in perdita, presenze e insegnanti al completo.',b:'',v:'',st:'ok'});
+  }
+  let h=`<p class="occhiello" style="text-transform:none;letter-spacing:0;font-size:15px;font-weight:500">${data.charAt(0).toUpperCase()+data.slice(1)}</p>`;
+  if(pronto){ const mese=t.m*Math.max(1,num(S.settimaneAperte))/12; h+=`<div class="tessere">${tessera('Margine della settimana',segno(t.m),`${t.mie?'tue lezioni '+segno(t.mie)+' · ':''}studio ${segno(t.altre)}`,t.m<0?'negv':'pos')}${tessera('Al mese, in media',segno(mese),'lordo, prima di tasse e contributi',mese<0?'negv':'pos')}</div>`; }
+  h+=`<div class="cose">${cose.map(c=>`<div class="cosa" data-st="${c.st}"><i class="glifo">${GLIFO[c.st]||'•'}</i><div><b>${esc(c.t)}</b><span>${esc(c.s)}</span></div>${c.b?`<button class="bottone piccolo ${c.st==='ok'?'secondario':''}" data-vista="${c.v}" ${c.ym?`data-ym="${c.ym}"`:''}>${esc(c.b)}</button>`:''}</div>`).join('')}</div>`;
+  const dsel=dataSel; const dd=new Date(dsel+'T12:00:00'); const gsel=(dd.getDay()>=1&&dd.getDay()<=6)?GIORNI[dd.getDay()-1][0]:null;
+  const etic=dsel===oggiISO()?'oggi':dd.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'});
+  const ls=gsel?PAL.filter(l=>l.g===gsel&&attiva(l)):[];
+  h+=`<div><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px"><h2>Le lezioni di ${etic}</h2><input type="date" value="${dsel}" data-scegli-giorno="1" aria-label="Scegli il giorno" style="width:auto;min-height:40px;padding:4px 8px"></div>
+    <p class="nota" style="margin-bottom:8px">Se una lezione è saltata o l’ha tenuta un’altra insegnante, segnalo qui: la chiusura del mese ne tiene conto da sola.</p>
+    <div class="giorno">${gsel?(ls.map(l=>{ const e=eccDi(dsel,key(l)); const ins=insDi(l); const salt=!!(e&&e.tipo==='saltata'); const sel=e&&e.tipo==='sostituita'?e.ins:(ins?ins.id:'');
+      return `<div class="lezecc ${e?'conecc':''}">${cardLez(l,dsel)}<div class="ecc"><button class="dicui ${salt?'on':''}" data-az="ecc-salta" data-data="${dsel}" data-k="${esc(key(l))}" aria-pressed="${salt}">${salt?'Saltata ✓':'Saltata'}</button><label class="piccolo muto">tenuta da <select data-ecc="sost" data-data="${dsel}" data-k="${esc(key(l))}" ${salt?'disabled':''} aria-label="Tenuta da"><option value="" ${sel===''?'selected':''}>da assegnare</option>${S.insegnanti.map(i=>`<option value="${esc(i.id)}" ${sel===i.id?'selected':''}>${esc(i.nome)}</option>`).join('')}</select></label>${e&&e.tipo==='sostituita'?'<span class="piccolo" style="color:var(--att)">sostituzione segnata</span>':''}</div></div>`; }).join('')||'<p class="nota">Nessuna lezione in palinsesto.</p>'):'<p class="nota">Domenica: studio chiuso.</p>'}</div></div>`;
+  el.innerHTML=h;
+}
+function renderSettimana(){
+  const el=$('#settimana'); const pronto=datiPronti(); const t=totali(); const qf=quotaFissa(); const sa=Math.max(1,num(S.settimaneAperte));
+  if(!settBase) settBase=isoDi(lunediDi(oggiISO()));
+  const lun=lunediDi(settBase), sab=new Date(lun); sab.setDate(sab.getDate()+5);
+  const f=d=>d.toLocaleDateString('it-IT',{day:'numeric',month:'long'});
+  const corrente=settBase===isoDi(lunediDi(oggiISO()));
+  let h=`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h2 style="font-size:17px">Settimana dal ${f(lun)} al ${f(sab)}</h2><span style="display:flex;gap:6px"><button class="bottone secondario piccolo" data-az="sett-prec" aria-label="Settimana precedente">‹</button>${corrente?'':'<button class="bottone secondario piccolo" data-az="sett-oggi">questa settimana</button>'}<button class="bottone secondario piccolo" data-az="sett-succ" aria-label="Settimana successiva">›</button></span></div>`;
+  if(pronto){
+    const mese=t.m*sa/12; const netto=num(S.tasse)>0?` · netto stimato ${segno(mese*(1-num(S.tasse)/100))}`:'';
+    h+=`<div class="tessere">
+      ${tessera('Margine della settimana',segno(t.m),t.note<t.n?`${t.note} lezioni su ${t.n} hanno le presenze`:`tutte le ${t.n} lezioni hanno le presenze`,t.m<0?'negv':'pos')}
+      ${tessera('Al mese, in media',segno(mese),'lordo'+netto,mese<0?'negv':'pos')}
+      ${tessera('Dalle tue lezioni',segno(t.mie),`dalle altre insegnanti ${segno(t.altre)}`)}
+      ${tessera('Sotto il pareggio',String(t.neg),`${t.att} sul filo${t.ign?` · ${t.ign} senza presenze`:''}`,t.neg>0?'negv':'')}
+      ${tessera('Quota spese fisse',eur(qf,2),`a lezione: ${eur(totSpese())} al mese su ${fmt(lezioniSett(),2)} lezioni a settimana`)}
+    </div>`;
+  } else {
+    h+=`<div class="tessere">
+      ${tessera('Lezioni a settimana',fmt(lezioniSett(),2),'il Funzionale del sabato conta un quarto')}
+      ${tessera('Posti totali',fmt(PAL.filter(attiva).reduce((a,l)=>a+(l.posti||0)*peso(l),0),2),'in una settimana piena')}
+      ${tessera('Incasso a lezione piena',eur(PAL.filter(attiva).reduce((a,l)=>a+(l.posti||0)*prezzoMedio(l.disc)*peso(l),0)),'con i prezzi medi di oggi, se tutte le lezioni fossero piene')}
+    </div>`;
+  }
+  h+=`<div class="chips" role="tablist" aria-label="Giorno">${GIORNI.map(([g,n])=>{ const ls=PAL.filter(l=>l.g===g); const neg=ls.filter(l=>statoDi(l).st==='neg').length;
+    return `<button class="chip" role="tab" data-giorno="${g}" aria-selected="${g===giornoSel}">${n.slice(0,3)} ${+dataDelGiorno(g).slice(8)}<small>${ls.length} lez.${neg?` · ${neg} ✕`:''}</small></button>`; }).join('')}</div>`;
+  h+=`<div class="settimana">${GIORNI.map(([g,n])=>{
+    const ls=PAL.filter(l=>l.g===g); let mg=0, con=0;
+    ls.forEach(l=>{ const s=statoDi(l); if(s.c){mg+=s.c.m*peso(l);con++;} });
+    const dg=dataDelGiorno(g);
+    return `<div class="giorno ${g===giornoSel?'':'off'}"><header><h3>${n} ${+dg.slice(8)}</h3><span class="piccolo muto num">${pronto&&con?segno(mg):ls.length+' lezioni'}</span></header>
+      ${ls.map(l=>cardLez(l,dg)).join('')}</div>`; }).join('')}</div>`;
+  h+=`<div class="legenda"><span><i class="glifo" style="--st:var(--ok)">✓</i> in pari o sopra</span><span><i class="glifo" style="--st:var(--att)">!</i> sul filo</span><span><i class="glifo" style="--st:var(--neg)">✕</i> in perdita</span><span><i class="glifo" style="--st:var(--ign)">?</i> dati da inserire</span><span><i class="glifo" style="--st:var(--ign)">–</i> saltata quel giorno</span><span>· tocca una lezione per il conto e per segnarla saltata o sostituita</span></div>`;
+  el.innerHTML=h;
+}
+function cardLez(l,data){
+  const s=statoDi(l); const sl=S.slot[key(l)]||{}; const ins=insDi(l); const e=data?eccDi(data,key(l)):null;
+  if(e&&e.tipo==='saltata'){ return `<button class="lez" data-st="fuori" data-k="${esc(key(l))}" data-data="${data}">
+    <span class="ora num">${l.ora}</span><span class="marg num"></span>
+    <span class="nome">${pallino(l.disc)}<span>${esc(l.nome)}${l.sotto?` <span class="sotto">${esc(l.sotto)}</span>`:''}</span></span>
+    <span class="meta num">${ins?esc(ins.nome):''}</span>
+    <span class="stato"><i class="glifo">–</i><span>saltata</span></span></button>`; }
+  const prn=presenzeDi(l); const pres=prn!=null?`${prn}/${l.posti}`:`–/${l.posti}`;
+  const marg=s.c?segno(s.c.m):(datiPronti()&&attiva(l)?'':'');
+  const chi=e&&e.tipo==='sostituita'?eccTesto(l,e):(ins?esc(ins.nome):'da assegnare');
+  return `<button class="lez" data-st="${s.st}" data-k="${esc(key(l))}" ${data?`data-data="${data}"`:''}>
+    <span class="ora num">${l.ora}</span>
+    <span class="marg num">${marg||''}</span>
+    <span class="nome">${pallino(l.disc)}<span>${esc(l.nome)}${l.sotto?` <span class="sotto">${esc(l.sotto)}</span>`:''}</span></span>
+    <span class="meta num">${pres} · ${chi}</span>
+    <span class="stato"><i class="glifo">${GLIFO[s.st]}</i><span>${esc(s.testo)}</span></span>
+  </button>`;
+}
+
+function apriDettaglio(k,data){
+  const l=PAL.find(x=>key(x)===k); if(!l) return;
+  const dlg=$('#dettaglio'); dlg.dataset.k=k; if(data) dlg.dataset.data=data; else delete dlg.dataset.data; dlg.innerHTML=htmlDettaglio(l,data||null); if(!dlg.open) dlg.showModal();
+}
+function bloccoEcc(l,data){ const e=eccDi(data,key(l)); const ins=insDi(l); const salt=!!(e&&e.tipo==='saltata'); const sel=e&&e.tipo==='sostituita'?e.ins:(ins?ins.id:'');
+  const quando=new Date(data+'T12:00:00').toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'});
+  return `<div class="campo" style="border-top:1px solid var(--bordo);padding-top:10px"><label>Questa lezione, ${quando}</label><div class="ecc" style="padding:0"><button class="dicui ${salt?'on':''}" data-az="ecc-salta" data-data="${data}" data-k="${esc(key(l))}" aria-pressed="${salt}">${salt?'Saltata ✓':'Saltata'}</button><label class="piccolo muto">tenuta da <select data-ecc="sost" data-data="${data}" data-k="${esc(key(l))}" ${salt?'disabled':''} aria-label="Tenuta da"><option value="" ${sel===''?'selected':''}>da assegnare</option>${S.insegnanti.map(i=>`<option value="${esc(i.id)}" ${sel===i.id?'selected':''}>${esc(i.nome)}</option>`).join('')}</select></label>${e&&e.tipo==='sostituita'?'<span class="piccolo" style="color:var(--att)">sostituzione segnata</span>':''}</div><span class="piccolo muto">Vale solo per questo giorno e finisce nella chiusura del mese.</span></div>`; }
+function htmlDettaglio(l,data){
+  const sl=S.slot[key(l)]||{}; const s=statoDi(l); const ins=insDi(l); const pm=prezzoMedioLez(l); const qf=quotaFissa(); const pronto=datiPronti();
+  const cd=compDi(l); const n=presenzeDi(l); const c=n!=null?conto(l,n):null; const pz=DISC[l.disc].prezzi;
+  const opz=S.insegnanti.map(i=>`<option value="${esc(i.id)}" ${sl.ins===i.id?'selected':''}>${esc(i.nome)}${i.tipo==='titolare'?' (tu)':''}</option>`).join('');
+  let h=`<div class="dlg"><div class="intesta"><div><p class="occhiello">${nomeG(l.g)} · ${l.ora}</p><h2>${pallino(l.disc)} ${esc(l.nome)}${l.sotto?` <span class="muto" style="font-weight:400">${esc(l.sotto)}</span>`:''}</h2>
+    <p class="piccolo muto">${l.posti} posti · prezzo medio a presenza ${eur(prezzoMedioLez(l),2)}${l.freq==='mensile'?' · una volta al mese':''}${l.nota&&l.freq!=='mensile'?' · '+esc(l.nota):''}</p></div>
+    <button class="chiudi" data-az="chiudi" aria-label="Chiudi">×</button></div>`;
+  if(!attiva(l)) h+=`<p class="nota">Questa lezione è fuori dal conteggio. Si attiva in “I tuoi dati”, alla voce “Cosa contare”.</p></div>`;
+  else {
+    h+=`<div class="griglia2"><div class="campo"><label for="d-pres">Persone presenti in media${cd.tot>0?' <span class="muto">(somma del dettaglio)</span>':''}</label><input id="d-pres" type="number" min="0" max="${l.posti}" step="1" inputmode="numeric" value="${n??''}" placeholder="es. 3" data-k="slot/${esc(key(l))}/presenze" data-tipo="int" ${cd.tot>0?'disabled':''}></div>
+      <div class="campo"><label for="d-ins">Chi la tiene</label><select id="d-ins" data-k="slot/${esc(key(l))}/ins" data-tipo="str"><option value="">da assegnare</option>${opz}</select></div></div>
+    <div class="campo"><label>Di cui, se vuoi essere precisa: quante hanno la singola o ciascun pacchetto <span class="muto">(se vuoto si usa la media della disciplina)</span></label>
+      <div class="mix">${Object.keys(pz).map(k=>`<div class="campo"><label for="d-comp-${k}">${ETIC[k]} <span class="muto">${eur(pz[k],2)}</span></label><input id="d-comp-${k}" type="number" min="0" max="${l.posti}" step="1" inputmode="numeric" value="${num(cd.c[k])||''}" placeholder="0" data-k="slot/${esc(key(l))}/comp/${k}" data-tipo="int"></div>`).join('')}</div>
+      ${cd.tot>0?`<span class="piccolo muto">prezzo medio di questa lezione ${eur(cd.pm,2)} a presenza</span>`:''}</div>`;
+    if(data) h+=bloccoEcc(l,data);
+    if(!pronto) h+=`<p class="nota">Senza le spese fisse il conto non si può chiudere: inseriscile in “I tuoi dati”.</p>`;
+    else {
+      h+=`<span class="bolla ${s.st}"><i class="glifo" style="--st:var(--${s.st==='ign'?'ign':s.st})">${GLIFO[s.st]}</i>${esc(s.testo)}</span>`;
+      if(c){ h+=`<div class="conto">
+        <div class="r"><span>Incasso<small>${descIncasso(l,c)}</small></span><span class="v num">${eur(c.inc,2)}</span></div>
+        <div class="r"><span>Insegnante<small>${ins?esc(ins.nome)+' · '+descIns(ins):'nessuna assegnata'}</small></span><span class="v num">${c.ci?'− '+eur(c.ci,2):'0 €'}</span></div>
+        <div class="r"><span>Quota spese fisse<small>${eur(totSpese())} al mese spalmati su ${fmt(lezioniSett(),2)} lezioni a settimana</small></span><span class="v num">− ${eur(c.qf,2)}</span></div>
+        ${c.v?`<div class="r"><span>Costi che nascono con la lezione</span><span class="v num">− ${eur(c.v,2)}</span></div>`:''}
+        <div class="r tot"><span>${c.titolare?'Resta a te':'Margine dello studio'}</span><span class="v num ${c.m<0?'negv':'pos'}">${segno(c.m)}</span></div>
+        ${c.titolare&&c.soglia?`<div class="r"><span class="muto">Il valore che dai alla tua ora</span><span class="v num muto">${eur(c.soglia)}</span></div>`:''}
+        ${num(S.tasse)>0&&c.m>0?`<div class="r"><span class="muto">Netto stimato, tolto il ${fmt(S.tasse)}%</span><span class="v num">${eur(c.m*(1-num(S.tasse)/100))}</span></div>`:''}
+      </div>`; }
+      h+=`<div><h3 style="margin-bottom:6px">Cosa succede con più o meno persone</h3>${tabellaPersone(l,ins,pm,qf,n)}</div>`;
+    }
+    h+=`</div>`;
+  }
+  return h;
+}
+function descIns(i){ return {ora:`${eur(i.importo)} a lezione`,testa:`${eur(i.importo)} a persona`,perc:`${fmt(i.importo)}% dell’incasso`,mese:`${eur(i.importo)} al mese`,titolare:'sei tu'}[i.tipo]||''; }
+function tabellaPersone(l,ins,pm,qf,nSel){
+  let r=''; for(let n=1;n<=l.posti;n++){ const c=conto(l,n,ins,pm,qf); const cls=c.m<0?'neg':(c.m<c.soglia?'att':'ok');
+    r+=`<tr class="${n===nSel?'sel':''}"><td>${n}${n===nSel?' <span class="muto piccolo">oggi</span>':''}</td><td class="num">${eur(c.inc)}</td><td class="num">${eur(c.ci+c.qf+c.v)}</td><td class="num ${cls}">${segno(c.m)}</td></tr>`; }
+  return `<div style="overflow-x:auto"><table class="tabellina"><thead><tr><th>Persone</th><th>Incasso</th><th>Costi</th><th>Margine</th></tr></thead><tbody>${r}</tbody></table></div>`;
+}
+
+function grafico(margini,soglia,nSel){
+  const N=margini.length,W=340,H=170,pl=6,pr=6,pt=22,pb=24;
+  const maxV=Math.max(0,...margini),minV=Math.min(0,...margini),span=(maxV-minV)||1;
+  const y=v=>pt+(maxV-v)/span*(H-pt-pb); const bw=(W-pl-pr)/N;
+  let s=`<svg class="grafico" viewBox="0 0 ${W} ${H}" role="img" aria-label="Margine per numero di persone presenti">`;
+  s+=`<text x="${pl}" y="11" font-size="10" fill="var(--fg-2)">margine in euro, per numero di persone presenti</text>`;
+  if(soglia>0&&soglia<=maxV) s+=`<line x1="${pl}" x2="${W-pr}" y1="${y(soglia)}" y2="${y(soglia)}" stroke="var(--att)" stroke-dasharray="3 3"/><text x="${W-pr}" y="${y(soglia)-3}" text-anchor="end" font-size="9.5" fill="var(--fg-2)">la tua ora ${eur(soglia)}</text>`;
+  margini.forEach((m,i)=>{ const n=i+1,x=pl+i*bw+bw*.2,w=bw*.6,top=Math.min(y(m),y(0)),hh=Math.abs(y(m)-y(0));
+    const col=m<0?'var(--neg)':(m<soglia?'var(--att)':'var(--ok)'); const sel=nSel===n;
+    s+=`<rect x="${x.toFixed(1)}" y="${top.toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(hh,1.5).toFixed(1)}" rx="3" fill="${col}" opacity="${(nSel==null||sel)?1:.5}"/>`;
+    s+=`<text x="${(x+w/2).toFixed(1)}" y="${(m>=0?top-4:top+hh+11).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="${sel?700:500}" fill="var(--fg)">${segno(m)}</text>`;
+    s+=`<text x="${(x+w/2).toFixed(1)}" y="${H-7}" text-anchor="middle" font-size="11" fill="var(--fg-2)">${n}</text>`; });
+  s+=`<line x1="${pl}" x2="${W-pr}" y1="${y(0).toFixed(1)}" y2="${y(0).toFixed(1)}" stroke="var(--fg-2)" stroke-width="1"/></svg>`;
+  return s;
+}
+
+function renderTipologie(){
+  const el=$('#tipologie'); const pronto=datiPronti(); const qf=quotaFissa();
+  const ordine=['macchine','matwork','yoga','funzionale','mam','somatica','evento'];
+  let h=`<p class="nota">Per ogni tipologia: quanto rende una presenza secondo come paga la cliente, e quante persone servono perché la lezione stia in piedi. Dove hai scritto il dettaglio “di cui” la lezione usa i suoi prezzi veri. Le lezioni che tieni tu non hanno il costo dell’insegnante: lì il “pareggio” è coprire la quota di spese e il valore che dai alla tua ora${num(S.valoreOra)?` (${eur(S.valoreOra)})`:' (oggi non impostato)'}.</p><div class="carte">`;
+  ordine.forEach(d=>{
+    const ls=PAL.filter(l=>l.disc===d); if(!ls.length) return; const D=DISC[d]; const inc=!(d in S.includi)||S.includi[d];
+    const nSett=ls.reduce((a,l)=>a+peso(l),0); const pm=prezzoMedio(d);
+    const posti=ls.map(l=>l.posti); const pMin=Math.min(...posti),pMax=Math.max(...posti);
+    const rapp=ls.slice().sort((a,b)=>b.posti-a.posti)[Math.floor(ls.length/2)]; // lezione tipo
+    const insAltre=[...new Set(ls.map(l=>insDi(l)).filter(i=>i&&i.tipo!=='titolare'))];
+    const tu={id:'giorgia',nome:'tu',tipo:'titolare',importo:0};
+    const pTu=pronto?pareggio(rapp,tu,pm,qf):null;
+    const insRif=insAltre[0]||null; const pAltra=pronto&&insRif?pareggio(rapp,insRif,pm,qf):null;
+    const chartIns=insRif||tu; const margini=[]; for(let n=1;n<=rapp.posti;n++) margini.push(conto(rapp,n,chartIns,pm,qf).m);
+    const soglia=chartIns.tipo==='titolare'?num(S.valoreOra):0;
+    h+=`<article class="carta" style="--dc:var(--d-${d})"><header><div class="n">${pallino(d)}<h3>${esc(D.nome)}</h3></div><span class="piccolo muto">${inc?`${fmt(nSett,2)} a settimana`:'fuori dal conteggio'}</span></header>
+      <div class="fatti"><div class="fatto"><span class="k">Prezzo medio</span><span class="v num">${eur(pm,2)}<small> /presenza</small></span></div>
+        <div class="fatto"><span class="k">Posti</span><span class="v num">${pMin===pMax?pMin:pMin+'–'+pMax}</span></div>
+        <div class="fatto"><span class="k">Piena rende</span><span class="v num">${eur(rapp.posti*pm)}</span></div></div>
+      <div style="overflow-x:auto"><table class="tabellina"><thead><tr>${Object.keys(D.prezzi).map(k=>`<th>${ETIC[k]}</th>`).join('')}</tr></thead><tbody><tr>${Object.keys(D.prezzi).map(k=>`<td class="num">${eur(D.prezzi[k],2)}</td>`).join('')}</tr></tbody></table></div>
+      <p class="nota">${esc(D.listino)}. Mix di pagamento usato: ${Object.entries(S.mix[d]||{}).filter(([k,v])=>num(v)>0&&D.prezzi[k]!=null).map(([k,v])=>`${ETIC[k]} ${fmt(v)}%`).join(', ')||'non impostato'}.</p>`;
+    if(pronto&&inc){
+      h+=`<div class="fatti" style="grid-template-columns:1fr 1fr"><div class="fatto"><span class="k">Pari se la tieni tu</span><span class="v num">${pTu!=null?pTu+' <small>persone</small>':'neanche piena'}</span></div>
+        <div class="fatto"><span class="k">${insRif?'Pari con '+esc(insRif.nome):'Con un’insegnante'}</span><span class="v num">${insRif?(pAltra!=null?pAltra+' <small>persone</small>':'neanche piena'):'<small>nessuna assegnata</small>'}</span></div></div>
+        ${grafico(margini,soglia,null)}<p class="nota">Lezione tipo da ${rapp.posti} posti, ${insRif?'tenuta da '+esc(insRif.nome)+' ('+descIns(insRif)+')':'tenuta da te'}, quota spese fisse ${eur(qf,2)}.</p>`;
+    } else if(!inc) h+=`<p class="nota">Si conta solo se lo decidi in “I tuoi dati”.</p>`;
+    h+=`</article>`;
+  });
+  el.innerHTML=h+'</div>';
+}
+
+function renderSimulatore(){
+  const el=$('#simulatore'); const D=DISC[SIM.disc]; const pronto=datiPronti();
+  const lRif=PAL.filter(l=>l.disc===SIM.disc).sort((a,b)=>a.posti-b.posti)[0]||{posti:7,disc:SIM.disc};
+  const posti=SIM.posti||lRif.posti; const pm=SIM.pm!=null?SIM.pm:prezzoMedio(SIM.disc); const qf=SIM.qf!=null?SIM.qf:quotaFissa();
+  let ins; if(SIM.ins==='libero') ins={id:'libero',nome:'costo libero',tipo:'ora',importo:SIM.costo}; else ins=S.insegnanti.find(i=>i.id===SIM.ins)||S.insegnanti[0];
+  const n=Math.min(SIM.n,posti); const lFinta={posti,disc:SIM.disc,g:'',ora:''};
+  const c=conto(lFinta,n,ins,pm,qf); const p=pareggio(lFinta,ins,pm,qf); const margini=[]; for(let k=1;k<=posti;k++) margini.push(conto(lFinta,k,ins,pm,qf).m);
+  const opz=S.insegnanti.map(i=>`<option value="${esc(i.id)}" ${SIM.ins===i.id?'selected':''}>${esc(i.nome)}${i.tipo==='titolare'?' (tu)':''}</option>`).join('')+`<option value="libero" ${SIM.ins==='libero'?'selected':''}>Un costo a lezione che scelgo io</option>`;
+  const st=c.m<0?'neg':(c.m<c.soglia?'att':(p===n?'att':'ok'));
+  el.innerHTML=`<p class="nota">Qui provi le ipotesi senza toccare i dati veri: cambia persone, prezzo o insegnante e guarda cosa resta. ${pronto?'':'Le spese fisse non sono ancora inserite, quindi la quota qui sotto parte da zero: puoi scriverla a mano per provare.'}</p>
+  <div class="blocco"><div class="griglia2">
+    <div class="campo"><label for="s-disc">Tipologia</label><select id="s-disc" data-sim="disc">${Object.keys(DISC).map(d=>`<option value="${d}" ${d===SIM.disc?'selected':''}>${DISC[d].nome}</option>`).join('')}</select></div>
+    <div class="campo"><label for="s-ins">Chi la tiene</label><select id="s-ins" data-sim="ins">${opz}</select></div>
+    ${SIM.ins==='libero'?`<div class="campo"><label for="s-costo">Costo insegnante a lezione (€)</label><input id="s-costo" type="number" min="0" step="1" inputmode="decimal" value="${SIM.costo}" data-sim="costo"></div>`:''}
+    <div class="campo"><label for="s-posti">Posti</label><input id="s-posti" type="number" min="1" max="12" step="1" inputmode="numeric" value="${posti}" data-sim="posti"></div>
+    <div class="campo"><label for="s-pm">Prezzo medio a presenza (€)</label><input id="s-pm" type="number" min="0" step="0.5" inputmode="decimal" value="${+pm.toFixed(2)}" data-sim="pm"></div>
+    <div class="campo"><label for="s-qf">Quota spese fisse a lezione (€)</label><input id="s-qf" type="number" min="0" step="0.5" inputmode="decimal" value="${+qf.toFixed(2)}" data-sim="qf"></div>
+    <div class="campo" style="grid-column:1/-1"><label for="s-n">Persone presenti: <strong>${n}</strong> su ${posti}</label><input id="s-n" type="range" min="0" max="${posti}" step="1" value="${n}" data-sim="n"></div>
+  </div></div>
+  <div class="tessere">
+    ${tessera('Incasso',eur(c.inc,2),`${n} × ${eur(pm,2)}`)}
+    ${tessera('Costi',eur(c.ci+c.qf+c.v,2),`insegnante ${eur(c.ci,2)} · quota fissa ${eur(c.qf,2)}${c.v?` · altri ${eur(c.v,2)}`:''}`)}
+    ${tessera(c.titolare?'Resta a te':'Margine',segno(c.m,2),num(S.tasse)>0&&c.m>0?`netto stimato ${eur(c.m*(1-num(S.tasse)/100),2)}`:(c.titolare&&c.soglia?`la tua ora vale ${eur(c.soglia)}`:'lordo'),c.m<0?'negv':'pos')}
+    ${tessera('Pareggio',p!=null?p+' persone':'neanche piena',p!=null?(c.titolare&&c.soglia?'coprendo anche la tua ora':'per non andare sotto'):'con questi numeri non si chiude')}
+  </div>
+  <div class="blocco"><span class="bolla ${st}"><i class="glifo" style="--st:var(--${st})">${GLIFO[st]}</i>${st==='neg'?'in perdita':st==='att'?(c.titolare&&c.m<c.soglia?'sotto il valore della tua ora':'sul filo'):'in pari o sopra'}</span>${grafico(margini,c.soglia,n)}</div>`;
+}
+
+function graficoMesi(valori,soglia){
+  const N=12,W=360,H=190,pl=6,pr=6,pt=22,pb=24;
+  const maxV=Math.max(0,soglia,...valori),minV=Math.min(0,...valori),span=(maxV-minV)||1;
+  const y=v=>pt+(maxV-v)/span*(H-pt-pb); const bw=(W-pl-pr)/N;
+  let s=`<svg class="grafico" viewBox="0 0 ${W} ${H}" role="img" aria-label="Utile per mese e fabbisogno mensile">`;
+  s+=`<text x="${pl}" y="11" font-size="10" fill="var(--fg-2)">utile del mese in euro · la linea tratteggiata è bonifico + tasse + riserva</text>`;
+  valori.forEach((m,i)=>{ const x=pl+i*bw+bw*.2,w=bw*.6,top=Math.min(y(m),y(0)),hh=Math.abs(y(m)-y(0));
+    const col=m<0?'var(--neg)':(m<soglia?'var(--att)':'var(--ok)');
+    s+=`<rect x="${x.toFixed(1)}" y="${top.toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(hh,1.5).toFixed(1)}" rx="3" fill="${col}"/>`;
+    s+=`<text x="${(x+w/2).toFixed(1)}" y="${H-7}" text-anchor="middle" font-size="10" fill="var(--fg-2)">${MESI[i]}</text>`; });
+  s+=`<line x1="${pl}" x2="${W-pr}" y1="${y(0).toFixed(1)}" y2="${y(0).toFixed(1)}" stroke="var(--fg-2)" stroke-width="1"/>`;
+  if(soglia>0) s+=`<line x1="${pl}" x2="${W-pr}" y1="${y(soglia).toFixed(1)}" y2="${y(soglia).toFixed(1)}" stroke="var(--fg)" stroke-dasharray="4 3"/><text x="${W-pr}" y="${(y(soglia)-4).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--fg)">${eur(soglia)}</text>`;
+  return s+'</svg>';
+}
+function renderStipendio(){
+  const el=$('#stipendio'); const pronto=datiPronti(); const t=totali(); const F=S.fisco, P=S.piano;
+  const sett=t.inc-t.ci-t.v; const fisso=totSpese(); const mesi=S.mesi.map(num);
+  const incM=mesi.map(p=>t.inc*4.333*p/100); const utM=mesi.map(p=>sett*4.333*p/100-fisso);
+  const incA=incM.reduce((a,b)=>a+b,0), utA=utM.reduce((a,b)=>a+b,0), settEq=mesi.reduce((a,p)=>a+4.333*p/100,0);
+  let T=0,dett='';
+  if(F.modo==='forfettario'){ const imp=incA*num(F.coeff)/100; const contr=imp*num(F.contributi)/100; const imposta=Math.max(0,imp-contr)*num(F.imposta)/100; T=contr+imposta;
+    dett=`imponibile ${eur(imp)} (il ${fmt(F.coeff)}% dell’incasso) · contributi ${eur(contr)} · imposta ${eur(imposta)}`; }
+  else { T=Math.max(0,utA)*num(F.percentuale)/100; dett=`il ${fmt(F.percentuale)}% dell’utile`; }
+  const N=utA-T, accM=T/12, nettoM=N/12, bon=num(P.bonifico), risM=num(P.riservaMensile), fabb=bon+accM+risM;
+  const restoM=nettoM-risM-bon; const mesiSotto=utM.filter(u=>u<fabb).length; const mesiNeg=utM.filter(u=>u<0).length;
+  if(!pronto){ el.innerHTML=`<div class="avviso"><div class="testo"><strong>Servono prima le spese fisse e le presenze.</strong><span class="piccolo">Il piano dello stipendio si costruisce sui conti della settimana tipo: compila “I tuoi dati”.</span></div><button class="bottone piccolo" data-az="vai-dati">Vai ai dati</button></div>`; return; }
+  let h=`<p class="nota">Quanto può bonificarsi Giorgia ogni mese, partendo dalla settimana tipo e dall’andamento dei mesi. Le cifre fiscali sono una stima: coefficiente, aliquota e contributi li conferma il commercialista. Tutto quello che cambi qui si salva.</p>`;
+  if(F.modo==='forfettario'&&incA>85000) h+=`<div class="avviso" style="border-color:var(--neg)"><div class="testo"><strong>Attenzione: incasso stimato ${eur(incA)} l’anno.</strong><span class="piccolo">Il forfettario ha un tetto di 85.000 € di incassi; sopra i 100.000 € si esce nell’anno stesso. Da verificare subito col commercialista: o i numeri qui sono più alti della realtà, o il regime va rivisto.</span></div></div>`;
+  h+=`<div class="tessere">
+    ${tessera('Utile dell’anno',eur(utA),`incasso ${eur(incA)} · insegnanti ${eur(t.ci*settEq)} · spese fisse ${eur(fisso*12)}`,utA<0?'negv':'')}
+    ${tessera('Tasse e contributi',eur(T),dett)}
+    ${tessera('Netto suo, all’anno',eur(N),`${eur(nettoM)} al mese in media`,N<0?'negv':'pos')}
+    ${tessera('Bonifico sostenibile',eur(Math.max(0,nettoM-risM)),`netto medio meno ${eur(risM)} di riserva al mese`)}
+  </div>
+  <div class="blocco"><h2>Il piano mensile</h2>
+    <div class="griglia2"><div class="campo"><label for="p-bon">Bonifico a Giorgia, ogni mese (€)</label><input id="p-bon" type="number" min="0" step="50" inputmode="numeric" value="${P.bonifico??''}" data-k="piano/bonifico" data-tipo="num"></div>
+    <div class="campo"><label for="p-ris">Riserva per lo studio, ogni mese (€)</label><input id="p-ris" type="number" min="0" step="50" inputmode="numeric" value="${P.riservaMensile??''}" data-k="piano/riservaMensile" data-tipo="num"></div></div>
+    <div class="conto">
+      <div class="r"><span>Utile medio del mese</span><span class="v num">${eur(utA/12)}</span></div>
+      <div class="r"><span>Da mettere da parte per tasse e contributi<small>ogni mese, su un conto separato</small></span><span class="v num">− ${eur(accM)}</span></div>
+      <div class="r"><span>Riserva dello studio</span><span class="v num">− ${eur(risM)}</span></div>
+      <div class="r"><span>Bonifico a Giorgia</span><span class="v num">− ${eur(bon)}</span></div>
+      <div class="r tot"><span>Resta sul conto dello studio, in media</span><span class="v num ${restoM<0?'negv':'pos'}">${segno(restoM)}</span></div>
+    </div>
+    <p class="nota">${mesiSotto?`In ${mesiSotto} mesi su 12 l’utile non copre bonifico, tasse e riserva${mesiNeg?` (in ${mesiNeg} è sotto zero)`:''}: li reggono i mesi buoni e la riserva accumulata. `:'Ogni mese copre bonifico, tasse e riserva. '}${restoM<0?'Con queste cifre il conto si svuota: abbassa il bonifico o la riserva.':'Un bonifico fisso è sostenibile se sul conto resta un cuscino di almeno due mesi di spese e insegnanti, circa '+eur(2*(fisso+t.ci*4.333))+'.'}</p>
+    ${graficoMesi(utM,fabb)}
+  </div>
+  <div class="blocco"><h2>Com’è l’anno, mese per mese</h2><p class="nota">Quanto è pieno ogni mese rispetto alla settimana tipo di oggi: 100 vuol dire uguale, 50 la metà, 0 chiuso. Profilo di partenza impostato il 2 ottobre 2026 su indicazione di Mattia (estate sotto, settembre e gennaio pieni): da correggere coi dati veri, mese dopo mese. Settimane equivalenti: ${fmt(settEq,1)} (in “I tuoi dati” ne hai dichiarate ${S.settimaneAperte}).</p>
+    <div class="mix">${MESI.map((m,i)=>`<div class="campo"><label for="m-${i}">${m} <span class="muto">${eur(utM[i])}</span></label><input id="m-${i}" type="number" min="0" max="150" step="5" inputmode="numeric" value="${mesi[i]}" data-k="mesi/${i}" data-tipo="num"></div>`).join('')}</div></div>
+  <div class="blocco"><h2>Regime fiscale</h2>
+    <div class="riga"><label for="f-modo">Come si calcolano tasse e contributi</label><select id="f-modo" data-k="fisco/modo" data-tipo="str"><option value="forfettario" ${F.modo==='forfettario'?'selected':''}>Forfettario (sull’incasso)</option><option value="percentuale" ${F.modo==='percentuale'?'selected':''}>Percentuale sull’utile</option></select></div>
+    ${F.modo==='forfettario'?`<div class="griglia2"><div class="campo"><label for="f-coeff">Coefficiente di redditività (%)</label><input id="f-coeff" type="number" min="0" max="100" step="1" inputmode="numeric" value="${F.coeff??''}" data-k="fisco/coeff" data-tipo="num"></div>
+      <div class="campo"><label for="f-imp">Imposta sostitutiva (%)</label><input id="f-imp" type="number" min="0" max="100" step="1" inputmode="numeric" value="${F.imposta??''}" data-k="fisco/imposta" data-tipo="num"></div>
+      <div class="campo"><label for="f-contr">Contributi INPS (% sull’imponibile)</label><input id="f-contr" type="number" min="0" max="100" step="0.01" inputmode="decimal" value="${F.contributi??''}" data-k="fisco/contributi" data-tipo="num"></div></div>
+      <p class="nota">Valori di partenza: 67% è il coefficiente delle palestre, 15% l’imposta ordinaria del forfettario (5% nei primi cinque anni se spettante), 26,07% la gestione separata INPS. Se Giorgia è iscritta come commerciante INPS il conto dei contributi è diverso: chiedere al commercialista.</p>`
+    :`<div class="riga"><label for="f-perc">Percentuale di tasse e contributi sull’utile</label><input id="f-perc" type="number" min="0" max="80" step="1" inputmode="numeric" value="${F.percentuale??''}" data-k="fisco/percentuale" data-tipo="num"></div>`}
+  </div>`;
+  el.innerHTML=h;
+}
+let dataSel=null;
+const isoDi=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+function lunediDi(iso){ const x=new Date(iso+'T12:00:00'); x.setDate(x.getDate()-((x.getDay()+6)%7)); return x; }
+let settBase=null; // ISO del lunedì della settimana mostrata
+function dataDelGiorno(g){ const i=GIORNI.findIndex(x=>x[0]===g); const d=lunediDi(settBase); d.setDate(d.getDate()+i); return isoDi(d); }
+const eccTesto=(l,e)=>e?(e.tipo==='saltata'?'saltata':'tenuta da '+esc((S.insegnanti.find(i=>i.id===e.ins)||{}).nome||'?')):'';
+let meseSel=null;
+const ymDi=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+function meseSuccessivo(ym){ const [a,m]=ym.split('-').map(Number); return ymDi(new Date(a,m,1)); }
+function meseDaChiudere(){ const d=new Date(); d.setDate(1); const corrente=ymDi(d); d.setMonth(d.getMonth()-1); let ym=ymDi(d);
+  while(ym<corrente && S.chiusure[ym] && S.chiusure[ym].chiuso) ym=meseSuccessivo(ym); return ym; }
+const NOME_MESE=['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
+function occorrenze(ym){ const [a,m]=ym.split('-').map(Number); const c={Lun:0,Mar:0,Mer:0,Gio:0,Ven:0,Sab:0}; const d=new Date(a,m-1,1); while(d.getMonth()===m-1){ const i=d.getDay(); if(i>=1&&i<=6) c[GIORNI[i-1][0]]++; d.setDate(d.getDate()+1); } return c; }
+function aliquotaTasse(){ const F=S.fisco; if(F.modo==='forfettario'){ const c=num(F.coeff)/100, k=num(F.contributi)/100, i=num(F.imposta)/100; return {suIncasso:true, pct:c*k+c*(1-k)*i}; } return {suIncasso:false, pct:num(F.percentuale)/100}; }
+const INIZIO_PALINSESTO='2026-09-07';
+const oggiISO=()=>{ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+const eccDi=(d,k)=>(S.eccezioni&&S.eccezioni[d]&&S.eccezioni[d][k])||null;
+function setEcc(d,k,v){ S.eccezioni=S.eccezioni||{}; if(v){ (S.eccezioni[d]=S.eccezioni[d]||{})[k]=v; } else if(S.eccezioni[d]){ delete S.eccezioni[d][k]; if(!Object.keys(S.eccezioni[d]).length) delete S.eccezioni[d]; } }
+const dataBreve=ds=>new Date(ds+'T12:00:00').toLocaleDateString('it-IT',{weekday:'short',day:'numeric'});
+function stimaMese(ym){ const [a,m]=ym.split('-').map(Number); const occ=occorrenze(ym); const perIns={}; let guadagno=0, lezTot=0; const ecc=[]; const mensili=new Set();
+  const d=new Date(a,m-1,1);
+  while(d.getMonth()===m-1){ const gi=d.getDay();
+    if(gi>=1&&gi<=6){ const g=GIORNI[gi-1][0]; const ds=a+'-'+String(m).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      if(ds>=INIZIO_PALINSESTO) PAL.filter(l=>l.g===g&&attiva(l)).forEach(l=>{ if(l.freq==='mensile'){ if(mensili.has(key(l))) return; mensili.add(key(l)); }
+        const e=eccDi(ds,key(l)); if(e){ ecc.push({data:ds,k:key(l),l,e}); if(e.tipo==='saltata') return; }
+        lezTot++; const insId=(e&&e.tipo==='sostituita')?e.ins:((S.slot[key(l)]||{}).ins||null); if(insId) perIns[insId]=(perIns[insId]||0)+1;
+        const pr=presenzeDi(l); if(pr!=null) guadagno+=pr*prezzoMedioLez(l); }); }
+    d.setDate(d.getDate()+1); }
+  return {occ,perIns,guadagno,lezTot,ecc}; }
+function importoIns(ins,nLez,ym){ const imp=num(ins.importo); switch(ins.tipo){ case 'ora': return nLez*imp; case 'mese': return imp; case 'testa': { const ls=PAL.filter(l=>attiva(l)&&(S.slot[key(l)]||{}).ins===ins.id); const pres=ls.length?ls.reduce((a,l)=>a+(presenzeDi(l)||0),0)/ls.length:0; return nLez*pres*imp; } case 'perc': { const ls=PAL.filter(l=>attiva(l)&&(S.slot[key(l)]||{}).ins===ins.id); const inc=ls.length?ls.reduce((a,l)=>a+(presenzeDi(l)||0)*prezzoMedioLez(l),0)/ls.length:0; return nLez*inc*imp/100; } default: return 0; } }
+function contoMese(ym){ const C=S.chiusure[ym]||{}; const st=stimaMese(ym); const incasso=C.incasso!=null?num(C.incasso):null;
+  const righe=S.insegnanti.filter(i=>i.tipo!=='titolare').map(i=>{ const n=(C.lezioni&&C.lezioni[i.id]!=null)?num(C.lezioni[i.id]):(st.perIns[i.id]||0); const calc=importoIns(i,n,ym); const imp=(C.importi&&C.importi[i.id]!=null)?num(C.importi[i.id]):calc; return {ins:i,n,calc,imp,override:(C.importi&&C.importi[i.id]!=null)}; });
+  const insTot=righe.reduce((a,r)=>a+r.imp,0); const extra=(C.spese||[]).reduce((a,s)=>a+num(s.importo),0); const fisse=totSpese();
+  const inc=incasso!=null?incasso:st.guadagno; const utile=inc-insTot-fisse-extra; const al=aliquotaTasse(); const tasse=al.suIncasso?inc*al.pct:Math.max(0,utile)*al.pct;
+  const riserva=C.riserva!=null?num(C.riserva):num(S.piano.riservaMensile); const bonifico=utile-tasse-riserva;
+  const tit=S.insegnanti.find(i=>i.tipo==='titolare'); const lezTit=tit?((C.lezioni&&C.lezioni[tit.id]!=null)?num(C.lezioni[tit.id]):(st.perIns[tit.id]||0)):0;
+  return {C,st,incasso,inc,righe,insTot,extra,fisse,utile,tasse,al,riserva,bonifico,tit,lezTit}; }
+function renderMese(){
+  const el=$('#mese'); if(!datiPronti()){ el.innerHTML=`<div class="avviso"><div class="testo"><strong>Servono prima le spese fisse.</strong><span class="piccolo">La chiusura del mese usa le spese fisse e il palinsesto: compila “I tuoi dati”.</span></div><button class="bottone piccolo" data-az="vai-dati">Vai ai dati</button></div>`; return; }
+  if(!meseSel) meseSel=meseDaChiudere(); const ym=meseSel; const [a,m]=ym.split('-').map(Number); const titolo=NOME_MESE[m-1]+' '+a; const k=contoMese(ym); const C=k.C; const chiuso=!!C.chiuso;
+  const pctTesto=k.al.suIncasso?`${fmt(k.al.pct*100,1)}% dell’incasso`:`${fmt(k.al.pct*100,1)}% dell’utile`;
+  const delta=k.incasso!=null&&k.st.guadagno>0?(k.incasso-k.st.guadagno)/k.st.guadagno:null;
+  let h=`<div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;justify-content:space-between"><div class="campo" style="min-width:200px"><label for="ms-mese">Mese da chiudere</label><input id="ms-mese" type="month" value="${ym}" data-mese="1"></div>
+    <span class="bolla ${chiuso?'ok':''}">${chiuso?'<i class="glifo" style="--st:var(--ok)">✓</i> mese chiuso':'<i class="glifo" style="--st:var(--ign)">…</i> in lavorazione'}</span></div>
+  <p class="nota">Le caselle partono dalla stima della pagina (palinsesto × settimane di ${titolo}, presenze medie): correggile con i numeri veri. ${chiuso?'Il mese è chiuso: per modificarlo premi “Riapri”.':''}</p>
+  <div class="blocco"><h2>1. Incasso di ${titolo}</h2>
+    <div class="riga"><label for="ms-inc">Incassato nel mese (€) <span class="muto piccolo">da App Palestre o dal POS, pacchetti compresi</span></label><input id="ms-inc" type="number" min="0" step="10" inputmode="decimal" value="${k.incasso??''}" placeholder="${Math.round(k.st.guadagno)}" data-k="chiusure/${ym}/incasso" data-tipo="num" ${chiuso?'disabled':''}></div>
+    <p class="nota">Guadagnato stimato dalle presenze: ${eur(k.st.guadagno)} (${k.st.lezTot} lezioni in calendario).${k.incasso==null?' Finché non scrivi l’incassato, il conto usa questa stima.':''}${delta!=null&&delta>0.15?` <strong>L’incassato supera il guadagnato del ${fmt(delta*100)}%</strong>: ci sono lezioni prepagate ancora da fare, conviene tenere più riserva questo mese.`:''}${delta!=null&&delta<-0.15?` L’incassato è sotto il guadagnato del ${fmt(-delta*100)}%: si stanno consumando pacchetti pagati nei mesi scorsi.`:''}</p></div>
+  <div class="blocco"><h2>2. Da bonificare alle insegnanti</h2><p class="nota">Lezioni fatte da ciascuna in ${titolo}, già senza le lezioni saltate e con le sostituzioni segnate in “Oggi”. La cifra si calcola dall’accordo di ogni insegnante; se serve la puoi correggere a mano.</p>
+    <div class="insriga intesta"><span>Insegnante</span><span>Lezioni</span><span>Da bonificare</span></div>
+    ${k.righe.map(r=>`<div class="insriga"><span><b>${esc(r.ins.nome)}</b><small>${descIns(r.ins)}</small></span><input type="number" min="0" step="1" inputmode="numeric" value="${r.n}" data-k="chiusure/${ym}/lezioni/${esc(r.ins.id)}" data-tipo="num" aria-label="Lezioni di ${esc(r.ins.nome)}" ${chiuso?'disabled':''}><input type="number" min="0" step="1" inputmode="decimal" style="${r.override?'border-color:var(--att)':''}" value="${Math.round(r.imp)}" data-k="chiusure/${ym}/importi/${esc(r.ins.id)}" data-tipo="num" aria-label="Importo per ${esc(r.ins.nome)}" ${chiuso?'disabled':''}></div>`).join('')}
+    ${k.tit?`<div class="insriga"><span class="muto"><b>${esc(k.tit.nome)} (tu)</b><small>le tue lezioni non si bonificano qui</small></span><input type="number" min="0" step="1" inputmode="numeric" value="${k.lezTit}" data-k="chiusure/${ym}/lezioni/${esc(k.tit.id)}" data-tipo="num" aria-label="Lezioni tue" ${chiuso?'disabled':''}><span class="muto" style="text-align:right">–</span></div>`:''}
+    <div class="insriga tot"><span>Totale insegnanti</span><span></span><span class="num">${eur(k.insTot)}</span></div></div>
+  <div class="blocco"><h2>Lezioni saltate e sostituzioni di ${titolo}</h2>${k.st.ecc.length?`<div class="conto">${k.st.ecc.map(x=>`<div class="r"><span>${dataBreve(x.data)} · ${x.l.ora} ${esc(x.l.nome)}<small>${x.e.tipo==='saltata'?'saltata':'tenuta da '+esc((S.insegnanti.find(i=>i.id===x.e.ins)||{}).nome||'?')+(insDi(x.l)?' invece di '+esc(insDi(x.l).nome):'')}</small></span><span class="v"><button class="dicui" data-az="ecc-togli" data-data="${x.data}" data-k="${esc(x.k)}" ${chiuso?'disabled':''}>togli</button></span></div>`).join('')}</div>`:`<p class="nota">Nessuna segnalata. Si segnano dalla schermata Oggi, giorno per giorno.</p>`}</div>
+  <div class="blocco"><h2>3. Spese di ${titolo}</h2>
+    <div class="riga"><span>Spese fisse <small class="muto" style="display:block">da “I tuoi dati”</small></span><span class="num" style="text-align:right">${eur(k.fisse)}</span></div>
+    ${(C.spese||[]).map((s,i)=>`<div class="riga tre" style="grid-template-columns:1fr 130px 36px"><input type="text" value="${esc(s.voce)}" placeholder="spesa straordinaria" data-k="chiusure/${ym}/spese/${i}/voce" data-tipo="str" aria-label="Voce" ${chiuso?'disabled':''}><input type="number" min="0" step="1" inputmode="decimal" value="${s.importo??''}" placeholder="€" data-k="chiusure/${ym}/spese/${i}/importo" data-tipo="num" aria-label="Importo" ${chiuso?'disabled':''}><button class="x" data-az="togli-spesa-mese" data-i="${i}" aria-label="Togli" ${chiuso?'disabled':''}>×</button></div>`).join('')}
+    ${chiuso?'':`<div><button class="bottone secondario piccolo" data-az="aggiungi-spesa-mese">+ Spesa straordinaria del mese</button></div>`}</div>
+  <div class="blocco"><h2>4. Il conto di ${titolo}</h2>
+    <div class="conto">
+      <div class="r"><span>Incasso${k.incasso==null?'<small>stima dalle presenze</small>':''}</span><span class="v num">${eur(k.inc)}</span></div>
+      <div class="r"><span>Insegnanti</span><span class="v num">− ${eur(k.insTot)}</span></div>
+      <div class="r"><span>Spese fisse${k.extra?' e straordinarie':''}</span><span class="v num">− ${eur(k.fisse+k.extra)}</span></div>
+      <div class="r tot"><span>Utile dello studio</span><span class="v num ${k.utile<0?'negv':'pos'}">${segno(k.utile)}</span></div>
+      <div class="r"><span>Nel salvadanaio tasse<small>${pctTesto}, dal regime impostato in “Stipendio”</small></span><span class="v num">− ${eur(k.tasse)}</span></div>
+      <div class="r"><span>Riserva dello studio<small>questo mese</small></span><span class="v num"><input type="number" min="0" step="50" inputmode="numeric" style="width:96px;padding:5px 6px;text-align:right" value="${Math.round(k.riserva)}" data-k="chiusure/${ym}/riserva" data-tipo="num" aria-label="Riserva del mese" ${chiuso?'disabled':''}></span></div>
+      <div class="r tot"><span>Bonifico a Giorgia</span><span class="v num ${k.bonifico<0?'negv':'pos'}">${eur(Math.max(0,k.bonifico))}${k.bonifico<0?' <small>mancano '+eur(-k.bonifico)+'</small>':''}</span></div>
+    </div>
+    <p class="nota">${k.bonifico<0?'Questo mese l’utile non copre tasse e riserva: il bonifico si prende dal cuscino accumulato, oppure si rinvia.':'Da fare: '+k.righe.filter(r=>r.imp>0).length+' bonifici alle insegnanti, uno al salvadanaio tasse, uno a Giorgia.'}</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">${chiuso?`<button class="bottone secondario piccolo" data-az="riapri-mese">Riapri il mese</button>`:`<button class="bottone piccolo" data-az="chiudi-mese">Segna ${titolo} come chiuso</button>`}</div></div>`;
+  const storico=Object.keys(S.chiusure).filter(x=>S.chiusure[x].chiuso).sort();
+  if(storico.length){ let salv=0,bon=0; const righe=storico.map(x=>{ const c=S.chiusure[x].riepilogo||{}; salv+=num(c.tasse); bon+=num(c.bonifico); const [aa,mm]=x.split('-').map(Number); return `<tr><td>${NOME_MESE[mm-1]} ${aa}</td><td class="num">${eur(c.incasso)}</td><td class="num">${eur(c.insegnanti)}</td><td class="num ${num(c.utile)<0?'neg':''}">${eur(c.utile)}</td><td class="num">${eur(c.tasse)}</td><td class="num">${eur(c.bonifico)}</td><td><button class="bottone secondario piccolo" data-az="vai-mese" data-ym="${x}">apri</button></td></tr>`; }).join('');
+    h+=`<div class="blocco"><h2>Mesi chiusi</h2><div style="overflow-x:auto"><table class="tabellina"><thead><tr><th>Mese</th><th>Incasso</th><th>Insegnanti</th><th>Utile</th><th>Salvadanaio</th><th>Bonifico</th><th></th></tr></thead><tbody>${righe}<tr><td style="font-weight:600">Totale</td><td></td><td></td><td></td><td class="num" style="font-weight:600">${eur(salv)}</td><td class="num" style="font-weight:600">${eur(bon)}</td><td></td></tr></tbody></table></div><p class="nota">Nel salvadanaio tasse dovrebbero esserci ${eur(salv)}: è la cifra da avere pronta alle scadenze.</p></div>`; }
+  el.innerHTML=h;
+}
+let meseIns=null;
+function lezioniIstruttoreMese(ym,id){ const [a,m]=ym.split('-').map(Number); const righe=[]; const mensili=new Set(); const d=new Date(a,m-1,1);
+  while(d.getMonth()===m-1){ const gi=d.getDay();
+    if(gi>=1&&gi<=6){ const g=GIORNI[gi-1][0]; const ds=a+'-'+String(m).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      if(ds>=INIZIO_PALINSESTO) PAL.filter(l=>l.g===g&&attiva(l)).forEach(l=>{ if(l.freq==='mensile'){ if(mensili.has(key(l))) return; mensili.add(key(l)); }
+        const mia=((S.slot[key(l)]||{}).ins===id); const e=eccDi(ds,key(l));
+        const futura=ds>oggiISO();
+        if(mia){ if(e&&e.tipo==='saltata') righe.push({data:ds,l,stato:'saltata'}); else if(e&&e.tipo==='sostituita'&&e.ins!==id) righe.push({data:ds,l,stato:'ceduta',a:e.ins}); else righe.push({data:ds,l,stato:futura?'futura':'fatta'}); }
+        else if(e&&e.tipo==='sostituita'&&e.ins===id) righe.push({data:ds,l,stato:futura?'futura':'sostituzione'}); }); }
+    d.setDate(d.getDate()+1); }
+  return righe; }
+const ICONE={
+  macchine:'<rect x="3" y="11" width="18" height="5" rx="1.5"/><path d="M6 16v3M18 16v3M8 11V8h8v3M10 8V6M14 8V6"/>',
+  matwork:'<rect x="3" y="8" width="18" height="9" rx="4.5"/><path d="M7.5 8v9M16.5 8v9"/>',
+  yoga:'<path d="M12 4c2.2 3 2.2 6 0 9-2.2-3-2.2-6 0-9z"/><path d="M4 11c3.2 0 6 2 8 5-3.3 1-6.2 0-8-5zM20 11c-3.2 0-6 2-8 5 3.3 1 6.2 0 8-5z"/><path d="M4 18c3 2.5 13 2.5 16 0"/>',
+  funzionale:'<path d="M3 10v4M6 8v8M18 8v8M21 10v4M6 12h12"/>',
+  mam:'<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>',
+  somatica:'<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2 2M16 16l2 2M6 18l2-2M16 8l2-2"/>',
+  evento:'<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
+  calendario:'<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M9 15l2 2 4-4"/>',
+  euro:'<path d="M17 6.5a6.5 6.5 0 1 0 0 11M4 10.5h9M4 13.5h9"/>',
+  calendarioMese:'<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M8 13h3M13 13h3M8 17h3"/>'
+};
+const icona=(n,cls='')=>`<svg class="ico ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONE[n]||ICONE.evento}</svg>`;
+function renderIstruttore(){
+  const el=$('#istruttore'); el.hidden=false; document.querySelectorAll('.vista').forEach(s=>{ if(s.id!=='istruttore') s.hidden=true; });
+  const ins=S.insegnanti[0]; if(!meseIns){ const d=new Date(); d.setDate(1); d.setMonth(d.getMonth()-1); meseIns=ymDi(d); }
+  const ym=meseIns; const [a,m]=ym.split('-').map(Number); const titolo=NOME_MESE[m-1]+' '+a; const Titolo=titolo.charAt(0).toUpperCase()+titolo.slice(1);
+  const righe=lezioniIstruttoreMese(ym,ins.id); const fatte=righe.filter(r=>r.stato==='fatta'||r.stato==='sostituzione'); const saltate=righe.filter(r=>r.stato==='saltata'||r.stato==='ceduta'); const future=righe.filter(r=>r.stato==='futura');
+  const C=S.chiusure[ym]||{}; const chiuso=!!C.chiuso;
+  const nLez=(C.lezioni&&C.lezioni[ins.id]!=null)?num(C.lezioni[ins.id]):fatte.length;
+  const rie=C.riepilogo&&C.riepilogo.perIns&&C.riepilogo.perIns[ins.id];
+  const gruppi={}; righe.forEach(r=>{ const k=r.l.disc; (gruppi[k]=gruppi[k]||{disc:k,nome:DISC[k].nome,fatte:0,saltate:0,future:0,righe:[]}); if(r.stato==='fatta'||r.stato==='sostituzione') gruppi[k].fatte++; else if(r.stato==='futura') gruppi[k].future++; else gruppi[k].saltate++; gruppi[k].righe.push(r); });
+  const quando=iso=>new Date(iso+'T12:00:00').toLocaleDateString('it-IT',{weekday:'short',day:'numeric'});
+  const stTesto={fatta:'',saltata:'saltata',ceduta:'fatta da un’altra',sostituzione:'in sostituzione',futura:'da fare'};
+  let h=`<div class="ist-testa"><div><p class="occhiello">Il tuo riepilogo</p><h2>Ciao ${esc(ins.nome.trim().split(' ')[0])}</h2><p class="muto">Accordo: ${descIns(ins)}</p></div>
+    <label class="ist-mese">${icona('calendarioMese')}<input id="i-mese" type="month" value="${ym}" data-mese-ins="1" aria-label="Mese"></label></div>
+  <div class="ist-tessere">
+    <div class="ist-tessera">${icona('calendario','grande')}<div><span class="k">${chiuso?'Lezioni fatte':'Lezioni fatte finora'}</span><span class="v num">${nLez}</span><span class="s">${chiuso?(C.lezioni&&C.lezioni[ins.id]!=null&&C.lezioni[ins.id]!==fatte.length?`confermate da Giorgia · dal calendario ${fatte.length}`:Titolo):[future.length?`${future.length} ancora da fare in ${titolo}`:'',saltate.length?`${saltate.length} saltate, non contate`:''].filter(Boolean).join(' · ')||Titolo}</span></div></div>
+    <div class="ist-tessera">${icona(chiuso?'calendarioMese':'calendarioMese','grande')}<div><span class="k">${chiuso?'Conteggio':'Ancora in calendario'}</span><span class="v num">${chiuso?'✓':future.length}</span><span class="s">${chiuso?`confermato da Giorgia${C.riepilogo&&C.riepilogo.chiusoIl?' il '+new Date(C.riepilogo.chiusoIl).toLocaleDateString('it-IT'):''}`:(future.length?`lezioni da fare in ${titolo}: si aggiungono man mano`:'nessuna lezione ancora da fare')}</span></div></div>
+  </div>
+  <div class="ist-stato ${chiuso?'ok':''}"><i class="glifo" style="--st:var(--${chiuso?'ok':'att'})">${chiuso?'✓':'!'}</i><div><b>${chiuso?Titolo+' è chiuso':Titolo+' non è ancora chiuso'}</b><span>${chiuso?'Il conteggio è quello di Giorgia.':'Conta solo le lezioni fino a oggi: fa fede il conteggio di Giorgia alla chiusura del mese.'}</span></div></div>
+  <div class="ist-blocco"><h3>Per tipologia</h3><p class="muto piccolo">Tocca una riga per vedere i giorni.</p>
+    ${Object.values(gruppi).sort((x,y)=>y.fatte-x.fatte).map(g=>`<details class="tipo"><summary>${icona(g.disc)}<span class="nome">${esc(g.nome)}${[g.future?`${g.future} da fare`:'',g.saltate?`${g.saltate} saltat${g.saltate===1?'a':'e'}`:''].filter(Boolean).length?`<small>${[g.future?`${g.future} da fare`:'',g.saltate?`${g.saltate} saltat${g.saltate===1?'a':'e'}`:''].filter(Boolean).join(' · ')}</small>`:''}</span><span class="n num">${g.fatte}</span><span class="chev" aria-hidden="true">›</span></summary>
+      <div class="giorni">${(()=>{ const perGiorno={}; g.righe.forEach(r=>{ (perGiorno[r.data]=perGiorno[r.data]||[]).push(r); });
+        return Object.keys(perGiorno).sort().map(d=>`<div class="gio"><span class="num data">${quando(d)}</span><span class="orari">${perGiorno[d].map(r=>`<span class="orach num ${r.stato==='fatta'||r.stato==='sostituzione'?'':(r.stato==='futura'?'fut':'no')}">${r.l.ora}${r.l.sotto?` <small>${esc(r.l.sotto)}</small>`:''}${stTesto[r.stato]?` <small>${stTesto[r.stato]}</small>`:''}</span>`).join('')}</span></div>`).join(''); })()}</div></details>`).join('')||'<p class="nota">Nessuna lezione in questo mese.</p>'}
+    <div class="tipo tot"><span class="nome">${chiuso?'Totale lezioni':'Fatte finora'}${!chiuso&&future.length?`<small>${future.length} ancora da fare</small>`:''}</span><span class="n num">${fatte.length}</span></div></div>`;
+  const storico=Object.keys(S.chiusure).filter(x=>S.chiusure[x].chiuso&&S.chiusure[x].riepilogo&&S.chiusure[x].riepilogo.perIns&&S.chiusure[x].riepilogo.perIns[ins.id]).sort().reverse();
+  if(storico.length) h+=`<div class="ist-blocco"><h3>Mesi chiusi</h3>${storico.map(x=>{ const p=S.chiusure[x].riepilogo.perIns[ins.id]; const [xa,xm]=x.split('-').map(Number); return `<div class="tipo stor"><span class="nome">${NOME_MESE[xm-1]} ${xa}<small>confermato da Giorgia</small></span><span class="n num">${p.lezioni} <small style="font-size:13px;font-weight:400;color:var(--fg-2)">lezioni</small></span></div>`; }).join('')}</div>`;
+  h+=`<div class="ist-piede"><span class="piccolo muto">Le ore vengono aggiornate ogni fine mese.</span><button class="bottone secondario piccolo" data-az="esci">Esci</button></div>`;
+  el.innerHTML=h;
+}
+function renderDati(){
+  const el=$('#dati'); const qf=quotaFissa();
+  const righeSpese=S.spese.map((s,i)=>`<div class="riga"><input type="text" value="${esc(s.voce)}" data-k="spese/${i}/voce" data-tipo="str" aria-label="Voce di spesa"><div style="display:flex;gap:6px;align-items:center"><input type="number" min="0" step="1" inputmode="decimal" placeholder="€ al mese" value="${s.importo??''}" data-k="spese/${i}/importo" data-tipo="num" aria-label="Importo mensile"><button class="x" data-az="togli-spesa" data-i="${i}" aria-label="Togli voce">×</button></div></div>`).join('');
+  const tipi={titolare:'Sei tu (titolare)',ora:'Tanto a lezione',testa:'Tanto a persona presente',perc:'Percentuale sull’incasso',mese:'Fisso al mese'};
+  const righeIns=S.insegnanti.map((ins,i)=>`<div class="riga tre"><input type="text" value="${esc(ins.nome)}" data-k="insegnanti/${i}/nome" data-tipo="str" aria-label="Nome"><select data-k="insegnanti/${i}/tipo" data-tipo="str" aria-label="Come viene pagata">${Object.entries(tipi).map(([k,v])=>`<option value="${k}" ${ins.tipo===k?'selected':''}>${v}</option>`).join('')}</select>
+    ${ins.tipo==='titolare'?`<input type="number" min="0" step="1" inputmode="decimal" value="${S.valoreOra||''}" placeholder="valore della tua ora €" title="Quanto vale la tua ora: sotto questa cifra una tua lezione risulta sotto" data-k="valoreOra" data-tipo="num" aria-label="Valore della tua ora">`:`<input type="number" min="0" step="0.5" inputmode="decimal" value="${ins.importo??''}" placeholder="${ins.tipo==='perc'?'%':'€'}" data-k="insegnanti/${i}/importo" data-tipo="num" aria-label="Importo">`}
+    ${ins.id==='giorgia'?'<span></span>':`<button class="x" data-az="togli-ins" data-i="${i}" aria-label="Togli insegnante">×</button>`}</div>
+    ${ins.tipo==='titolare'?'':`<div class="codins"><span class="piccolo muto">Suo codice per vedere il riepilogo: ${ins.accesso?'<b style="color:var(--ok)">attivo</b>':'non ancora dato'}</span><input type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="${ins.accesso?'nuovo codice':'scegli un codice, almeno 6 caratteri'}" data-codins="${i}" aria-label="Codice per ${esc(ins.nome)}"><button class="bottone secondario piccolo" data-az="ins-codice" data-i="${i}">${ins.accesso?'Cambia':'Attiva'}</button>${ins.accesso?`<button class="bottone secondario piccolo" data-az="ins-codice-togli" data-i="${i}">Disattiva</button>`:''}<span class="piccolo" data-esito-codins="${i}"></span></div>`}`).join('');
+  const opzIns=sel=>`<option value="">da assegnare</option>`+S.insegnanti.map(i=>`<option value="${esc(i.id)}" ${sel===i.id?'selected':''}>${esc(i.nome)}${i.tipo==='titolare'?' (tu)':''}</option>`).join('');
+  const rimSet=new Set(S.rimosse||[]);
+  const giorni=GIORNI.map(([g,n],gi)=>{ const ls=PAL.filter(l=>l.g===g); const fatte=ls.filter(l=>presenzeDi(l)!=null).length; const tolte=PAL_BASE.filter(l=>l.g===g&&rimSet.has(key(l)));
+    return `<details ${gi===0?'open':''}><summary><span>${n}</span><span class="piccolo muto">${fatte}/${ls.length} con presenze</span></summary><div class="dentro">
+      <div class="slotriga piccolo muto" style="font-weight:600"><span>Ora</span><span>Lezione</span><span>Chi la tiene</span><span style="text-align:right">Presenze</span></div>
+      ${ls.map(l=>{ const sl=S.slot[key(l)]||{}; const cd=compDi(l); const pz=DISC[l.disc].prezzi; return `<div class="slotriga"><span class="num" style="font-weight:600">${l.ora}</span><span>${pallino(l.disc)} ${esc(l.nome)}${l.sotto?` <span class="piccolo muto">${esc(l.sotto)}</span>`:''}${l.extra?' <span class="piccolo muto">(aggiunta)</span>':''}${attiva(l)?'':' <span class="piccolo muto">(fuori)</span>'} <button class="dicui" data-az="dicui" aria-expanded="${cd.tot>0}">di cui</button> <button class="dicui" data-az="togli-lez" data-k="${esc(key(l))}" title="Togli questa lezione dal palinsesto">togli</button></span>
+        <select data-k="slot/${esc(key(l))}/ins" data-tipo="str" aria-label="Insegnante">${opzIns(sl.ins)}</select>
+        <input type="number" min="0" max="${l.posti}" step="1" inputmode="numeric" value="${presenzeDi(l)??''}" placeholder="su ${l.posti}" data-k="slot/${esc(key(l))}/presenze" data-tipo="int" aria-label="Presenze medie" ${cd.tot>0?'disabled':''}></div>
+        <div class="slotcomp" ${cd.tot>0?'':'hidden'}><span class="piccolo muto">di cui con:</span>${Object.keys(pz).map(k=>`<label class="piccolo">${ETIC[k]}<input type="number" min="0" max="${l.posti}" step="1" inputmode="numeric" value="${num(cd.c[k])||''}" placeholder="0" data-k="slot/${esc(key(l))}/comp/${k}" data-tipo="int" aria-label="${ETIC[k]}"></label>`).join('')}</div>`; }).join('')}
+      ${tolte.length?`<p class="piccolo muto">Tolte: ${tolte.map(l=>`${l.ora} ${esc(l.nome)} <button class="dicui" data-az="rimetti-lez" data-k="${esc(key(l))}">rimetti</button>`).join(' · ')}</p>`:''}
+      <div class="lezform" data-g="${g}"><input type="text" inputmode="numeric" placeholder="ora, es. 12.30" aria-label="Ora" data-campo="ora"><select aria-label="Tipologia" data-campo="disc">${['macchine','matwork','yoga','funzionale','mam','somatica'].map(d=>`<option value="${d}">${DISC[d].nome}</option>`).join('')}</select><input type="text" placeholder="nota, es. livello base" aria-label="Nota" data-campo="sotto"><input type="number" min="1" max="20" step="1" inputmode="numeric" placeholder="posti" aria-label="Posti" data-campo="posti"><button class="bottone secondario piccolo" data-az="aggiungi-lez">+ Aggiungi lezione</button><span class="piccolo negv" data-campo="errore"></span></div></div></details>`; }).join('');
+  const mix=['macchine','matwork','yoga','funzionale','mam','somatica'].filter(d=>!(d in S.includi)||S.includi[d]).map(d=>{ const D=DISC[d]; const m=S.mix[d]; const somma=Object.keys(D.prezzi).reduce((a,k)=>a+num(m[k]),0);
+    return `<div class="blocco" style="padding:12px 14px"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:baseline"><h3>${pallino(d)} ${D.nome}</h3><span class="piccolo ${somma===100?'muto':'negv'} num" data-calc="somma-${d}">${somma===100?'prezzo medio '+eur(prezzoMedio(d),2):'il totale fa '+fmt(somma)+'%, deve fare 100'}</span></div>
+      <div class="mix">${Object.keys(D.prezzi).map(k=>`<div class="campo"><label>${ETIC[k]} <span class="muto">${eur(D.prezzi[k],2)}</span></label><input type="number" min="0" max="100" step="5" inputmode="numeric" value="${m[k]??0}" data-k="mix/${d}/${k}" data-tipo="num" aria-label="${ETIC[k]} percentuale"></div>`).join('')}</div></div>`; }).join('');
+  el.innerHTML=`
+  ${S.esempio?`<div class="avviso esempio"><div class="testo"><strong>Questi sono numeri di esempio.</strong><span class="piccolo">Puoi modificarli per provare: qui niente si salva. Quando vuoi lavorare sui tuoi, premi “Torna ai tuoi dati”.</span></div><button class="bottone piccolo" data-az="usa-miei">Torna ai tuoi dati</button></div>`:`<p class="nota">Quello che scrivi qui si salva da solo online, protetto dal tuo codice: lo ritrovi da qualsiasi telefono o computer. In basso a destra vedi quando è stato salvato l’ultima volta.</p>`}
+  <div class="blocco"><h2>Spese fisse del mese</h2><p class="nota">Quello che paghi anche se una lezione salta. Una cifra per voce, al mese.</p>${righeSpese}
+    <div><button class="bottone secondario piccolo" data-az="aggiungi-spesa">+ Aggiungi una voce</button></div>
+    <div class="riga tot"><span>Totale al mese</span><span class="num" data-calc="tot-spese">${eur(totSpese())}</span></div>
+    <div class="riga"><label for="d-sett">Settimane all’anno con lezioni <span class="muto piccolo">(52 meno le chiusure)</span></label><input id="d-sett" type="number" min="1" max="52" step="1" inputmode="numeric" value="${S.settimaneAperte}" data-k="settimaneAperte" data-tipo="int"></div>
+    <div class="riga tot"><span>Quota fissa su ogni lezione <small class="muto" style="font-weight:400;display:block">spese dell’anno diviso le lezioni dell’anno: ${eur(totSpese())} × 12 ÷ (${fmt(lezioniSett(),2)} × ${S.settimaneAperte})</small></span><span class="num" data-calc="quota">${eur(qf,2)}</span></div></div>
+  <div class="blocco"><h2>Insegnanti</h2><p class="nota">Per ciascuna, come viene pagata. Per te (titolare) non c’è un costo: nella tua riga scrivi quanto vale la tua ora. Sotto ogni insegnante puoi darle un suo codice: con quello, dallo stesso link, vede solo il proprio riepilogo del mese (lezioni fatte e cifra che le spetta), senza poter modificare nulla e senza vedere le altre.</p>${righeIns}
+    <div><button class="bottone secondario piccolo" data-az="aggiungi-ins">+ Aggiungi un’insegnante</button></div>
+</div>
+  <div class="blocco"><h2>Le lezioni della settimana</h2><p class="nota">Chi tiene ogni lezione e quante persone ci sono in media. Con “di cui” puoi dire quante hanno la singola o ciascun pacchetto: allora il conto usa quei prezzi invece della media. “Togli” leva una lezione dal palinsesto (si può rimettere), e in fondo a ogni giornata puoi aggiungerne una nuova. Vale per tutte le viste.</p>${giorni}</div>
+  <div class="blocco"><h2>Come pagano le clienti</h2><p class="nota">Su 100 presenze, quante arrivano con la singola e quante con ciascun pacchetto. Serve per il prezzo medio di una presenza nelle lezioni dove non hai scritto il dettaglio “di cui”.</p>${mix}</div>
+  <div class="blocco"><h2>Altre voci</h2>
+    <div class="riga"><label for="d-var">Costi che nascono solo se la lezione si fa (€ a lezione)</label><input id="d-var" type="number" min="0" step="0.5" inputmode="decimal" value="${S.variabili||''}" placeholder="0" data-k="variabili" data-tipo="num"></div>
+    <div class="riga"><label for="d-tasse">Tasse e contributi da mettere da parte (%) <span class="muto piccolo">la cifra la dà il commercialista</span></label><input id="d-tasse" type="number" min="0" max="80" step="1" inputmode="numeric" value="${S.tasse||''}" placeholder="0" data-k="tasse" data-tipo="num"></div>
+    <h3 style="margin-top:4px">Cosa contare</h3>
+    <label class="riga" style="grid-template-columns:1fr 24px"><span>Laboratorio esperienziale del venerdì</span><input type="checkbox" ${S.includi.somatica?'checked':''} data-k="includi/somatica" data-tipo="bool"></label>
+    <label class="riga" style="grid-template-columns:1fr 24px"><span>Workshop</span><input type="checkbox" ${S.includi.evento?'checked':''} data-k="includi/evento" data-tipo="bool"></label></div>
+  <div class="blocco"><h2>Codice di accesso</h2><p class="nota">Con questo codice entri nella pagina da qualsiasi dispositivo. Per cambiarlo scrivi quello nuovo: almeno 6 caratteri, maiuscole e minuscole non contano.</p>
+    <div class="riga" style="grid-template-columns:1fr auto"><input id="d-nuovo-codice" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="nuovo codice" aria-label="Nuovo codice"><button class="bottone secondario piccolo" data-az="cambia-codice">Cambia codice</button></div><p class="nota" id="d-esito-codice"></p>
+    <div class="solo-fuori-app"><button class="bottone secondario piccolo" data-az="esci">Esci da questo dispositivo</button></div></div>
+  <div class="blocco"><h2>Copia di sicurezza</h2><p class="nota">Il testo qui sotto è tutto quello che hai inserito, già salvato online. Serve solo se vuoi tenerne una copia o ripristinarla con “Carica il testo incollato”.</p>
+    <textarea id="d-json" aria-label="Dati in formato testo" spellcheck="false">${esc(JSON.stringify(S))}</textarea>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="bottone secondario piccolo" data-az="copia">Copia</button><button class="bottone secondario piccolo" data-az="incolla">Carica il testo incollato</button><span style="flex:1"></span><button class="bottone secondario piccolo" data-az="esempio">Guarda i numeri di esempio</button><button class="bottone secondario piccolo" data-az="azzera">Svuota tutto</button></div><p class="nota" id="d-esito"></p></div>`;
+}
+
+/* ============ EVENTI ============ */
+function setPath(path,val){ const parts=path.split('/'); let o=S; for(let i=0;i<parts.length-1;i++){ const p=parts[i]; if(o[p]==null||typeof o[p]!=='object') o[p]=isNaN(+parts[i+1])?{}:{}; o=o[p]; } o[parts[parts.length-1]]=val; }
+function leggi(el){ const t=el.dataset.tipo; if(t==='bool') return el.checked; const v=el.value; if(t==='num'||t==='int'){ if(v==='') return null; const n=t==='int'?parseInt(v,10):parseFloat(v); return isNaN(n)?null:n; } return v; }
+function aggiornaCalcolati(){ const q=$('[data-calc="tot-spese"]'); if(q) q.textContent=eur(totSpese()); const qq=$('[data-calc="quota"]'); if(qq) qq.textContent=eur(quotaFissa(),2);
+  for(const d in S.mix){ const e=$(`[data-calc="somma-${d}"]`); if(!e) continue; const somma=Object.keys(DISC[d].prezzi).reduce((a,k)=>a+num(S.mix[d][k]),0); e.textContent=somma===100?'prezzo medio '+eur(prezzoMedio(d),2):'il totale fa '+fmt(somma)+'%, deve fare 100'; e.className='piccolo num '+(somma===100?'muto':'negv'); }
+  const j=$('#d-json'); if(j&&document.activeElement!==j) j.value=JSON.stringify(S); }
+
+document.addEventListener('input',e=>{ const el=e.target;
+  if(el.dataset.sim){ const k=el.dataset.sim; SIM[k]=k==='disc'||k==='ins'?el.value:(el.value===''?null:+el.value); if(k==='disc'){SIM.pm=null;SIM.posti=null;} if(k==='n'||k==='posti'||k==='pm'||k==='qf'||k==='costo') renderSimulatore(); else renderSimulatore(); if(k==='n'){ const r=$('#s-n'); if(r) r.focus(); } return; }
+  if(el.dataset.mese||el.dataset.scegliGiorno||el.dataset.ecc||el.dataset.meseIns) return; if(!el.dataset.k) return; setPath(el.dataset.k,leggi(el)); salva(); aggiornaCalcolati(); });
+document.addEventListener('change',e=>{ const el=e.target; if(el.dataset.sim) return; if(el.dataset.mese){ meseSel=el.value||meseSel; renderMese(); return; }
+  if(el.dataset.scegliGiorno){ if(el.value) dataSel=el.value; renderOggi(); return; }
+  if(el.dataset.meseIns){ if(el.value) meseIns=el.value; renderIstruttore(); return; }
+  if(el.dataset.ecc){ const d=el.dataset.data,k=el.dataset.k; const ass=(S.slot[k]||{}).ins||''; const v=el.value; setEcc(d,k,(v===ass)?null:{tipo:'sostituita',ins:v}); salva(); dopoEcc(); return; }
+  if(!el.dataset.k) return;
+  setPath(el.dataset.k,leggi(el)); const mk=el.dataset.k.match(/^chiusure\/([^/]+)\/lezioni\/(.+)$/); if(mk&&S.chiusure[mk[1]]&&S.chiusure[mk[1]].importi) delete S.chiusure[mk[1]].importi[mk[2]]; salva();
+  const dlg=$('#dettaglio'); if(dlg.open&&dlg.contains(el)){ const l=PAL.find(x=>key(x)===dlg.dataset.k); const f=document.activeElement&&document.activeElement.id; dlg.innerHTML=htmlDettaglio(l); if(f){const nf=$('#'+f); if(nf&&nf.tagName!=='INPUT') nf.focus();} render(); return; }
+  if(el.tagName==='SELECT'||el.type==='checkbox'||el.type==='number') { const id=el.id; render(); if(id){ const nf=$('#'+id); if(nf&&nf.tagName==='SELECT') nf.focus(); } } });
+document.addEventListener('click',e=>{
+  const tab=e.target.closest('[data-vista]'); if(tab){ vista=tab.dataset.vista; if(tab.dataset.ym) meseSel=tab.dataset.ym; vaiA(vista); return; }
+  if(e.target.closest('[data-az="altro"]')){ const m=$('#altro-menu'); m.hidden=!m.hidden; $('.voce.altro').setAttribute('aria-expanded',String(!m.hidden)); return; }
+  if(!e.target.closest('#altro-menu')) { const m=$('#altro-menu'); if(m&&!m.hidden){ m.hidden=true; $('.voce.altro').setAttribute('aria-expanded','false'); } }
+  const chip=e.target.closest('[data-giorno]'); if(chip){ giornoSel=chip.dataset.giorno; renderSettimana(); return; }
+  const lez=e.target.closest('.lez'); if(lez){ apriDettaglio(lez.dataset.k,lez.dataset.data||null); return; }
+  if(e.target.closest('[data-az="sett-prec"]')){ const d=lunediDi(settBase); d.setDate(d.getDate()-7); settBase=isoDi(d); renderSettimana(); return; }
+  if(e.target.closest('[data-az="sett-succ"]')){ const d=lunediDi(settBase); d.setDate(d.getDate()+7); settBase=isoDi(d); renderSettimana(); return; }
+  if(e.target.closest('[data-az="sett-oggi"]')){ settBase=isoDi(lunediDi(oggiISO())); renderSettimana(); return; }
+  const az=e.target.closest('[data-az]'); if(!az) return; const a=az.dataset.az;
+  if(a==='chiudi'){ $('#dettaglio').close(); return; }
+  if(a==='dicui'){ const riga=az.closest('.slotriga'); const sub=riga&&riga.nextElementSibling; if(sub){ sub.hidden=!sub.hidden; az.setAttribute('aria-expanded',String(!sub.hidden)); } return; }
+  if(a==='vai-dati'){ $('[data-vista="dati"]').click(); return; }
+  if(a==='usa-miei'){ S=VERI||cacheLocale()||DEFAULT(); VERI=null; render(); $('[data-vista="dati"]').click(); return; }
+  if(a==='esempio'){ if(!S.esempio) VERI=S; S=esempio(); render(); window.scrollTo({top:0}); return; }
+  if(a==='esci'){ esci(); return; }
+  if(a==='ins-codice'||a==='ins-codice-togli'){ const i=+az.dataset.i; const ins=S.insegnanti[i]; const out=$(`[data-esito-codins="${i}"]`); const inp=$(`[data-codins="${i}"]`);
+    (async()=>{ try{ let r; if(a==='ins-codice'){ const nuovo=(inp.value||'').trim(); if(nuovo.length<6){ out.textContent=MSG.corto; return; } r=await rpc('conti_istruttore_codice',{p_id:SUPA.id,p_codice:CODICE,p_ins:ins.id,p_nuovo:nuovo}); if(r.ok){ ins.accesso=true; salva(); renderDati(); const o2=$(`[data-esito-codins="${i}"]`); if(o2) o2.textContent='Codice attivo: daglielo a voce, entra dallo stesso link.'; return; } }
+        else { r=await rpc('conti_istruttore_togli_codice',{p_id:SUPA.id,p_codice:CODICE,p_ins:ins.id}); if(r.ok){ ins.accesso=false; salva(); renderDati(); return; } }
+        out.textContent=MSG[r.errore]||('Errore: '+r.errore); }catch(e){ out.textContent='Non riesco a collegarmi: riprova.'; } })(); return; }
+  if(a==='ecc-salta'){ const d=az.dataset.data,k=az.dataset.k; const e=eccDi(d,k); setEcc(d,k,(e&&e.tipo==='saltata')?null:{tipo:'saltata'}); salva(); dopoEcc(); return; }
+  if(a==='ecc-togli'){ setEcc(az.dataset.data,az.dataset.k,null); salva(); renderMese(); return; }
+  if(a==='togli-lez'){ const kk=az.dataset.k; const l=PAL.find(x=>key(x)===kk); if(!l) return; if(l.extra){ S.extra=(S.extra||[]).filter(e=>(e.g+'|'+e.ora)!==kk); } else { S.rimosse=S.rimosse||[]; if(!S.rimosse.includes(kk)) S.rimosse.push(kk); } salva(); render(); return; }
+  if(a==='rimetti-lez'){ S.rimosse=(S.rimosse||[]).filter(x=>x!==az.dataset.k); salva(); render(); return; }
+  if(a==='aggiungi-lez'){ const f=az.closest('.lezform'); const g=f.dataset.g; const q=c=>f.querySelector(`[data-campo="${c}"]`); const err=q('errore'); let ora=(q('ora').value||'').trim().replace(':','.'); const mm=ora.match(/^(\d{1,2})\.(\d{2})$/); if(!mm||+mm[1]>23||+mm[2]>59){ err.textContent='Scrivi l’ora come 12.30'; return; } ora=(+mm[1])+'.'+mm[2];
+    if(PAL.some(l=>l.g===g&&l.ora===ora)){ err.textContent='C’è già una lezione a quell’ora'; return; } const disc=q('disc').value; const posti=num(q('posti').value)||(disc==='macchine'?4:7); const sotto=(q('sotto').value||'').trim()||null;
+    S.extra=S.extra||[]; S.extra.push({g,ora,disc,nome:DISC[disc].nome,sotto,posti}); S.rimosse=(S.rimosse||[]).filter(x=>x!==g+'|'+ora); salva(); render(); return; }
+  if(a==='aggiungi-spesa-mese'){ const C=S.chiusure[meseSel]=S.chiusure[meseSel]||{}; C.spese=C.spese||[]; C.spese.push({voce:'',importo:null}); salva(); renderMese(); return; }
+  if(a==='togli-spesa-mese'){ const C=S.chiusure[meseSel]||{}; (C.spese||[]).splice(+az.dataset.i,1); salva(); renderMese(); return; }
+  if(a==='chiudi-mese'){ const k=contoMese(meseSel); const C=S.chiusure[meseSel]=S.chiusure[meseSel]||{}; C.chiuso=true; C.riepilogo={incasso:k.inc,insegnanti:k.insTot,spese:k.fisse+k.extra,utile:k.utile,tasse:k.tasse,riserva:k.riserva,bonifico:Math.max(0,k.bonifico),perIns:Object.fromEntries(k.righe.map(r=>[r.ins.id,{nome:r.ins.nome,lezioni:r.n,importo:r.imp}])),chiusoIl:new Date().toISOString()}; if(C.incasso==null) C.incasso=Math.round(k.inc); salva(); const prossimo=meseSuccessivo(meseSel); const d0=new Date(); d0.setDate(1); if(prossimo<=ymDi(d0)) meseSel=prossimo; renderMese(); window.scrollTo({top:0}); return; }
+  if(a==='riapri-mese'){ const C=S.chiusure[meseSel]; if(C){ C.chiuso=false; delete C.riepilogo; } salva(); renderMese(); return; }
+  if(a==='vai-mese'){ meseSel=az.dataset.ym; renderMese(); window.scrollTo({top:0}); return; }
+  if(a==='cambia-codice'){ cambiaCodice($('#d-nuovo-codice').value); return; }
+  if(a==='azzera'){ if(az.dataset.conf!=='1'){ az.dataset.conf='1'; az.textContent='Sicura? Premi ancora per svuotare'; return; } S=DEFAULT(); VERI=null; salva(); render(); return; }
+  if(a==='aggiungi-spesa'){ S.spese.push({voce:'',importo:null}); salva(); renderDati(); const ins=document.querySelectorAll('[data-k^="spese/"][data-tipo="str"]'); ins[ins.length-1]?.focus(); return; }
+  if(a==='togli-spesa'){ S.spese.splice(+az.dataset.i,1); salva(); renderDati(); return; }
+  if(a==='aggiungi-ins'){ S.insegnanti.push({id:'ins'+Date.now().toString(36),nome:'',tipo:'ora',importo:null}); salva(); renderDati(); const ins=document.querySelectorAll('[data-k^="insegnanti/"][data-tipo="str"]'); ins[ins.length-1]?.focus(); return; }
+  if(a==='togli-ins'){ const id=S.insegnanti[+az.dataset.i].id; S.insegnanti.splice(+az.dataset.i,1); for(const k in S.slot) if(S.slot[k].ins===id) S.slot[k].ins=null; salva(); renderDati(); return; }
+  if(a==='copia'){ const t=$('#d-json'); t.select(); let ok=false; try{ navigator.clipboard?.writeText(t.value).then(()=>{$('#d-esito').textContent='Copiato. Incollalo in un messaggio a Mattia.';}); ok=true; }catch(err){} if(!ok){ try{ ok=document.execCommand('copy'); }catch(err){} $('#d-esito').textContent=ok?'Copiato.':'Non riesco a copiare da solo: tieni premuto sul testo e copia a mano.'; } return; }
+  if(a==='incolla'){ try{ const o=JSON.parse($('#d-json').value); if(!o||typeof o!=='object'||!Array.isArray(o.spese)) throw 0; S=Object.assign(DEFAULT(),o); S.esempio=false; VERI=null; salva(); render(); $('#d-esito').textContent='Dati caricati e salvati.'; }catch(err){ $('#d-esito').textContent='Il testo incollato non è nel formato giusto.'; } return; }
+});
+$('#dettaglio').addEventListener('click',e=>{ if(e.target===e.currentTarget) e.currentTarget.close(); });
+$('#dettaglio').addEventListener('close',()=>render());
+render();
+(function(){ try{ $('#c-logo').innerHTML=$('.testata .logo').innerHTML; }catch(e){}
+  if(APP){ document.body.classList.add('app'); $('#c-form').hidden=true; const out=$('#c-app'); out.hidden=false; out.textContent='Un attimo…'; $('#cancello').hidden=false;
+    window.addEventListener('message',e=>{ if(e.origin!==location.origin) return; const d=e.data||{}; if(d.tipo==='sessione'&&d.token){ const primo=!APP_TOKEN; APP_TOKEN=d.token; if(primo) entraAdmin(); } });
+    try{ parent.postMessage({tipo:'pronto'},location.origin); }catch(e){}
+    setTimeout(()=>{ if(!APP_TOKEN) out.textContent='Non ricevo la sessione dall’app. Ricarica la pagina.'; },8000); return; }
+  $('#c-form').addEventListener('submit',e=>{ e.preventDefault(); entra($('#c-codice').value,$('#c-ricorda').checked); });
+  let c=null, pers=false; try{ c=sessionStorage.getItem(CODICE_KEY); if(c) pers=codicePersistente(); else { c=localStorage.getItem(CODICE_KEY); pers=!!c; } }catch(e){}
+  if(c) entra(c,pers,true); else mostraCancello(''); })();
+</script>
+
+</body>
+</html>
