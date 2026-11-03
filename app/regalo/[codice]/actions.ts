@@ -7,6 +7,7 @@ import { getGiftStaff } from '@/lib/gift/staff'
 import { addMonths, fmtDay, giftContents } from '@/lib/gift/format'
 import { sendEmail } from '@/lib/email/send'
 import { giftActivatedEmail } from '@/lib/email/templates'
+import { ETICHETTE, registraContatto } from '@/lib/contatti'
 
 /**
  * Attiva il regalo in studio: lo fa solo chi e' dello studio, una volta sola.
@@ -20,6 +21,8 @@ export async function activateGift(input: {
   note: string
   /** la ricevuta e' stata fatta adesso, in studio (chi compra non era cliente) */
   receiptDone: boolean
+  /** chiesto in studio: vuole ricevere le novita' */
+  consensoNovita: boolean
 }): Promise<{ ok: true } | { error: string }> {
   const staff = await getGiftStaff()
   if (!staff) return { error: "Per attivare un regalo bisogna essere entrati con l'account dello studio." }
@@ -47,6 +50,7 @@ export async function activateGift(input: {
       holder_name: holderName,
       holder_phone: input.holderPhone.trim().slice(0, 30) || null,
       studio_note: input.note.trim().slice(0, 300) || null,
+      holder_consenso_novita: input.consensoNovita === true,
       ...(input.receiptDone && !card.receipt_done_at ? { receipt_done_at: ora.toISOString(), receipt_done_by: staff.id } : {}),
       // regalo programmato non ancora arrivato ma gia' in studio: i mesi partono da oggi
       ...(card.valid_until ? {} : { valid_until: addMonths(ora, card.valid_months).toISOString(), delivered_at: ora.toISOString() }),
@@ -55,6 +59,22 @@ export async function activateGift(input: {
     .in('status', ['paid', 'delivered'])
     .select('id')
   if (!data?.length) return { error: 'Questo regalo è già stato attivato.' }
+
+  // chi riceve il regalo entra nei contatti: e' la persona da invitare a restare
+  try {
+    await registraContatto({
+      studioId: card.studio_id,
+      nome: holderName,
+      email: null,
+      telefono: input.holderPhone,
+      etichetta: ETICHETTE.giftRicevuto,
+      consenso: input.consensoNovita === true,
+      origine: 'gift card',
+      evento: { tipo: 'gift_ricevuto', descrizione: `Ha attivato ${giftContents(card)}, regalo di ${card.from_name}`, giftCardId: card.id },
+    })
+  } catch (e) {
+    console.error('[contatti] attivazione:', (e as Error).message)
+  }
 
   // a chi ha regalato: best effort, non blocca l'attivazione
   const { subject, html } = giftActivatedEmail({ fromName: card.from_name, toName: card.to_name, contents: giftContents(card) })

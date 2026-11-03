@@ -4,6 +4,8 @@ import { getStripe } from '@/lib/stripe'
 import { sendEmail } from '@/lib/email/send'
 import { giftBuyerEmail, giftRecipientEmail, giftSoldStudioEmail } from '@/lib/email/templates'
 import { getGiftCardByCode, getGiftCardBySession, getStudioContact, getStudioName, type GiftCard } from './data'
+import { ETICHETTE, registraContatto } from '@/lib/contatti'
+import { avvisaTelegram } from '@/lib/telegram'
 import { addMonths, fmtDayTime, fmtEuro, giftContents } from './format'
 
 /** Indirizzo pubblico dell'app, per i link nelle email. */
@@ -42,7 +44,40 @@ export async function fulfillCheckoutSession(sessionId: string): Promise<GiftCar
   const consegnato = consegnaOra ? await deliverGift(card) : card
   await sendBuyerEmail(consegnato)
   await sendStudioEmail(consegnato)
+  await registraVendita(consegnato)
   return consegnato
+}
+
+const consegnaPerLoStudio = (card: GiftCard) =>
+  card.delivery === 'self' ? 'la consegna chi regala' : card.send_at ? `per email, il ${fmtDayTime(card.send_at)}` : 'per email, subito'
+
+/** Chi ha comprato entra nei contatti, e allo studio arriva l'avviso su Telegram. */
+async function registraVendita(card: GiftCard) {
+  try {
+    await registraContatto({
+      studioId: card.studio_id,
+      nome: card.from_name,
+      email: card.buyer_email,
+      telefono: null,
+      etichetta: ETICHETTE.giftRegalato,
+      consenso: card.buyer_consenso_novita,
+      origine: 'gift card',
+      evento: {
+        tipo: 'gift_regalato',
+        descrizione: `Ha regalato ${giftContents(card)} a ${card.to_name} (${fmtEuro(card.price)})`,
+        giftCardId: card.id,
+      },
+    })
+  } catch (e) {
+    console.error('[contatti] vendita:', (e as Error).message)
+  }
+  await avvisaTelegram(
+    `🎁 Gift card venduta!\n\n${giftContents(card)} · ${fmtEuro(card.price)}\n` +
+      `👤 da ${card.from_name} (${card.buyer_email}) per ${card.to_name}\n` +
+      `📬 ${consegnaPerLoStudio(card)}` +
+      (card.buyer_consenso_novita ? '\n✅ vuole ricevere le novità' : '') +
+      `\n\n→ ${giftUrl(card.code)}`,
+  )
 }
 
 async function sendStudioEmail(card: GiftCard) {
@@ -56,7 +91,7 @@ async function sendStudioEmail(card: GiftCard) {
     price: fmtEuro(card.price),
     code: card.code,
     // non deliverySentence: quella parla a chi ha comprato
-    delivery: card.delivery === 'self' ? 'la consegna chi regala' : card.send_at ? `per email, il ${fmtDayTime(card.send_at)}` : 'per email, subito',
+    delivery: consegnaPerLoStudio(card),
     studioUrl: giftUrl(card.code),
   })
   await sendEmail({ to: email, subject, html })

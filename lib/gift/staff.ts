@@ -23,3 +23,12 @@ export async function getGiftStaff(): Promise<GiftStaff | null> {
   const name = [data.first_name, data.last_name].filter(Boolean).join(' ') || user.email || 'Studio'
   return { id: data.id, name, studioId: data.studio_id }
 }
+
+/** Solo admin (non istruttrici): per le pagine con i dati delle persone. */
+export async function getAdminStaff(): Promise<GiftStaff | null> {
+  const staff = await getGiftStaff()
+  if (!staff) return null
+  const supabase = await createClient()
+  const { data } = await supabase.from('profiles').select('role').eq('id', staff.id).maybeSingle()
+  return data?.role === 'admin' ? staff : null
+}

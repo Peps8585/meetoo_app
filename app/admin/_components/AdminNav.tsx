@@ -15,6 +15,7 @@ const links = [
   { href: '/admin/clienti', label: 'Clienti' },
   { href: '/admin/pacchetti', label: 'Pacchetti' },
   { href: '/admin/gift-card', label: 'Gift card' },
+  { href: '/admin/contatti', label: 'Contatti' },
   { href: '/admin/conti', label: 'Conti' },
 ]
 

@@ -20,6 +20,8 @@ export type GiftOrderInput = {
   /** "08:00" */
   sendTime: string
   buyerEmail: string
+  /** casella facoltativa: vuole ricevere le novita' dello studio */
+  consensoNovita: boolean
 }
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
@@ -94,6 +96,7 @@ export async function startGiftCheckout(input: GiftOrderInput): Promise<{ url: s
         recipient_email: input.delivery === 'email' ? recipientEmail : null,
         send_at: sendAt?.toISOString() ?? null,
         buyer_email: buyerEmail,
+        buyer_consenso_novita: input.consensoNovita === true,
         valid_months: studio.validMonths,
       })
       .select('id, code')

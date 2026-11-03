@@ -61,6 +61,7 @@ export function RegalaFlow({
   const [sendDate, setSendDate] = useState('')
   const [sendTime, setSendTime] = useState('08:00')
   const [buyerEmail, setBuyerEmail] = useState('')
+  const [consenso, setConsenso] = useState(false)
   const [errore, setErrore] = useState<string | null>(null)
   const [inCorso, startTransition] = useTransition()
 
@@ -99,6 +100,7 @@ export function RegalaFlow({
         sendDate: scheduling && delivery === 'email' && programma ? sendDate : '',
         sendTime,
         buyerEmail,
+        consensoNovita: consenso,
       })
       if ('url' in esito) window.location.href = esito.url
       else setErrore(esito.error)
@@ -335,6 +337,10 @@ export function RegalaFlow({
               La tua email <small className="font-normal text-[#6f6a63]">(per la ricevuta e il link del regalo)</small>
             </span>
             <input className={campo} type="email" inputMode="email" value={buyerEmail} onChange={(e) => setBuyerEmail(e.target.value)} />
+          </label>
+          <label className="mt-4 flex items-start gap-2.5 text-[13.5px] leading-snug text-[#4a4744]">
+            <input type="checkbox" className="mt-0.5 h-4 w-4 flex-none accent-[#2c2c2c]" checked={consenso} onChange={(e) => setConsenso(e.target.checked)} />
+            <span>Voglio ricevere le novità di Mee Too Pilates (facoltativo)</span>
           </label>
           {errore && <p className="mt-4 rounded-lg bg-[#a8876a]/15 px-3.5 py-3 text-sm">{errore}</p>}
           <button type="button" className={pulsante} disabled={!buyerEmail.trim() || inCorso} onClick={paga}>

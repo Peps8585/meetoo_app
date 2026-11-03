@@ -13,13 +13,14 @@ export function AttivaRegalo({ code, toName, receiptDone }: { code: string; toNa
   const [holderPhone, setHolderPhone] = useState('')
   const [note, setNote] = useState('')
   const [ricevuta, setRicevuta] = useState(false)
+  const [consenso, setConsenso] = useState(false)
   const [errore, setErrore] = useState<string | null>(null)
   const [inCorso, startTransition] = useTransition()
 
   const attiva = () => {
     setErrore(null)
     startTransition(async () => {
-      const esito = await activateGift({ code, holderName, holderPhone, note, receiptDone: ricevuta })
+      const esito = await activateGift({ code, holderName, holderPhone, note, receiptDone: ricevuta, consensoNovita: consenso })
       if ('error' in esito) setErrore(esito.error)
     })
   }
@@ -44,6 +45,10 @@ export function AttivaRegalo({ code, toName, receiptDone }: { code: string; toNa
           <span>Ricevuta fatta adesso, con i dati presi in studio</span>
         </label>
       )}
+      <label className="mt-3 flex items-start gap-2.5 text-[13.5px] leading-snug">
+        <input type="checkbox" className="mt-0.5 h-4 w-4 accent-[#2c2c2c]" checked={consenso} onChange={(e) => setConsenso(e.target.checked)} />
+        <span>Vuole ricevere le novità dello studio (chiedilo a voce)</span>
+      </label>
       {errore && <p className="mt-3.5 rounded-lg bg-[#a8876a]/15 px-3.5 py-3 text-sm">{errore}</p>}
       <button
         type="button"
