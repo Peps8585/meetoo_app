@@ -136,7 +136,8 @@ export function RegalaFlow({
                 onClick={() => setDisciplina(d)}
                 className={`whitespace-nowrap rounded-full px-3.5 py-2 text-[13.5px] ${d === disciplina ? 'bg-[#2c2c2c] text-[#f5f0e8]' : 'bg-[#ece4d8]'}`}
               >
-                {d.replace(' & Chair', '')}
+                {/* etichetta corta nelle schede: "Yoga", non "Yoga in studio" (Mattia, 3/11/2026) */}
+                {d.replace(' & Chair', '').replace(' in studio', '')}
               </button>
             ))}
           </div>
