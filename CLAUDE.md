@@ -1260,3 +1260,35 @@ nuova insegnante. In **produzione** aggiunte 6 lezioni Pilates Reformer mercoled
 assegnata, come tutte le altre). Le date passate (28/10, 4/11) non sono state create.
 SQL e id in `~/Desktop/MEE TOO PILATES/PALINSESTO SETTEMBRE 2026/_app-mercoledi-830-aggiunte-il-4-novembre.sql`.
 Restano fuori dall'app, come prima, le modifiche del funzionale del 23/10.
+
+## S33 — 6 novembre 2026 · Posti fissi, promemoria, lista d'attesa (ramo `posti-fissi`, NON online)
+
+Richiesta di Mattia: le clienti "fisse" si dimenticano di cancellarsi, Giorgia gestisce ogni caso a mano e le
+jolly non trovano posto. Decisioni di Mattia: una notifica sola, almeno 12 ore prima della scadenza delle 24 ore,
+mai di notte; posto fisso occupato da subito su tutte le lezioni fino alla scadenza del pacchetto; **dalla lista
+d'attesa nessuna entra da sola**: avviso a tutte, il posto va a chi conferma per prima. Presenze: le segnera'
+l'insegnante (non fatto). Sospensione dopo 2 assenze: da decidere con Giorgia (non fatta). Obiettivo finale:
+app su App Store; per ora notifiche web (su iPhone solo con l'app sulla schermata Home).
+
+### Fatto (tutto sul database di PROVA, produzione intatta)
+- Migrazione `20261106100000_posti_fissi.sql`: stato `held` (posto tenuto, conta nei posti, non scala),
+  `fixed_slots`, campi su `bookings` (token del link, promemoria, risposta, problema pacchetto, avviso lista),
+  `schedules.spot_freed_at`. `book_lesson`/`cancel_booking` invariate per chi le chiama: il corpo e' in
+  `book_lesson_for`/`cancel_booking_for` (solo service role). `posti_fissi_giro()` tiene i posti, a 7 giorni
+  converte held->confirmed scalando, libera i posti senza credito all'ora del promemoria. `reminder_due_at()`.
+  Avvisi con presa in carico atomica: `posti_fissi_promemoria`, `_avvisi_pacchetto`, `_avvisi_lista`.
+  `nomi_insegnanti()`: alle clienti solo nome e cognome delle insegnanti (RLS su profiles non le faceva vedere).
+- Prova `supabase/tests/posti_fissi.sql`: **21/21** (`supabase db query --linked -f ...`, repo collegato al dev).
+- App: sezione Posto fisso nella scheda cliente; `/presenza/[token]` (Ci sono / Questa volta no / Lo prendo,
+  senza login, ?r= dall'email solo evidenzia); giro `/api/posti-fissi/giro` (stessa chiave dei regali,
+  `lib/cron.ts`); notifiche web (`web-push` 3.6.7, `public/sw.js`, riquadro in home); palinsesto con lista
+  d'attesa, nomi interi a 390px e insegnante; agenda con C'e'/Non ha risposto/Non vengono; home con ora italiana.
+- Collaudo su app costruita (`next start -p 3101`; la 3100 e' occupata dal dev server delle gift card del 30/10):
+  promemoria partito per email, avviso lista partito una volta sola, "Lo prendo" riuscito. Utenti finti solo sul
+  dev: Anna Fissa, Bea Jolly, Carla Jolly (clienti), Giorgia Prova (admin), email petrinmattia+...@gmail.com.
+
+### Per andare online (ognuno col si' di Mattia)
+1. Migrazione in produzione dal SQL Editor (il classificatore blocca le migrazioni in prod).
+2. Env Vercel: `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (chiavi NUOVE per prod) e
+   job pg_cron `posti-fissi-giro` ogni 10 minuti su `/api/posti-fissi/giro` con la chiave `gift_cron_secret()`.
+3. Merge su main. Le funzioni `sito_*` del sito leggono le loro tabelle, non `schedules`: nessun conflitto.
