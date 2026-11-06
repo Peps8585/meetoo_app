@@ -2,10 +2,13 @@
 --
 -- Le clienti "fisse" hanno ogni settimana lo stesso posto senza prenotarsi.
 -- Il posto e' TENUTO (status 'held': conta nei posti occupati, non scala
--- niente) per tutte le lezioni future; una settimana prima diventa una
+-- niente) su tutte le lezioni fino alla scadenza del pacchetto; quando la
+-- cliente rinnova si allunga da solo. Una settimana prima diventa una
 -- prenotazione vera e si scala come una prenotazione normale. Prima della
 -- scadenza delle 24 ore arriva un promemoria con "Ci sono" / "Questa volta no".
--- Le jolly possono mettersi in lista d'attesa sulle lezioni piene.
+-- Le jolly possono mettersi in lista d'attesa sulle lezioni piene: quando un
+-- posto si libera ricevono un avviso e lo prende chi conferma per prima.
+-- Nessuna entra da sola (decisione di Mattia, 6/11/2026).
 --
 -- book_lesson e cancel_booking restano identiche per chi le chiama: il loro
 -- corpo passa in book_lesson_for / cancel_booking_for, che prendono la
@@ -53,12 +56,10 @@ alter table public.bookings
   -- posto fisso che non si e' potuto confermare (pacchetto finito)
   add column hold_issue text,                       -- 'no_credits' | 'released_no_credits'
   add column hold_issue_notified_at timestamptz,
-  -- entrata dalla lista d'attesa
-  add column promoted_at timestamptz,
-  add column promoted_notified_at timestamptz,
+  -- lista d'attesa: ultimo avviso "si e' liberato un posto"
   add column waitlist_notified_at timestamptz;
 
--- posto liberato dopo la scadenza delle 24 ore: la lista d'attesa riceve un avviso
+-- ultimo posto liberato: chi e' in lista riceve un avviso
 alter table public.schedules add column spot_freed_at timestamptz;
 
 create index idx_bookings_fixed_slot on public.bookings (fixed_slot_id) where fixed_slot_id is not null;
@@ -193,42 +194,18 @@ $$;
 -- 4. Lista d'attesa
 -- ---------------------------------------------------------------------------
 
--- Il posto che si libera PRIMA della scadenza delle 24 ore va alla prima in
--- lista che ha credito: entra da sola e puo' ancora cancellare gratis.
--- DOPO la scadenza nessuna entra da sola (si troverebbe scalata una lezione
--- che non ha scelto): si segna l'ora e il giro avvisa tutta la lista.
-create or replace function public._fill_from_waitlist(p_schedule_id uuid)
-returns uuid
+-- Un posto si e' liberato: se c'e' qualcuna in lista si segna l'ora, e il
+-- giro manda l'avviso "si e' liberato un posto, lo vuoi?". Nessuna entra da
+-- sola: il posto lo prende chi conferma per prima, prenotando come sempre.
+create or replace function public._spot_freed(p_schedule_id uuid)
+returns void
 language plpgsql security definer set search_path to 'public'
 as $$
-declare
-  v_starts timestamptz; r_wait record; v_new uuid;
 begin
-  select starts_at into v_starts from schedules where id = p_schedule_id;
-  if v_starts is null or v_starts <= now() then return null; end if;
-
-  if v_starts - now() < interval '24 hours' then
-    if exists (select 1 from bookings where schedule_id = p_schedule_id and status = 'waitlist') then
-      update schedules set spot_freed_at = now() where id = p_schedule_id;
-    end if;
-    return null;
-  end if;
-
-  for r_wait in
-    select id, client_id from bookings
-    where schedule_id = p_schedule_id and status = 'waitlist'
-    order by booked_at asc
-  loop
-    begin
-      v_new := book_lesson_for(r_wait.client_id, p_schedule_id);
-      update bookings set promoted_at = now() where id = v_new;
-      return v_new;
-    exception when others then
-      -- senza credito o lezione chiusa: resta in lista, si passa alla prossima
-      null;
-    end;
-  end loop;
-  return null;
+  update schedules set spot_freed_at = now()
+  where id = p_schedule_id
+    and starts_at - now() >= interval '12 hours'
+    and exists (select 1 from bookings where schedule_id = p_schedule_id and status = 'waitlist');
 end;
 $$;
 
@@ -312,7 +289,7 @@ begin
     update schedules
       set current_bookings = greatest(0, coalesce(current_bookings,0) - 1)
     where id = v_schedule_id;
-    perform _fill_from_waitlist(v_schedule_id);
+    perform _spot_freed(v_schedule_id);
     return json_build_object('cancelled', true, 'refunded', false, 'used_bonus', false);
   end if;
 
@@ -374,7 +351,7 @@ begin
     set current_bookings = greatest(0, coalesce(current_bookings,0) - 1)
   where id = v_schedule_id;
 
-  perform _fill_from_waitlist(v_schedule_id);
+  perform _spot_freed(v_schedule_id);
 
   return json_build_object(
     'cancelled', true,
@@ -415,23 +392,34 @@ as $$
   order by s.starts_at
 $$;
 
--- Tiene il posto su tutte le lezioni future del posto fisso. Salta le lezioni
--- dove la cliente ha gia' una prenotazione (anche cancellata: "Questa volta no"
--- non si ricrea) e quelle gia' piene. Restituisce le date piene.
+-- Tiene il posto sulle lezioni future del posto fisso, fino alla scadenza del
+-- pacchetto della cliente (senza pacchetto attivo non tiene niente). Salta le
+-- lezioni dove la cliente ha gia' una prenotazione (anche cancellata: "Questa
+-- volta no" non si ricrea) e quelle gia' piene. Restituisce le date piene.
 create or replace function public._hold_fixed_slot(p_slot_id uuid)
 returns json
 language plpgsql security definer set search_path to 'public'
 as $$
 declare
   v_slot fixed_slots; r_sch record; v_held int := 0; v_full text[] := '{}';
-  v_max int; v_current int;
+  v_max int; v_current int; v_until timestamptz;
 begin
   select * into v_slot from fixed_slots where id = p_slot_id;
   if not found or not v_slot.is_active then
-    return json_build_object('held', 0, 'full', '[]'::json);
+    return json_build_object('held', 0, 'full', '[]'::json, 'until', null);
   end if;
 
-  for r_sch in select * from _fixed_slot_schedules(p_slot_id) loop
+  select case when bool_or(expires_at is null) then timestamptz 'infinity' else max(expires_at) end
+    into v_until
+  from client_packages
+  where client_id = v_slot.client_id and is_active = true
+    and (expires_at is null or expires_at > now());
+
+  if v_until is null then
+    return json_build_object('held', 0, 'full', '[]'::json, 'until', null);
+  end if;
+
+  for r_sch in select * from _fixed_slot_schedules(p_slot_id) where starts_at <= v_until loop
     if exists (select 1 from bookings where schedule_id = r_sch.id and client_id = v_slot.client_id) then
       continue;
     end if;
@@ -451,7 +439,8 @@ begin
     v_held := v_held + 1;
   end loop;
 
-  return json_build_object('held', v_held, 'full', to_json(v_full));
+  return json_build_object('held', v_held, 'full', to_json(v_full),
+    'until', case when v_until = 'infinity' then null else v_until end);
 end;
 $$;
 
@@ -536,7 +525,7 @@ begin
           hold_issue = 'released_no_credits', hold_issue_notified_at = null
     where id = r.id;
     update schedules set current_bookings = greatest(0, coalesce(current_bookings,0) - 1) where id = r.schedule_id;
-    perform _fill_from_waitlist(r.schedule_id);
+    perform _spot_freed(r.schedule_id);
     v_released := v_released + 1;
   end loop;
 
@@ -571,7 +560,7 @@ begin
   from bookings b join schedules s on s.id = b.schedule_id
   where b.fixed_slot_id = v_id and b.status = 'held' and s.starts_at <= now() + interval '7 days';
 
-  return json_build_object('id', v_id, 'held', v_res->'held', 'full', v_res->'full');
+  return json_build_object('id', v_id, 'held', v_res->'held', 'full', v_res->'full', 'until', v_res->'until');
 end;
 $$;
 
@@ -593,7 +582,7 @@ begin
   for r in select id, schedule_id from bookings where fixed_slot_id = p_slot_id and status = 'held' for update loop
     update bookings set status = 'cancelled', cancelled_at = now() where id = r.id;
     update schedules set current_bookings = greatest(0, coalesce(current_bookings,0) - 1) where id = r.schedule_id;
-    perform _fill_from_waitlist(r.schedule_id);
+    perform _spot_freed(r.schedule_id);
     v_freed := v_freed + 1;
   end loop;
 
@@ -610,7 +599,7 @@ revoke all on function public.cancel_booking_for(uuid, uuid) from public, anon, 
 revoke all on function public._booking_price(uuid) from public, anon, authenticated;
 revoke all on function public._client_balance(uuid) from public, anon, authenticated;
 revoke all on function public._debit_booking(uuid, uuid, uuid, numeric) from public, anon, authenticated;
-revoke all on function public._fill_from_waitlist(uuid) from public, anon, authenticated;
+revoke all on function public._spot_freed(uuid) from public, anon, authenticated;
 revoke all on function public._fixed_slot_schedules(uuid) from public, anon, authenticated;
 revoke all on function public._hold_fixed_slot(uuid) from public, anon, authenticated;
 revoke all on function public._confirm_hold(uuid) from public, anon, authenticated;

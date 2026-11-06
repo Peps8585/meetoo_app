@@ -5,7 +5,7 @@
 --
 -- COME ESEGUIRE (database di prova, repo collegato a MeeToo_Dev):
 --   supabase db query --linked -f supabase/tests/posti_fissi.sql
--- Esito atteso: "ESITO 20/20 ok" seguito dal dettaglio.
+-- Esito atteso: "ESITO 21/21 ok" seguito dal dettaglio.
 --
 -- PREREQUISITI: lo studio ha almeno un admin e tre clienti; usa la prima
 -- disciplina attiva. I crediti delle clienti si impostano qui dentro.
@@ -14,7 +14,7 @@
 do $$
 declare
   v_studio uuid; v_admin uuid; v_fissa uuid; v_jolly uuid; v_altra uuid; v_class uuid;
-  v_a uuid; v_a2 uuid; v_d uuid; v_e uuid; v_f uuid;
+  v_a uuid; v_a2 uuid; v_a3 uuid; v_d uuid; v_e uuid; v_f uuid;
   v_slot_a uuid; v_slot_d uuid; v_slot_f uuid;
   v_t timestamptz; v_res json; v_id uuid; v_txt text;
   v_out text := ''; v_ok int := 0; v_tot int := 0;
@@ -43,6 +43,9 @@ begin
   values (v_studio, v_class, v_t, v_t + interval '50 minutes', 2, 0) returning id into v_a;
   insert into schedules (studio_id, class_id, starts_at, ends_at, max_spots, current_bookings)
   values (v_studio, v_class, v_t + interval '7 days', v_t + interval '7 days 50 minutes', 2, 0) returning id into v_a2;
+  -- A3: 14 settimane dopo A, oltre la scadenza del pacchetto (90 giorni)
+  insert into schedules (studio_id, class_id, starts_at, ends_at, max_spots, current_bookings)
+  values (v_studio, v_class, v_t + interval '98 days', v_t + interval '98 days 50 minutes', 2, 0) returning id into v_a3;
   v_t := date_trunc('hour', (now() + interval '5 days') at time zone 'Europe/Rome') at time zone 'Europe/Rome' + interval '30 minutes';
   insert into schedules (studio_id, class_id, starts_at, ends_at, max_spots, current_bookings)
   values (v_studio, v_class, v_t, v_t + interval '50 minutes', 2, 0) returning id into v_d;
@@ -65,6 +68,11 @@ begin
   if (select count(*) from bookings where fixed_slot_id = v_slot_a and status = 'held'
       and schedule_id in (v_a, v_a2)) = 2 then v_ok := v_ok + 1; v_out := v_out || E'\nok  1 posto tenuto su A e A2';
   else v_out := v_out || E'\nNO  1 posto tenuto su A e A2: ' || v_res::text; end if;
+
+  v_tot := v_tot + 1;
+  if not exists (select 1 from bookings where schedule_id = v_a3) and (v_res->>'until') is not null
+  then v_ok := v_ok + 1; v_out := v_out || E'\nok  1b dopo la scadenza del pacchetto il posto non si tiene';
+  else v_out := v_out || E'\nNO  1b scadenza pacchetto: ' || v_res::text; end if;
 
   v_tot := v_tot + 1;
   if _client_balance(v_fissa) = 160 then v_ok := v_ok + 1; v_out := v_out || E'\nok  2 posto tenuto non scala niente';
@@ -100,7 +108,7 @@ begin
   then v_ok := v_ok + 1; v_out := v_out || E'\nok  5 lezione piena: niente prenotazione, si entra in lista senza pagare';
   else v_out := v_out || E'\nNO  5 lista: ' || v_txt; end if;
 
-  -- ---- 4. la fissa dice "questa volta no" su A: la jolly in lista entra da sola
+  -- ---- 4. la fissa dice "questa volta no" su A: la jolly in lista viene avvisata
   set local role authenticated;
   perform set_config('request.jwt.claims', json_build_object('sub', v_fissa, 'role', 'authenticated')::text, true);
   v_res := cancel_booking((select id from bookings where schedule_id = v_a and client_id = v_fissa and status = 'held'));
@@ -112,12 +120,18 @@ begin
   else v_out := v_out || E'\nNO  6 ' || v_res::text; end if;
 
   v_tot := v_tot + 1;
-  if exists (select 1 from bookings where schedule_id = v_a and client_id = v_jolly and status = 'confirmed' and promoted_at is not null)
-     and not exists (select 1 from bookings where schedule_id = v_a and client_id = v_jolly and status = 'waitlist')
-     and _client_balance(v_jolly) = 50 - _booking_price(v_a)
-     and (select current_bookings from schedules where id = v_a) = 2
-  then v_ok := v_ok + 1; v_out := v_out || E'\nok  7 la prima in lista entra da sola e paga la lezione';
-  else v_out := v_out || E'\nNO  7 entrata dalla lista'; end if;
+  if exists (select 1 from bookings where schedule_id = v_a and client_id = v_jolly and status = 'waitlist')
+     and (select spot_freed_at from schedules where id = v_a) is not null
+     and _client_balance(v_jolly) = 50
+     and (select current_bookings from schedules where id = v_a) = 1
+  then v_ok := v_ok + 1; v_out := v_out || E'\nok  7 nessuna entra da sola: la lista viene avvisata, niente scalato';
+  else v_out := v_out || E'\nNO  7 avviso alla lista'; end if;
+
+  -- la jolly conferma: prenota come sempre ed esce dalla lista
+  set local role authenticated;
+  perform set_config('request.jwt.claims', json_build_object('sub', v_jolly, 'role', 'authenticated')::text, true);
+  perform book_lesson(v_a);
+  reset role;
 
   -- ---- 5. il giro: "questa volta no" non si ricrea, A2 resta tenuta
   v_res := posti_fissi_giro();
@@ -171,7 +185,7 @@ begin
   v_tot := v_tot + 1;
   if exists (select 1 from bookings where schedule_id = v_e and client_id = v_jolly and status = 'waitlist')
      and (select spot_freed_at from schedules where id = v_e) is not null
-  then v_ok := v_ok + 1; v_out := v_out || E'\nok 12 dentro le 24 ore la jolly resta in lista e il posto risulta libero';
+  then v_ok := v_ok + 1; v_out := v_out || E'\nok 12 anche dentro le 24 ore la lista viene avvisata';
   else v_out := v_out || E'\nNO 12 lista dopo la scadenza'; end if;
 
   -- ---- 9. la jolly avvisata prende il posto: esce dalla lista
