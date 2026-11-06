@@ -1251,3 +1251,12 @@ la persona, quindi il regalo **si attiva in studio con un QR** invece di caricar
 - Riaprire il QR il giorno dopo: l'app non ha piu' il middleware che rinnova la sessione (tolto a luglio),
   rischio "Invalid Refresh Token" e rientro forzato per chi attiva.
 - Satispay su Stripe da verificare, rimborsi Stripe non collegati all'app, template email Auth in italiano.
+
+## S32 — 4 novembre 2026 · Macchine il mercoledì alle 8.30
+
+Nuova lezione del palinsesto (fonte `dati_palinsesto.py` aggiornata il 28/10), tenuta da Gloria,
+nuova insegnante. In **produzione** aggiunte 6 lezioni Pilates Reformer mercoledì 8.30-9.20,
+4 posti, dall'11/11 al 16/12 (modello: la Reformer del mercoledì 13.00; nessuna istruttrice
+assegnata, come tutte le altre). Le date passate (28/10, 4/11) non sono state create.
+SQL e id in `~/Desktop/MEE TOO PILATES/PALINSESTO SETTEMBRE 2026/_app-mercoledi-830-aggiunte-il-4-novembre.sql`.
+Restano fuori dall'app, come prima, le modifiche del funzionale del 23/10.
