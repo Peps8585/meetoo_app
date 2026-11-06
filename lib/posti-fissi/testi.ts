@@ -69,3 +69,31 @@ export function testoPacchettoStudio(issue: string, nome: string, className: str
         testo: `${nome} ha il posto fisso ${l.giorno} ${l.data} alle ${l.ora} (${className}) ma il pacchetto è finito. Se rinnova prima del promemoria, il posto resta suo.`,
       }
 }
+
+/** Lo studio ha annullato la lezione: la lezione torna sul pacchetto. */
+export function testoAnnullata(className: string, startsAt: string, rimborsata: boolean): Avviso {
+  const l = parti(startsAt)
+  return {
+    titolo: 'Lezione annullata',
+    testo: `${className} di ${l.giorno} ${l.data} alle ${l.ora} è stata annullata dallo studio.${rimborsata ? ' La lezione ti torna sul pacchetto.' : ''} Ci scusiamo per il cambio.`,
+  }
+}
+
+/** Lo studio ha tolto la cliente dalla lezione. */
+export function testoTolta(className: string, startsAt: string): Avviso {
+  const l = parti(startsAt)
+  return {
+    titolo: 'Prenotazione tolta dallo studio',
+    testo: `Lo studio ha tolto la tua prenotazione a ${className} di ${l.giorno} ${l.data} alle ${l.ora}. La lezione ti torna sul pacchetto.`,
+  }
+}
+
+/** Lo studio ha spostato l'orario della lezione. */
+export function testoSpostata(className: string, primaIso: string, dopoIso: string): Avviso {
+  const a = parti(primaIso)
+  const b = parti(dopoIso)
+  return {
+    titolo: 'Lezione spostata',
+    testo: `${className} di ${a.giorno} ${a.data} alle ${a.ora} si sposta a ${b.giorno} ${b.data} alle ${b.ora}. Se non riesci a venire puoi cancellarla dall'app.`,
+  }
+}

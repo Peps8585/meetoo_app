@@ -12,7 +12,7 @@ import {
 
 const APP_URL = process.env.APP_URL ?? 'https://meetoo-app-ntls.vercel.app'
 
-type Admin = ReturnType<typeof createAdminClient>
+export type Admin = ReturnType<typeof createAdminClient>
 
 async function contatto(admin: Admin, clientId: string) {
   const [{ data: u }, { data: p }] = await Promise.all([
@@ -29,7 +29,7 @@ async function contatto(admin: Admin, clientId: string) {
  * Prima la notifica sul telefono; se non arriva a nessun dispositivo, l'email
  * con gli stessi testi. Ritorna il canale usato.
  */
-async function avvisa(
+export async function avvisa(
   admin: Admin,
   clientId: string,
   a: Avviso,

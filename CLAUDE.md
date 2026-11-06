@@ -1300,3 +1300,10 @@ app su App Store; per ora notifiche web (su iPhone solo con l'app sulla schermat
   solo sul dev), visibile a lei e allo studio; `lib/foto.ts` firma i link.
 - In attesa del si' di Mattia: azioni sulla lezione (aggiungi/togli/annulla con lezione restituita intera,
   modifica, duplica, presenze, blocca iscrizioni, posto fisso). "Multimedia" di App Palestre da chiarire con Giorgia.
+- Azioni dello studio sulla lezione (migrazione `20261106140000_azioni_lezione.sql`, solo dev; prova
+  `supabase/tests/azioni_lezione.sql` **16/16**): aggiungi (scala, anche a iscrizioni chiuse), togli e annulla con
+  **lezione restituita intera** (`refund_booking_full`, regola confermata da Mattia), elimina solo senza pagamenti,
+  modifica (ora, insegnante, posti, note; avviso se cambia l'ora), duplica, blocca iscrizioni, presenze
+  (admin o insegnante della lezione, colonna `presenza`, lo stato non cambia), rendi fissa. `booked_by` app/studio/fisso.
+  UI: menu "..." in `/agenda/lezione/[id]`, schede Iscritte/Aggiungi, Presente/Assente in vista, il resto dietro "···".
+  "Multimedia" di App Palestre (contenuto prima della lezione) mai usato da Giorgia: non rifatto.

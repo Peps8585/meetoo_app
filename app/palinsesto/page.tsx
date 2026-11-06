@@ -32,6 +32,7 @@ const RPC_ERRORS: Record<string, string> = {
   not_active:         'Impossibile annullare questa prenotazione.',
   booking_closed:     'Le iscrizioni a questa lezione sono chiuse.',
   not_full:           'Si è appena liberato un posto: puoi prenotare.',
+  booking_locked:     'Le iscrizioni a questa lezione le ha chiuse lo studio.',
 }
 
 type MyBooking = { id: string; status: 'confirmed' | 'held' | 'waitlist'; fixed: boolean }
