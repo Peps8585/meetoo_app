@@ -20,12 +20,14 @@ type Booking = {
   profiles: BookingProfile | null
 }
 
-// Accanto al nome: per le fisse, com'e' andato il promemoria.
-function statoFissa(b: Booking): { testo: string; cls: string } | null {
-  if (!b.fixed_slot_id) return null
-  if (b.response === 'ci_sono') return { testo: 'C’è', cls: 'bg-meetoo-bg-dark/15 text-meetoo-bg-dark' }
+// Nel dettaglio della lezione, accanto al nome: per le fisse, com'e' andato
+// il promemoria. Le jolly si sono prenotate da sole: sono confermate.
+// Prima del promemoria una fissa non ha ancora niente da confermare.
+function conferma(b: Booking): { testo: string; cls: string } | null {
+  if (!b.fixed_slot_id || b.response === 'ci_sono')
+    return { testo: 'Confermata', cls: 'bg-meetoo-bg-dark/15 text-meetoo-bg-dark' }
   if (b.reminder_sent_at) return { testo: 'Non ha risposto', cls: 'bg-amber-100 text-amber-700' }
-  return { testo: 'Fissa', cls: 'bg-meetoo-accent-dark/8 text-meetoo-accent-dark/50' }
+  return null
 }
 
 type Schedule = {
@@ -87,6 +89,8 @@ export default function AgendaPage() {
   const [studioId, setStudioId] = useState<string | null>(null)
   const [role, setRole] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
+  // la vista resta compatta: le partecipanti si vedono toccando la lezione
+  const [aperta, setAperta] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadUser() {
@@ -264,13 +268,20 @@ export default function AgendaPage() {
                 .filter((b) => b.status === 'waitlist')
                 .sort(byBookedAt)
 
+              const isOpen = aperta === s.id
+
               return (
                 <section
                   key={s.id}
                   className="bg-white/60 backdrop-blur-sm border border-white/80 rounded-2xl shadow-sm overflow-hidden"
                 >
-                  {/* Lesson header */}
-                  <div className="flex items-center gap-3 px-5 py-4 border-b border-meetoo-accent-dark/5">
+                  {/* Lesson header: un tocco apre il dettaglio */}
+                  <button
+                    type="button"
+                    onClick={() => setAperta(isOpen ? null : s.id)}
+                    aria-expanded={isOpen}
+                    className={`w-full text-left flex items-center gap-3 px-5 py-4 ${isOpen ? 'border-b border-meetoo-accent-dark/5' : ''}`}
+                  >
                     {/* Color stripe */}
                     <div
                       className="w-1 h-10 rounded-full shrink-0"
@@ -289,7 +300,7 @@ export default function AgendaPage() {
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">
-                      <p className="font-inter font-medium text-meetoo-accent-dark truncate">
+                      <p className="font-inter font-medium text-meetoo-accent-dark leading-snug">
                         {s.classes?.name ?? '—'}
                       </p>
                       {s.profiles && (
@@ -313,35 +324,49 @@ export default function AgendaPage() {
                         </span>
                       </p>
                       <p className="font-inter font-light text-[10px] uppercase tracking-widest text-meetoo-accent-dark/40 mt-1">
-                        Confermati
+                        Prenotate
                       </p>
                     </div>
-                  </div>
+                    <span
+                      aria-hidden
+                      className={`shrink-0 font-inter text-meetoo-accent-dark/35 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                    >
+                      ▾
+                    </span>
+                  </button>
 
-                  {/* Confirmed list */}
+                  {/* Dettaglio: chi c'e', fissa o jolly, chi ha confermato */}
+                  {isOpen && (
                   <div className="px-5 py-4">
                     {confirmed.length === 0 ? (
                       <p className="font-inter font-light text-xs text-meetoo-accent-dark/40">
-                        Nessuna prenotazione confermata
+                        Nessuna prenotazione
                       </p>
                     ) : (
-                      <ul className="space-y-1.5">
+                      <ul className="space-y-3">
                         {confirmed.map((b, i) => (
                           <li
                             key={`${b.client_id}-${i}`}
-                            className="flex items-center gap-2 font-inter text-sm text-meetoo-accent-dark"
+                            className="flex items-start gap-2 font-inter text-sm text-meetoo-accent-dark"
                           >
-                            <span className="w-5 shrink-0 font-light text-xs text-meetoo-accent-dark/35 tabular-nums text-right">
+                            <span className="w-5 shrink-0 pt-px font-light text-xs text-meetoo-accent-dark/35 tabular-nums text-right">
                               {i + 1}
                             </span>
-                            <span className="truncate">{fullName(b.profiles)}</span>
-                            {statoFissa(b) && (
-                              <span
-                                className={`ml-auto shrink-0 font-inter font-normal text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full ${statoFissa(b)!.cls}`}
-                              >
-                                {statoFissa(b)!.testo}
-                              </span>
-                            )}
+                            <div className="min-w-0 flex-1">
+                              <p className="leading-snug">{fullName(b.profiles)}</p>
+                              <p className="mt-1 flex flex-wrap items-center gap-2">
+                                <span className="font-inter font-light text-[10px] uppercase tracking-widest text-meetoo-accent-dark/45">
+                                  {b.fixed_slot_id ? 'Fissa' : 'Jolly'}
+                                </span>
+                                {conferma(b) && (
+                                  <span
+                                    className={`font-inter font-normal text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full ${conferma(b)!.cls}`}
+                                  >
+                                    {conferma(b)!.testo}
+                                  </span>
+                                )}
+                              </p>
+                            </div>
                           </li>
                         ))}
                       </ul>
@@ -390,6 +415,7 @@ export default function AgendaPage() {
                       </div>
                     )}
                   </div>
+                  )}
                 </section>
               )
             })}
