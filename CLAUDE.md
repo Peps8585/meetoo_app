@@ -1292,3 +1292,11 @@ app su App Store; per ora notifiche web (su iPhone solo con l'app sulla schermat
 2. Env Vercel: `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (chiavi NUOVE per prod) e
    job pg_cron `posti-fissi-giro` ogni 10 minuti su `/api/posti-fissi/giro` con la chiave `gift_cron_secret()`.
 3. Merge su main. Le funzioni `sito_*` del sito leggono le loro tabelle, non `schedules`: nessun conflitto.
+
+### S33, sera (stesso ramo)
+- Agenda: lezioni compatte; un tocco apre `/agenda/lezione/[id]` (modello App Palestre: iscritte con foto,
+  fissa/jolly, conferma, ricerca, non vengono, lista). Calendario del telefono sulla data, `?giorno=` per tornare.
+- Foto profilo facoltativa, spazio privato `avatars` (migrazione `20261106120000_foto_profilo.sql`, applicata
+  solo sul dev), visibile a lei e allo studio; `lib/foto.ts` firma i link.
+- In attesa del si' di Mattia: azioni sulla lezione (aggiungi/togli/annulla con lezione restituita intera,
+  modifica, duplica, presenze, blocca iscrizioni, posto fisso). "Multimedia" di App Palestre da chiarire con Giorgia.
