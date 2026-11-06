@@ -47,6 +47,12 @@ import { ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import NoteForm from './NoteForm'
+import PostoFisso, { type SlotAttivo, type SlotPossibile } from './PostoFisso'
+import { etichettaSlot, romeSlot } from '@/lib/posti-fissi/slot'
+
+// Pagina costruita sul server a ogni richiesta: leggere l'ora qui e' voluto.
+const adesso = () => Date.now()
+
 
 // ─── types ────────────────────────────────────────────────────────────────────
 
@@ -71,7 +77,7 @@ type ClientPackage = {
 type RawBooking = {
   id: string
   status: string
-  created_at: string
+  booked_at: string
   schedules: {
     starts_at: string
     classes: { name: string } | null
@@ -95,6 +101,8 @@ const STATUS_LABEL: Record<string, string> = {
   confirmed: 'Confermata',
   cancelled: 'Cancellata',
   pending: 'In attesa',
+  held: 'Posto fisso',
+  waitlist: 'In lista',
 }
 
 function fmtDate(iso: string): string {
@@ -168,7 +176,10 @@ export default async function ClienteDetailPage({
   )
 
   // Parallel fetch
-  const [profileRes, authRes, packagesRes, bookingsRes, notesRes] = await Promise.all([
+  const nowIso = new Date().toISOString()
+  const fraCinqueSettimane = new Date(adesso() + 35 * 24 * 60 * 60 * 1000).toISOString()
+
+  const [profileRes, authRes, packagesRes, bookingsRes, notesRes, slotsRes, futureRes, prossimeRes] = await Promise.all([
     admin
       .from('profiles')
       .select('id, first_name, last_name, phone, avatar_url, role, studio_id')
@@ -186,11 +197,12 @@ export default async function ClienteDetailPage({
     admin
       .from('bookings')
       .select(
-        `id, status, created_at,
+        `id, status, booked_at,
          schedules:schedule_id ( starts_at, classes:class_id ( name ) )`
       )
       .eq('client_id', clientId)
-      .order('created_at', { ascending: false })
+      .neq('status', 'held') // i posti fissi futuri stanno nella sezione "Posto fisso"
+      .order('booked_at', { ascending: false })
       .limit(10),
 
     admin
@@ -201,6 +213,32 @@ export default async function ClienteDetailPage({
       )
       .eq('client_id', clientId)
       .order('created_at', { ascending: false }),
+
+    admin
+      .from('fixed_slots')
+      .select('id, weekday, start_time, class_id, classes:class_id ( name )')
+      .eq('client_id', clientId)
+      .eq('is_active', true)
+      .order('weekday')
+      .order('start_time'),
+
+    // la settimana tipo, ricavata dal calendario delle prossime settimane
+    admin
+      .from('schedules')
+      .select('starts_at, class_id, classes:class_id ( name )')
+      .eq('studio_id', studioId)
+      .eq('is_cancelled', false)
+      .gt('starts_at', nowIso)
+      .lt('starts_at', fraCinqueSettimane)
+      .order('starts_at'),
+
+    admin
+      .from('bookings')
+      .select('fixed_slot_id, schedules:schedule_id!inner ( starts_at )')
+      .eq('client_id', clientId)
+      .in('status', ['held', 'confirmed'])
+      .not('fixed_slot_id', 'is', null)
+      .gt('schedules.starts_at', nowIso),
   ])
 
   if (!profileRes.data) redirect('/admin/clienti')
@@ -212,6 +250,47 @@ export default async function ClienteDetailPage({
   const notes     = (notesRes.data     as unknown as Note[])          ?? []
 
   const displayName = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || '—'
+
+  // ── posto fisso ──
+  const prossimePerSlot = new Map<string, number>()
+  for (const b of (prossimeRes.data as unknown as { fixed_slot_id: string }[]) ?? [])
+    prossimePerSlot.set(b.fixed_slot_id, (prossimePerSlot.get(b.fixed_slot_id) ?? 0) + 1)
+
+  const slotAttivi: SlotAttivo[] = (
+    (slotsRes.data as unknown as {
+      id: string
+      weekday: number
+      start_time: string
+      classes: { name: string } | null
+    }[]) ?? []
+  ).map((f) => ({
+    id: f.id,
+    label: etichettaSlot(f.weekday, f.start_time, f.classes?.name ?? 'Lezione'),
+    prossime: prossimePerSlot.get(f.id) ?? 0,
+  }))
+
+  const possibiliMap = new Map<string, SlotPossibile>()
+  for (const r of (futureRes.data as unknown as {
+    starts_at: string
+    class_id: string
+    classes: { name: string } | null
+  }[]) ?? []) {
+    const { weekday, time } = romeSlot(r.starts_at)
+    const key = `${r.class_id}|${weekday}|${time}`
+    if (!possibiliMap.has(key))
+      possibiliMap.set(key, {
+        key,
+        classId: r.class_id,
+        weekday,
+        time,
+        label: etichettaSlot(weekday, time, r.classes?.name ?? 'Lezione'),
+      })
+  }
+  const slotPossibili = [...possibiliMap.values()].sort(
+    (a, b) => a.weekday - b.weekday || a.time.localeCompare(b.time)
+  )
+
+  const haPacchetto = packages.some((p) => !p.expires_at || new Date(p.expires_at) > new Date())
 
   // ── render ──────────────────────────────────────────────────────────────────
 
@@ -325,6 +404,19 @@ export default async function ClienteDetailPage({
             })}
           </div>
         )}
+      </section>
+
+      {/* ── SEZIONE 2b: Posto fisso ─────────────────────────────────────── */}
+      <section className="mb-6">
+        <h2 className="font-inter font-extrabold uppercase tracking-widest text-[11px] text-meetoo-accent-dark mb-3">
+          Posto fisso
+        </h2>
+        <PostoFisso
+          clientId={clientId}
+          attivi={slotAttivi}
+          possibili={slotPossibili}
+          haPacchetto={haPacchetto}
+        />
       </section>
 
       {/* ── SEZIONE 3: Storico prenotazioni ────────────────────────────── */}

@@ -533,6 +533,59 @@ begin
 end;
 $$;
 
+-- Avvisi da mandare. Ognuna "prende in carico" le righe segnandole nello
+-- stesso update, cosi' due giri sovrapposti non mandano lo stesso avviso due
+-- volte. L'app poi manda notifica o email e scrive il canale usato.
+
+-- Promemoria delle fisse: dall'ora giusta fino alla scadenza delle 24 ore.
+create or replace function public.posti_fissi_promemoria()
+returns table (booking_id uuid, client_id uuid, studio_id uuid, action_token text, starts_at timestamptz, class_name text)
+language sql security definer set search_path to 'public'
+as $$
+  update bookings b
+    set reminder_sent_at = now()
+  from schedules s join classes c on c.id = s.class_id
+  where s.id = b.schedule_id
+    and b.status = 'confirmed' and b.fixed_slot_id is not null
+    and b.reminder_sent_at is null and b.response is null
+    and now() >= reminder_due_at(s.starts_at)
+    and s.starts_at - now() > interval '24 hours'
+    and not coalesce(s.is_cancelled, false)
+  returning b.id, b.client_id, b.studio_id, b.action_token, s.starts_at, c.name
+$$;
+
+-- Pacchetto finito: il posto fisso non si e' potuto scalare, o e' stato liberato.
+create or replace function public.posti_fissi_avvisi_pacchetto()
+returns table (booking_id uuid, client_id uuid, studio_id uuid, issue text, starts_at timestamptz, class_name text)
+language sql security definer set search_path to 'public'
+as $$
+  update bookings b
+    set hold_issue_notified_at = now()
+  from schedules s join classes c on c.id = s.class_id
+  where s.id = b.schedule_id
+    and b.hold_issue is not null and b.hold_issue_notified_at is null
+    and s.starts_at > now()
+  returning b.id, b.client_id, b.studio_id, b.hold_issue, s.starts_at, c.name
+$$;
+
+-- Posto liberato: chi e' in lista e non e' ancora stata avvisata di questo posto.
+create or replace function public.posti_fissi_avvisi_lista()
+returns table (booking_id uuid, client_id uuid, studio_id uuid, action_token text, starts_at timestamptz, class_name text)
+language sql security definer set search_path to 'public'
+as $$
+  update bookings b
+    set waitlist_notified_at = now()
+  from schedules s join classes c on c.id = s.class_id
+  where s.id = b.schedule_id
+    and b.status = 'waitlist'
+    and s.spot_freed_at is not null
+    and (b.waitlist_notified_at is null or b.waitlist_notified_at < s.spot_freed_at)
+    and coalesce(s.current_bookings, 0) < s.max_spots
+    and s.starts_at - now() >= interval '12 hours'
+    and not coalesce(s.is_cancelled, false)
+  returning b.id, b.client_id, b.studio_id, b.action_token, s.starts_at, c.name
+$$;
+
 -- Per lo studio: aggiungere e togliere un posto fisso.
 create or replace function public.fixed_slot_add(p_client uuid, p_class uuid, p_weekday int, p_time time)
 returns json
@@ -591,6 +644,26 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
+-- 6b. Nomi delle insegnanti per le clienti
+-- ---------------------------------------------------------------------------
+
+-- Una cliente legge solo il proprio profilo (RLS su profiles), quindi nel
+-- palinsesto il nome dell'insegnante non le arrivava mai. Qui solo nome e
+-- cognome delle insegnanti del suo studio: telefono, indirizzo e il resto
+-- del profilo restano chiusi.
+create or replace function public.nomi_insegnanti()
+returns table (id uuid, first_name text, last_name text)
+language sql stable security definer set search_path to 'public'
+as $$
+  select p.id, p.first_name, p.last_name
+  from profiles p
+  where p.studio_id = get_user_studio_id() and p.role = 'instructor'
+$$;
+
+revoke all on function public.nomi_insegnanti() from public, anon;
+grant execute on function public.nomi_insegnanti() to authenticated;
+
+-- ---------------------------------------------------------------------------
 -- 7. Permessi: le funzioni "_for" e quelle interne solo dal server
 -- ---------------------------------------------------------------------------
 
@@ -604,6 +677,9 @@ revoke all on function public._fixed_slot_schedules(uuid) from public, anon, aut
 revoke all on function public._hold_fixed_slot(uuid) from public, anon, authenticated;
 revoke all on function public._confirm_hold(uuid) from public, anon, authenticated;
 revoke all on function public.posti_fissi_giro() from public, anon, authenticated;
+revoke all on function public.posti_fissi_promemoria() from public, anon, authenticated;
+revoke all on function public.posti_fissi_avvisi_pacchetto() from public, anon, authenticated;
+revoke all on function public.posti_fissi_avvisi_lista() from public, anon, authenticated;
 revoke all on function public.join_waitlist(uuid) from public, anon;
 revoke all on function public.fixed_slot_add(uuid, uuid, int, time) from public, anon;
 revoke all on function public.fixed_slot_remove(uuid) from public, anon;
@@ -611,6 +687,9 @@ revoke all on function public.fixed_slot_remove(uuid) from public, anon;
 grant execute on function public.book_lesson_for(uuid, uuid) to service_role;
 grant execute on function public.cancel_booking_for(uuid, uuid) to service_role;
 grant execute on function public.posti_fissi_giro() to service_role;
+grant execute on function public.posti_fissi_promemoria() to service_role;
+grant execute on function public.posti_fissi_avvisi_pacchetto() to service_role;
+grant execute on function public.posti_fissi_avvisi_lista() to service_role;
 grant execute on function public.join_waitlist(uuid) to authenticated;
 grant execute on function public.fixed_slot_add(uuid, uuid, int, time) to authenticated;
 grant execute on function public.fixed_slot_remove(uuid) to authenticated;

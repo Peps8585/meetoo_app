@@ -262,3 +262,32 @@ export function giftSoldStudioEmail(params: {
   `
   return { subject: `Regalo venduto: ${params.contents}, ${params.price}`, html: layout(body) }
 }
+
+// ── Posti fissi e lista d'attesa ─────────────────────────────────────────────
+// Stesso titolo e testo della notifica sul telefono (lib/posti-fissi-testi.ts):
+// l'email arriva a chi le notifiche non le ha attivate.
+
+function secondaryButton(href: string, label: string): string {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:12px auto 0;">
+    <tr>
+      <td style="border:1px solid ${INK}; border-radius:999px;">
+        <a href="${href}" style="${FONT} display:inline-block; padding:13px 34px; font-size:13px; letter-spacing:0.18em; text-transform:uppercase; color:${INK}; text-decoration:none;">${label}</a>
+      </td>
+    </tr>
+  </table>`
+}
+
+export function avvisoEmail(params: {
+  titolo: string
+  testo: string
+  pulsante?: { href: string; label: string }
+  secondo?: { href: string; label: string }
+}): { subject: string; html: string } {
+  const body = `
+    <h1 style="${FONT} margin:0 0 20px; font-size:18px; font-weight:800; letter-spacing:0.14em; text-transform:uppercase; color:${INK}; text-align:center;">${escapeHtml(params.titolo)}</h1>
+    <p style="${FONT} margin:0; font-size:15px; line-height:1.7; color:${INK};">${escapeHtml(params.testo)}</p>
+    ${params.pulsante ? ctaButton(params.pulsante.href, params.pulsante.label) : ''}
+    ${params.secondo ? secondaryButton(params.secondo.href, params.secondo.label) : ''}
+  `
+  return { subject: params.titolo, html: layout(body) }
+}

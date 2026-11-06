@@ -4,10 +4,24 @@ import { Calendar, User, Play } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { Logo } from '../Logo'
 import DecisionCard from './DecisionCard'
+import Notifiche from './Notifiche'
+
+// Pagina costruita sul server a ogni richiesta: leggere l'ora qui e' voluto.
+const adesso = () => Date.now()
+
 
 type Profile = {
   first_name: string | null
   last_name: string | null
+}
+
+type MiaPrenotazione = {
+  schedule_id: string
+  status: 'confirmed' | 'held' | 'waitlist'
+  fixed_slot_id: string | null
+  action_token: string
+  response: string | null
+  reminder_sent_at: string | null
 }
 
 type UpcomingLesson = {
@@ -15,6 +29,7 @@ type UpcomingLesson = {
   starts_at: string
   ends_at: string
   location: string | null
+  instructor_id: string | null
   classes: { name: string; color: string | null } | null
   profiles: { first_name: string | null; last_name: string | null } | null
 }
@@ -24,11 +39,13 @@ function fmtDay(iso: string): string {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
+    timeZone: 'Europe/Rome',
   })
 }
 
+// La pagina si costruisce sul server (Vercel gira in UTC): l'ora va resa esplicita.
 function fmtTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
+  return new Date(iso).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' })
 }
 
 function fmtTodayLong(): string {
@@ -37,6 +54,7 @@ function fmtTodayLong(): string {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
+    timeZone: 'Europe/Rome',
   })
 }
 
@@ -65,17 +83,26 @@ export default async function DashboardPage() {
   const profile = profileData as Profile | null
   const displayName = profile?.first_name ?? user.email?.split('@')[0] ?? 'ospite'
 
-  // Fetch upcoming confirmed bookings (next 3)
+  // Prossime lezioni: prenotate, posto fisso (anche tenuto) e lista d'attesa
   const now = new Date().toISOString()
 
   const { data: rawBookings } = await supabase
     .from('bookings')
-    .select('schedule_id')
+    .select('schedule_id, status, fixed_slot_id, action_token, response, reminder_sent_at')
     .eq('client_id', user.id)
-    .eq('status', 'confirmed')
+    .in('status', ['confirmed', 'held', 'waitlist'])
 
-  const scheduleIds = ((rawBookings ?? []) as { schedule_id: string }[]).map(
-    (b) => b.schedule_id
+  const mie = new Map<string, MiaPrenotazione>()
+  for (const b of (rawBookings ?? []) as MiaPrenotazione[]) mie.set(b.schedule_id, b)
+  const scheduleIds = [...mie.keys()]
+
+  // nome e cognome delle insegnanti: una cliente non legge i loro profili
+  const { data: nomiRows } = await supabase.rpc('nomi_insegnanti')
+  const insegnanti = new Map(
+    ((nomiRows ?? []) as { id: string; first_name: string | null; last_name: string | null }[]).map((n) => [
+      n.id,
+      [n.first_name, n.last_name].filter(Boolean).join(' '),
+    ])
   )
 
   let upcoming: UpcomingLesson[] = []
@@ -83,14 +110,14 @@ export default async function DashboardPage() {
     const { data } = await supabase
       .from('schedules')
       .select(
-        `id, starts_at, ends_at, location,
+        `id, starts_at, ends_at, location, instructor_id,
          classes:class_id(name, color),
          profiles:instructor_id(first_name, last_name)`
       )
       .in('id', scheduleIds)
       .gte('starts_at', now)
       .order('starts_at')
-      .limit(3)
+      .limit(4)
     upcoming = (data as unknown as UpcomingLesson[]) ?? []
   }
 
@@ -198,6 +225,8 @@ export default async function DashboardPage() {
           </h2>
         </div>
 
+        <Notifiche />
+
         {/* ── Le tue prossime lezioni ── */}
         <section className="mb-8">
           <div className="flex items-center justify-between mb-4">
@@ -245,9 +274,11 @@ export default async function DashboardPage() {
                     <p className="font-inter font-medium text-sm text-meetoo-accent-dark truncate mt-0.5">
                       {lesson.classes?.name ?? '—'}
                     </p>
-                    {lesson.profiles && (
+                    {(lesson.profiles || (lesson.instructor_id && insegnanti.get(lesson.instructor_id))) && (
                       <p className="font-inter font-light text-xs text-meetoo-accent-dark/50 truncate">
-                        {lesson.profiles.first_name} {lesson.profiles.last_name}
+                        {lesson.profiles
+                          ? `${lesson.profiles.first_name ?? ''} ${lesson.profiles.last_name ?? ''}`.trim()
+                          : insegnanti.get(lesson.instructor_id!)}
                       </p>
                     )}
                     {lesson.location && (
@@ -255,6 +286,7 @@ export default async function DashboardPage() {
                         {lesson.location}
                       </p>
                     )}
+                    <StatoPrenotazione b={mie.get(lesson.id)} startsAt={lesson.starts_at} />
                   </div>
 
                   {/* Time badge */}
@@ -328,5 +360,37 @@ export default async function DashboardPage() {
 
       </div>
     </main>
+  )
+}
+
+// Sotto ogni lezione: posto fisso, risposta al promemoria, lista d'attesa.
+// "Rispondi" apre la stessa pagina della notifica (/presenza/<codice>).
+function StatoPrenotazione({ b, startsAt }: { b?: MiaPrenotazione; startsAt: string }) {
+  if (!b) return null
+  const prima24 = new Date(startsAt).getTime() - adesso() > 24 * 60 * 60 * 1000
+  const etichetta = 'font-inter font-normal text-[10px] uppercase tracking-widest mt-1'
+
+  if (b.status === 'waitlist')
+    return (
+      <Link href={`/presenza/${b.action_token}`} className={`${etichetta} inline-block text-meetoo-accent-light`}>
+        In lista d&apos;attesa →
+      </Link>
+    )
+  if (!b.fixed_slot_id) return null
+  if (b.response === 'ci_sono')
+    return <p className={`${etichetta} text-meetoo-bg-dark`}>Posto fisso · hai confermato</p>
+  if (b.reminder_sent_at && prima24)
+    return (
+      <Link
+        href={`/presenza/${b.action_token}`}
+        className="inline-block mt-2 font-inter font-normal uppercase tracking-widest text-[10px] px-4 py-1.5 rounded-full bg-meetoo-accent-dark text-meetoo-bg-light"
+      >
+        Ci sei? Rispondi
+      </Link>
+    )
+  return (
+    <Link href={`/presenza/${b.action_token}`} className={`${etichetta} inline-block text-meetoo-bg-dark`}>
+      Il tuo posto fisso
+    </Link>
   )
 }

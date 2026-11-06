@@ -14,7 +14,18 @@ type Booking = {
   status: string
   client_id: string
   booked_at: string
+  fixed_slot_id: string | null
+  response: string | null
+  reminder_sent_at: string | null
   profiles: BookingProfile | null
+}
+
+// Accanto al nome: per le fisse, com'e' andato il promemoria.
+function statoFissa(b: Booking): { testo: string; cls: string } | null {
+  if (!b.fixed_slot_id) return null
+  if (b.response === 'ci_sono') return { testo: 'C’è', cls: 'bg-meetoo-bg-dark/15 text-meetoo-bg-dark' }
+  if (b.reminder_sent_at) return { testo: 'Non ha risposto', cls: 'bg-amber-100 text-amber-700' }
+  return { testo: 'Fissa', cls: 'bg-meetoo-accent-dark/8 text-meetoo-accent-dark/50' }
 }
 
 type Schedule = {
@@ -117,7 +128,8 @@ export default function AgendaPage() {
         `id, starts_at, ends_at, max_spots, location,
          classes:class_id(name, color, duration_minutes),
          profiles:instructor_id(first_name, last_name),
-         bookings(status, client_id, booked_at, profiles:client_id(first_name, last_name))`
+         bookings(status, client_id, booked_at, fixed_slot_id, response, reminder_sent_at,
+           profiles:client_id(first_name, last_name))`
       )
       .eq('studio_id', studioId)
       .gte('starts_at', dayStart.toISOString())
@@ -241,9 +253,13 @@ export default function AgendaPage() {
               )
               const byBookedAt = (a: Booking, b: Booking) =>
                 a.booked_at.localeCompare(b.booked_at)
+              // il posto fisso tenuto conta come prenotato
               const confirmed = active
-                .filter((b) => b.status === 'confirmed')
+                .filter((b) => b.status === 'confirmed' || b.status === 'held')
                 .sort(byBookedAt)
+              const nonVengono = (s.bookings ?? []).filter(
+                (b) => b.status === 'cancelled' && b.response === 'non_vengo'
+              )
               const waitlist = active
                 .filter((b) => b.status === 'waitlist')
                 .sort(byBookedAt)
@@ -319,9 +335,35 @@ export default function AgendaPage() {
                               {i + 1}
                             </span>
                             <span className="truncate">{fullName(b.profiles)}</span>
+                            {statoFissa(b) && (
+                              <span
+                                className={`ml-auto shrink-0 font-inter font-normal text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full ${statoFissa(b)!.cls}`}
+                              >
+                                {statoFissa(b)!.testo}
+                              </span>
+                            )}
                           </li>
                         ))}
                       </ul>
+                    )}
+
+                    {/* Fisse che hanno detto "questa volta no" */}
+                    {nonVengono.length > 0 && (
+                      <div className="mt-4 pt-3 border-t border-meetoo-accent-dark/10">
+                        <p className="font-inter font-light uppercase tracking-widest text-[10px] text-meetoo-accent-dark/40 mb-2">
+                          Questa volta non vengono · {nonVengono.length}
+                        </p>
+                        <ul className="space-y-1.5">
+                          {nonVengono.map((b, i) => (
+                            <li
+                              key={`${b.client_id}-no-${i}`}
+                              className="font-inter font-light text-sm text-meetoo-accent-dark/45 line-through decoration-meetoo-accent-dark/25 truncate pl-7"
+                            >
+                              {fullName(b.profiles)}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     )}
 
                     {/* Waitlist — solo se presente, visivamente distinta */}

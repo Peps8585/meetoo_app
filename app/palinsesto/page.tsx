@@ -12,6 +12,7 @@ type Schedule = {
   max_spots: number
   current_bookings: number
   location: string | null
+  instructor_id: string | null
   price_override: number | null
   classes: { name: string; color: string | null; price: number | null } | null
   profiles: { first_name: string | null; last_name: string | null } | null
@@ -29,7 +30,11 @@ const RPC_ERRORS: Record<string, string> = {
   not_owner:          'Impossibile annullare questa prenotazione.',
   booking_not_found:  'Impossibile annullare questa prenotazione.',
   not_active:         'Impossibile annullare questa prenotazione.',
+  booking_closed:     'Le iscrizioni a questa lezione sono chiuse.',
+  not_full:           'Si è appena liberato un posto: puoi prenotare.',
 }
+
+type MyBooking = { id: string; status: 'confirmed' | 'held' | 'waitlist'; fixed: boolean }
 
 function translateRpcError(msg: string): string {
   return RPC_ERRORS[msg] ?? 'Si è verificato un errore. Riprova.'
@@ -71,8 +76,10 @@ export default function PalinsestoPage() {
   const [feedback, setFeedback] = useState<Feedback | null>(null)
   const [studioId, setStudioId] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
-  const [myBookings, setMyBookings] = useState<Map<string, string>>(new Map())
+  const [myBookings, setMyBookings] = useState<Map<string, MyBooking>>(new Map())
   const [busyIds, setBusyIds] = useState<Set<string>>(new Set())
+  // nome e cognome delle insegnanti: una cliente non legge i loro profili
+  const [insegnanti, setInsegnanti] = useState<Map<string, string>>(new Map())
 
   useEffect(() => {
     async function loadUser() {
@@ -88,6 +95,15 @@ export default function PalinsestoPage() {
         .eq('id', user.id)
         .single()
       if (profile?.studio_id) setStudioId(profile.studio_id)
+      const { data: nomi } = await supabase.rpc('nomi_insegnanti')
+      setInsegnanti(
+        new Map(
+          ((nomi ?? []) as { id: string; first_name: string | null; last_name: string | null }[]).map((n) => [
+            n.id,
+            [n.first_name, n.last_name].filter(Boolean).join(' '),
+          ])
+        )
+      )
     }
     loadUser()
   }, [])
@@ -115,7 +131,7 @@ export default function PalinsestoPage() {
     const { data: schData, error: schErr } = await supabase
       .from('schedules')
       .select(
-        `id, starts_at, ends_at, max_spots, current_bookings, location, price_override,
+        `id, starts_at, ends_at, max_spots, current_bookings, location, price_override, instructor_id,
          classes:class_id(name, color, price),
          profiles:instructor_id(first_name, last_name)`
       )
@@ -136,15 +152,16 @@ export default function PalinsestoPage() {
     if (fetched.length > 0) {
       const { data: bkData } = await supabase
         .from('bookings')
-        .select('id, schedule_id')
+        .select('id, schedule_id, status, fixed_slot_id')
         .eq('client_id', userId)
-        .eq('status', 'confirmed')
+        .in('status', ['confirmed', 'held', 'waitlist'])
         .in(
           'schedule_id',
           fetched.map((s) => s.id)
         )
-      const map = new Map<string, string>()
-      for (const b of bkData ?? []) map.set(b.schedule_id, b.id)
+      const map = new Map<string, MyBooking>()
+      for (const b of bkData ?? [])
+        map.set(b.schedule_id, { id: b.id, status: b.status, fixed: b.fixed_slot_id !== null })
       setMyBookings(map)
     } else {
       setMyBookings(new Map())
@@ -193,10 +210,38 @@ export default function PalinsestoPage() {
     toggleBusy(scheduleId, false)
   }
 
-  async function handleCancel(scheduleId: string, bookingId: string, within24h: boolean) {
+  // Lezione piena: ci si mette in lista. Se un posto si libera prima della
+  // scadenza delle 24 ore si entra da sole; dopo, arriva un avviso.
+  async function handleWaitlist(scheduleId: string) {
+    if (!userId) return
+    toggleBusy(scheduleId, true)
+    setFeedback(null)
+    const supabase = createClient()
+
+    const { error } = await supabase.rpc('join_waitlist', { p_schedule_id: scheduleId })
+
+    if (error) {
+      setFeedback({ message: translateRpcError(error.message), type: 'error' })
+    } else {
+      setFeedback({
+        message: 'Sei in lista d\'attesa. Se si libera un posto ti avvisiamo.',
+        type: 'success',
+      })
+    }
+    await loadSchedules(true)
+    toggleBusy(scheduleId, false)
+  }
+
+  async function handleCancel(
+    scheduleId: string,
+    bookingId: string,
+    within24h: boolean,
+    status: MyBooking['status']
+  ) {
     if (!userId) return
 
-    if (within24h) {
+    // Uscire dalla lista o liberare un posto fisso non ancora scalato non costa niente
+    if (within24h && status === 'confirmed') {
       const confirmed = window.confirm(
         'Sei entro le 24 ore: se disdici perdi il credito. Confermi?'
       )
@@ -217,7 +262,11 @@ export default function PalinsestoPage() {
 
     const refunded = (data as { refunded: boolean }).refunded
     setFeedback({
-      message: refunded
+      message: status === 'waitlist'
+        ? 'Sei uscita dalla lista d\'attesa.'
+        : status === 'held'
+        ? 'Posto liberato. Il tuo posto fisso resta per le altre settimane.'
+        : refunded
         ? 'Prenotazione annullata, credito riaccreditato.'
         : 'Prenotazione annullata. Credito trattenuto (penale entro 24h).',
       type: refunded ? 'success' : 'warning',
@@ -350,12 +399,15 @@ export default function PalinsestoPage() {
                   </div>
 
                   {/* Lessons */}
-                  <div className="space-y-2 pl-12">
+                  <div className="space-y-2 sm:pl-12">
                     {daySchedules.map((s) => {
-                      const bookingId = myBookings.get(s.id)
-                      const isBooked = bookingId !== undefined
+                      const mine = myBookings.get(s.id)
+                      const isBooked = mine !== undefined && mine.status !== 'waitlist'
+                      const inWaitlist = mine?.status === 'waitlist'
                       const freeSpots = Math.max(0, s.max_spots - s.current_bookings)
                       const isFull = freeSpots === 0 && !isBooked
+                      const closed =
+                        new Date(s.starts_at).getTime() - Date.now() < 12 * 60 * 60 * 1000
                       const within24h =
                         new Date(s.starts_at).getTime() - Date.now() < 24 * 60 * 60 * 1000
                       const busy = busyIds.has(s.id)
@@ -385,17 +437,29 @@ export default function PalinsestoPage() {
 
                           {/* Info */}
                           <div className="flex-1 min-w-0">
-                            <p className="font-inter font-medium text-meetoo-accent-dark truncate">
+                            <p className="font-inter font-medium text-meetoo-accent-dark leading-snug">
                               {s.classes?.name ?? '—'}
                             </p>
-                            {s.profiles && (
+                            {(s.profiles || (s.instructor_id && insegnanti.get(s.instructor_id))) && (
                               <p className="font-inter font-light text-xs text-meetoo-accent-dark/50 truncate">
-                                {s.profiles.first_name} {s.profiles.last_name}
+                                {s.profiles
+                                  ? `${s.profiles.first_name ?? ''} ${s.profiles.last_name ?? ''}`.trim()
+                                  : insegnanti.get(s.instructor_id!)}
                               </p>
                             )}
                             {s.location && (
                               <p className="font-inter font-light text-xs text-meetoo-accent-dark/35 truncate">
                                 {s.location}
+                              </p>
+                            )}
+                            {mine?.fixed && isBooked && (
+                              <p className="font-inter font-normal text-[10px] uppercase tracking-widest text-meetoo-bg-dark mt-0.5">
+                                Il tuo posto fisso
+                              </p>
+                            )}
+                            {inWaitlist && (
+                              <p className="font-inter font-normal text-[10px] uppercase tracking-widest text-meetoo-accent-light mt-0.5">
+                                Sei in lista d&apos;attesa
                               </p>
                             )}
                           </div>
@@ -413,17 +477,29 @@ export default function PalinsestoPage() {
                               </span>
                             </div>
 
-                            {isBooked ? (
+                            {isBooked || inWaitlist ? (
                               <button
                                 disabled={busy}
-                                onClick={() => handleCancel(s.id, bookingId!, within24h)}
+                                onClick={() => handleCancel(s.id, mine!.id, within24h, mine!.status)}
                                 className={`font-inter font-normal uppercase tracking-widest text-[10px] px-4 py-1.5 rounded-full border transition-colors ${
                                   busy
                                     ? 'border-meetoo-accent-dark/15 text-meetoo-accent-dark/25 cursor-wait'
                                     : 'border-red-300 text-red-500 hover:bg-red-50'
                                 }`}
                               >
-                                {busy ? '…' : 'Cancella'}
+                                {busy ? '…' : inWaitlist ? 'Esci dalla lista' : 'Cancella'}
+                              </button>
+                            ) : isFull && !closed ? (
+                              <button
+                                disabled={busy}
+                                onClick={() => handleWaitlist(s.id)}
+                                className={`font-inter font-normal uppercase tracking-widest text-[10px] px-4 py-1.5 rounded-full border transition-colors ${
+                                  busy
+                                    ? 'border-meetoo-accent-dark/15 text-meetoo-accent-dark/25 cursor-wait'
+                                    : 'border-meetoo-accent-dark/40 text-meetoo-accent-dark hover:bg-meetoo-accent-dark hover:text-meetoo-bg-light'
+                                }`}
+                              >
+                                {busy ? '…' : 'Lista d\'attesa'}
                               </button>
                             ) : isFull ? (
                               <button
