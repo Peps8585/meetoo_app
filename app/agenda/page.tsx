@@ -1,13 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 
 type BookingProfile = {
   first_name: string | null
   last_name: string | null
+  avatar_url: string | null
 }
 
 type Booking = {
@@ -20,15 +21,6 @@ type Booking = {
   profiles: BookingProfile | null
 }
 
-// Nel dettaglio della lezione, accanto al nome: per le fisse, com'e' andato
-// il promemoria. Le jolly si sono prenotate da sole: sono confermate.
-// Prima del promemoria una fissa non ha ancora niente da confermare.
-function conferma(b: Booking): { testo: string; cls: string } | null {
-  if (!b.fixed_slot_id || b.response === 'ci_sono')
-    return { testo: 'Confermata', cls: 'bg-meetoo-bg-dark/15 text-meetoo-bg-dark' }
-  if (b.reminder_sent_at) return { testo: 'Non ha risposto', cls: 'bg-amber-100 text-amber-700' }
-  return null
-}
 
 type Schedule = {
   id: string
@@ -64,11 +56,12 @@ function formatTime(iso: string): string {
   })
 }
 
-function fullName(p: BookingProfile | null): string {
-  if (!p) return 'Cliente'
-  const name = `${p.first_name ?? ''} ${p.last_name ?? ''}`.trim()
-  return name || 'Cliente'
+// yyyy-mm-dd nel giorno locale (il valore che vuole <input type="date">)
+function dataIso(d: Date): string {
+  const z = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}`
 }
+
 
 const DAYS_IT = [
   'Domenica',
@@ -83,14 +76,16 @@ const DAYS_IT = [
 export default function AgendaPage() {
   const router = useRouter()
   const [schedules, setSchedules] = useState<Schedule[]>([])
-  const [day, setDay] = useState<Date>(() => startOfDay(new Date()))
+  const giorno = useSearchParams().get('giorno')
+  const [day, setDay] = useState<Date>(() => {
+    const m = giorno?.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+    return m ? new Date(+m[1], +m[2] - 1, +m[3]) : startOfDay(new Date())
+  })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [studioId, setStudioId] = useState<string | null>(null)
   const [role, setRole] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
-  // la vista resta compatta: le partecipanti si vedono toccando la lezione
-  const [aperta, setAperta] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadUser() {
@@ -132,8 +127,7 @@ export default function AgendaPage() {
         `id, starts_at, ends_at, max_spots, location,
          classes:class_id(name, color, duration_minutes),
          profiles:instructor_id(first_name, last_name),
-         bookings(status, client_id, booked_at, fixed_slot_id, response, reminder_sent_at,
-           profiles:client_id(first_name, last_name))`
+         bookings(status, client_id, booked_at)`
       )
       .eq('studio_id', studioId)
       .gte('starts_at', dayStart.toISOString())
@@ -153,8 +147,10 @@ export default function AgendaPage() {
       return
     }
 
-    setSchedules((data as unknown as Schedule[]) ?? [])
+    const righe = (data as unknown as Schedule[]) ?? []
+    setSchedules(righe)
     setLoading(false)
+
   }
 
   async function logout() {
@@ -210,27 +206,40 @@ export default function AgendaPage() {
         {/* Day navigation */}
         <div className="flex items-center justify-between gap-3 mb-8">
           <button
-            onClick={() => setDay((prev) => startOfDay(addDays(prev, -1)))}
+            onClick={() => { setDay((prev) => startOfDay(addDays(prev, -1))) }}
             aria-label="Giorno precedente"
             className="w-10 h-10 rounded-full border border-meetoo-accent-dark/20 flex items-center justify-center text-meetoo-accent-dark/50 hover:text-meetoo-accent-dark hover:border-meetoo-accent-dark/40 transition-colors font-inter text-sm shrink-0"
           >
             ←
           </button>
           <div className="flex flex-col items-center gap-1 text-center min-w-0">
-            <span className="font-inter font-light text-sm text-meetoo-accent-dark truncate">
-              {dayLabel}
-            </span>
+            {/* Toccando la data si apre il calendario del telefono: qualsiasi giorno */}
+            <label className="relative inline-flex items-center gap-1.5 font-inter font-light text-sm text-meetoo-accent-dark cursor-pointer">
+              <span className="truncate underline decoration-meetoo-accent-dark/25 underline-offset-4">{dayLabel}</span>
+              <span aria-hidden className="text-meetoo-accent-dark/40 text-xs">▾</span>
+              <input
+                type="date"
+                aria-label="Scegli il giorno"
+                value={dataIso(day)}
+                onChange={(e) => {
+                  if (!e.target.value) return
+                  const [y, m, d] = e.target.value.split('-').map(Number)
+                  setDay(new Date(y, m - 1, d))
+                }}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              />
+            </label>
             {!isToday && (
               <button
                 onClick={() => setDay(startOfDay(new Date()))}
                 className="font-inter font-normal uppercase tracking-widest text-[10px] text-meetoo-accent-dark/50 hover:text-meetoo-accent-dark transition-colors"
               >
-                Oggi
+                Torna a oggi
               </button>
             )}
           </div>
           <button
-            onClick={() => setDay((prev) => startOfDay(addDays(prev, 1)))}
+            onClick={() => { setDay((prev) => startOfDay(addDays(prev, 1))) }}
             aria-label="Giorno successivo"
             className="w-10 h-10 rounded-full border border-meetoo-accent-dark/20 flex items-center justify-center text-meetoo-accent-dark/50 hover:text-meetoo-accent-dark hover:border-meetoo-accent-dark/40 transition-colors font-inter text-sm shrink-0"
           >
@@ -261,26 +270,17 @@ export default function AgendaPage() {
               const confirmed = active
                 .filter((b) => b.status === 'confirmed' || b.status === 'held')
                 .sort(byBookedAt)
-              const nonVengono = (s.bookings ?? []).filter(
-                (b) => b.status === 'cancelled' && b.response === 'non_vengo'
-              )
-              const waitlist = active
-                .filter((b) => b.status === 'waitlist')
-                .sort(byBookedAt)
 
-              const isOpen = aperta === s.id
 
               return (
                 <section
                   key={s.id}
                   className="bg-white/60 backdrop-blur-sm border border-white/80 rounded-2xl shadow-sm overflow-hidden"
                 >
-                  {/* Lesson header: un tocco apre il dettaglio */}
-                  <button
-                    type="button"
-                    onClick={() => setAperta(isOpen ? null : s.id)}
-                    aria-expanded={isOpen}
-                    className={`w-full text-left flex items-center gap-3 px-5 py-4 ${isOpen ? 'border-b border-meetoo-accent-dark/5' : ''}`}
+                  {/* Un tocco apre la pagina della lezione con le iscritte */}
+                  <Link
+                    href={`/agenda/lezione/${s.id}`}
+                    className="w-full text-left flex items-center gap-3 px-5 py-4 hover:bg-white/40 transition-colors"
                   >
                     {/* Color stripe */}
                     <div
@@ -327,95 +327,11 @@ export default function AgendaPage() {
                         Prenotate
                       </p>
                     </div>
-                    <span
-                      aria-hidden
-                      className={`shrink-0 font-inter text-meetoo-accent-dark/35 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-                    >
-                      ▾
+                    <span aria-hidden className="shrink-0 font-inter text-meetoo-accent-dark/35">
+                      →
                     </span>
-                  </button>
+                  </Link>
 
-                  {/* Dettaglio: chi c'e', fissa o jolly, chi ha confermato */}
-                  {isOpen && (
-                  <div className="px-5 py-4">
-                    {confirmed.length === 0 ? (
-                      <p className="font-inter font-light text-xs text-meetoo-accent-dark/40">
-                        Nessuna prenotazione
-                      </p>
-                    ) : (
-                      <ul className="space-y-3">
-                        {confirmed.map((b, i) => (
-                          <li
-                            key={`${b.client_id}-${i}`}
-                            className="flex items-start gap-2 font-inter text-sm text-meetoo-accent-dark"
-                          >
-                            <span className="w-5 shrink-0 pt-px font-light text-xs text-meetoo-accent-dark/35 tabular-nums text-right">
-                              {i + 1}
-                            </span>
-                            <div className="min-w-0 flex-1">
-                              <p className="leading-snug">{fullName(b.profiles)}</p>
-                              <p className="mt-1 flex flex-wrap items-center gap-2">
-                                <span className="font-inter font-light text-[10px] uppercase tracking-widest text-meetoo-accent-dark/45">
-                                  {b.fixed_slot_id ? 'Fissa' : 'Jolly'}
-                                </span>
-                                {conferma(b) && (
-                                  <span
-                                    className={`font-inter font-normal text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full ${conferma(b)!.cls}`}
-                                  >
-                                    {conferma(b)!.testo}
-                                  </span>
-                                )}
-                              </p>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-
-                    {/* Fisse che hanno detto "questa volta no" */}
-                    {nonVengono.length > 0 && (
-                      <div className="mt-4 pt-3 border-t border-meetoo-accent-dark/10">
-                        <p className="font-inter font-light uppercase tracking-widest text-[10px] text-meetoo-accent-dark/40 mb-2">
-                          Questa volta non vengono · {nonVengono.length}
-                        </p>
-                        <ul className="space-y-1.5">
-                          {nonVengono.map((b, i) => (
-                            <li
-                              key={`${b.client_id}-no-${i}`}
-                              className="font-inter font-light text-sm text-meetoo-accent-dark/45 line-through decoration-meetoo-accent-dark/25 truncate pl-7"
-                            >
-                              {fullName(b.profiles)}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {/* Waitlist — solo se presente, visivamente distinta */}
-                    {waitlist.length > 0 && (
-                      <div className="mt-4 pt-3 border-t border-dashed border-meetoo-accent-dark/15">
-                        <p className="font-inter font-light uppercase tracking-widest text-[10px] text-meetoo-accent-dark/40 mb-2">
-                          Lista d&apos;attesa · {waitlist.length}
-                        </p>
-                        <ul className="space-y-1.5">
-                          {waitlist.map((b, i) => (
-                            <li
-                              key={`${b.client_id}-${i}`}
-                              className="flex items-center gap-2 font-inter font-light text-sm text-meetoo-accent-dark/55"
-                            >
-                              <span className="w-5 shrink-0 font-light text-xs text-meetoo-accent-dark/30 tabular-nums text-right">
-                                {i + 1}
-                              </span>
-                              <span className="truncate italic">
-                                {fullName(b.profiles)}
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                  )}
                 </section>
               )
             })}

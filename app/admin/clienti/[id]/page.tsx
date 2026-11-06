@@ -49,6 +49,7 @@ import { createClient as createAdminClient } from '@supabase/supabase-js'
 import NoteForm from './NoteForm'
 import PostoFisso, { type SlotAttivo, type SlotPossibile } from './PostoFisso'
 import { etichettaSlot, romeSlot } from '@/lib/posti-fissi/slot'
+import { linkFoto } from '@/lib/foto'
 
 // Pagina costruita sul server a ogni richiesta: leggere l'ora qui e' voluto.
 const adesso = () => Date.now()
@@ -250,6 +251,7 @@ export default async function ClienteDetailPage({
   const notes     = (notesRes.data     as unknown as Note[])          ?? []
 
   const displayName = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || '—'
+  const fotoUrl = profile.avatar_url ? (await linkFoto(admin, [profile.avatar_url])).get(profile.avatar_url) : undefined
 
   // ── posto fisso ──
   const prossimePerSlot = new Map<string, number>()
@@ -312,10 +314,10 @@ export default async function ClienteDetailPage({
 
           {/* Avatar */}
           <div className="shrink-0">
-            {profile.avatar_url ? (
+            {fotoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={profile.avatar_url}
+                src={fotoUrl}
                 alt={displayName}
                 className="w-16 h-16 rounded-full object-cover"
               />

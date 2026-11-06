@@ -2,11 +2,14 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Package, Clock, Wallet } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { iniziali, linkFoto } from '@/lib/foto'
+import FotoProfilo from './FotoProfilo'
 
 type Profile = {
   first_name: string | null
   last_name: string | null
   phone: string | null
+  avatar_url: string | null
 }
 
 type ClientPackage = {
@@ -30,7 +33,7 @@ type BookingRow = {
   id: string
   schedule_id: string
   status: string
-  created_at: string
+  booked_at: string
 }
 
 type ScheduleRow = {
@@ -84,11 +87,12 @@ export default async function ProfiloPage() {
   // ── Dati personali ──────────────────────────────────────────────────
   const { data: profileData } = await supabase
     .from('profiles')
-    .select('first_name, last_name, phone')
+    .select('first_name, last_name, phone, avatar_url')
     .eq('id', user.id)
     .single()
 
   const profile = profileData as Profile | null
+  const foto = profile?.avatar_url ? (await linkFoto(supabase, [profile.avatar_url])).get(profile.avatar_url) ?? null : null
 
   // ── Pacchetti attivi ────────────────────────────────────────────────
   const now = new Date().toISOString()
@@ -120,9 +124,10 @@ export default async function ProfiloPage() {
   // ── Storico prenotazioni (ultime 5) ─────────────────────────────────
   const { data: rawBookings } = await supabase
     .from('bookings')
-    .select('id, schedule_id, status, created_at')
+    .select('id, schedule_id, status, booked_at')
     .eq('client_id', user.id)
-    .order('created_at', { ascending: false })
+    .neq('status', 'held') // i posti fissi futuri non sono "storico"
+    .order('booked_at', { ascending: false })
     .limit(5)
 
   const recentBookings = (rawBookings as BookingRow[]) ?? []
@@ -144,7 +149,7 @@ export default async function ProfiloPage() {
       return {
         bookingId: b.id,
         status: b.status,
-        starts_at: sched?.starts_at ?? b.created_at,
+        starts_at: sched?.starts_at ?? b.booked_at,
         className: sched?.classes?.name ?? '—',
         classColor: sched?.classes?.color ?? null,
       }
@@ -176,6 +181,14 @@ export default async function ProfiloPage() {
           </h2>
 
           <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-sm border border-white/80 px-6 sm:px-8 py-6">
+            <div className="mb-6 pb-6 border-b border-meetoo-accent-dark/5">
+              <FotoProfilo
+                userId={user.id}
+                percorso={profile?.avatar_url ?? null}
+                link={foto}
+                iniziali={iniziali(profile?.first_name, profile?.last_name)}
+              />
+            </div>
             <dl className="space-y-0">
               {(
                 [
