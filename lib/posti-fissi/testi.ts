@@ -31,12 +31,25 @@ export function testoPromemoria(className: string, startsAt: string): Avviso {
   }
 }
 
-/** A chi e' in lista d'attesa, quando si libera un posto. */
-export function testoPostoLibero(className: string, startsAt: string): Avviso {
+/** Fino a quando vale l'offerta: "alle 10.30" se e' oggi, "domani alle 8.15" se no. */
+export function entroLe(iso: string, adesso = new Date()) {
+  const giornoDi = (d: Date) => d.toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' })
+  const d = new Date(iso)
+  const { giorno, ora } = parti(iso)
+  if (giornoDi(d) === giornoDi(adesso)) return `alle ${ora}`
+  const domani = new Date(adesso.getTime() + 24 * 60 * 60 * 1000)
+  return giornoDi(d) === giornoDi(domani) ? `domani alle ${ora}` : `${giorno} alle ${ora}`
+}
+
+/**
+ * Alla prima in lista d'attesa, quando si libera un posto: il posto e' tenuto
+ * per lei fino alla scadenza, poi passa alla prossima.
+ */
+export function testoPostoLibero(className: string, startsAt: string, scade: string): Avviso {
   const l = parti(startsAt)
   return {
-    titolo: 'Si è liberato un posto',
-    testo: `${className}, ${l.giorno} ${l.data} alle ${l.ora}. Se lo vuoi confermalo: va a chi risponde per prima.`,
+    titolo: 'Si è liberato un posto per te',
+    testo: `${className}, ${l.giorno} ${l.data} alle ${l.ora}. Sei la prima in lista e il posto è tenuto per te fino ${entroLe(scade)}. Se non ti serve tocca «Questa volta no», così passa subito alla prossima.`,
   }
 }
 

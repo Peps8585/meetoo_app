@@ -37,6 +37,8 @@ type Riga = {
         fixed_slot_id: string | null
         response: string | null
         reminder_sent_at: string | null
+        offered_at: string | null
+        offer_expires_at: string | null
         profiles: Persona | null
       }[]
     | null
@@ -70,7 +72,7 @@ export default async function LezionePage({ params }: { params: Promise<{ id: st
       `id, starts_at, ends_at, max_spots, notes, is_cancelled, bookings_locked, instructor_id,
        classes:class_id(name, color),
        profiles:instructor_id(first_name, last_name),
-       bookings(id, client_id, status, booked_at, booked_by, presenza, fixed_slot_id, response, reminder_sent_at,
+       bookings(id, client_id, status, booked_at, booked_by, presenza, fixed_slot_id, response, reminder_sent_at, offered_at, offer_expires_at,
          profiles:client_id(first_name, last_name, avatar_url))`
     )
     .eq('id', id)
@@ -114,6 +116,8 @@ export default async function LezionePage({ params }: { params: Promise<{ id: st
       daStudio: b.booked_by === 'studio',
       presenza: b.presenza,
       prenotataIl: b.booked_at,
+      // lista d'attesa: posto tenuto per lei (offerta in corso) e fino a quando
+      offerta: b.status === 'waitlist' && b.offered_at ? b.offer_expires_at ?? 'in_arrivo' : null,
     }))
     .sort((a, b) => a.prenotataIl.localeCompare(b.prenotataIl))
 

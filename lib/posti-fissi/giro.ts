@@ -54,6 +54,33 @@ async function emailStudio(admin: Admin, studioId: string): Promise<string | nul
   return data?.email ?? null
 }
 
+/**
+ * Lista d'attesa: avvisa chi ha un posto tenuto per lei (la prima in lista per
+ * ogni posto libero). Lo usa il giro, e la pagina della risposta subito dopo un
+ * "Questa volta no", cosi' la seconda non aspetta il giro dopo.
+ */
+export async function avvisiLista(admin: Admin) {
+  const canali: ('push' | 'email' | 'nessuno')[] = []
+  const { data: lista, error } = await admin.rpc('posti_fissi_avvisi_lista')
+  if (error) throw new Error(`posti_fissi_avvisi_lista: ${error.message}`)
+  for (const r of (lista ?? []) as {
+    client_id: string
+    action_token: string
+    starts_at: string
+    class_name: string
+    offer_expires_at: string
+  }[]) {
+    const url = `${APP_URL}/presenza/${r.action_token}`
+    canali.push(
+      await avvisa(admin, r.client_id, testoPostoLibero(r.class_name, r.starts_at, r.offer_expires_at), url, {
+        primo: { href: `${url}?r=prendo`, label: 'Lo prendo' },
+        secondo: { href: `${url}?r=lascia`, label: 'Questa volta no' },
+      })
+    )
+  }
+  return canali
+}
+
 /** Il giro dei posti fissi: lo chiama /api/posti-fissi/giro ogni 10 minuti. */
 export async function giroPostiFissi() {
   const admin = createAdminClient()
@@ -120,20 +147,11 @@ export async function giroPostiFissi() {
     esito.pacchetto++
   }
 
-  // 4. posto liberato: chi e' in lista lo puo' prendere
-  const { data: lista } = await admin.rpc('posti_fissi_avvisi_lista')
-  for (const r of (lista ?? []) as {
-    client_id: string
-    action_token: string
-    starts_at: string
-    class_name: string
-  }[]) {
-    const url = `${APP_URL}/presenza/${r.action_token}`
-    conta(
-      await avvisa(admin, r.client_id, testoPostoLibero(r.class_name, r.starts_at), url, {
-        primo: { href: url, label: 'Lo prendo' },
-      })
-    )
+  // 4. lista d'attesa: offerte scadute passano avanti, poi gli avvisi alle prime in lista
+  const { error: errScad } = await admin.rpc('lista_scadenze')
+  if (errScad) throw new Error(`lista_scadenze: ${errScad.message}`)
+  for (const canale of await avvisiLista(admin)) {
+    conta(canale)
     esito.lista++
   }
 

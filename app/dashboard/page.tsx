@@ -22,6 +22,7 @@ type MiaPrenotazione = {
   action_token: string
   response: string | null
   reminder_sent_at: string | null
+  offered_at: string | null
 }
 
 type UpcomingLesson = {
@@ -88,7 +89,7 @@ export default async function DashboardPage() {
 
   const { data: rawBookings } = await supabase
     .from('bookings')
-    .select('schedule_id, status, fixed_slot_id, action_token, response, reminder_sent_at')
+    .select('schedule_id, status, fixed_slot_id, action_token, response, reminder_sent_at, offered_at')
     .eq('client_id', user.id)
     .in('status', ['confirmed', 'held', 'waitlist'])
 
@@ -370,6 +371,15 @@ function StatoPrenotazione({ b, startsAt }: { b?: MiaPrenotazione; startsAt: str
   const prima24 = new Date(startsAt).getTime() - adesso() > 24 * 60 * 60 * 1000
   const etichetta = 'font-inter font-normal text-[10px] uppercase tracking-widest mt-1'
 
+  if (b.status === 'waitlist' && b.offered_at)
+    return (
+      <Link
+        href={`/presenza/${b.action_token}`}
+        className="inline-block mt-2 font-inter font-normal uppercase tracking-widest text-[10px] px-4 py-1.5 rounded-full bg-meetoo-accent-dark text-meetoo-bg-light"
+      >
+        Posto libero per te · Rispondi
+      </Link>
+    )
   if (b.status === 'waitlist')
     return (
       <Link href={`/presenza/${b.action_token}`} className={`${etichetta} inline-block text-meetoo-accent-light`}>

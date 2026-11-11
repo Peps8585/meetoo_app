@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { Logo } from '../../Logo'
 import Scelta, { type Pulsante } from './Scelta'
+import { entroLe } from '@/lib/posti-fissi/testi'
 
 // Pagina costruita sul server a ogni richiesta: leggere l'ora qui e' voluto.
 const adesso = () => Date.now()
@@ -19,6 +20,8 @@ type Riga = {
   status: string
   response: string | null
   fixed_slot_id: string | null
+  offered_at: string | null
+  offer_expires_at: string | null
   schedules: {
     starts_at: string
     max_spots: number
@@ -51,7 +54,7 @@ export default async function PresenzaPage({
   const { data } = await admin
     .from('bookings')
     .select(
-      `id, client_id, status, response, fixed_slot_id,
+      `id, client_id, status, response, fixed_slot_id, offered_at, offer_expires_at,
        schedules:schedule_id ( starts_at, max_spots, current_bookings, is_cancelled,
          classes:class_id ( name ), profiles:instructor_id ( first_name, last_name ) )`
     )
@@ -97,16 +100,24 @@ export default async function PresenzaPage({
   } else if (passata) {
     titolo = 'Lezione già passata'
     testo = 'Questa lezione si è già tenuta.'
-  } else if (b.status === 'waitlist') {
-    const libero = (s.current_bookings ?? 0) < s.max_spots
-    titolo = libero ? 'Si è liberato un posto' : 'Sei in lista d’attesa'
-    testo = libero
-      ? 'Se lo vuoi, confermalo adesso: il posto va a chi risponde per prima e solo allora la lezione si scala dal pacchetto.'
-      : 'Il posto è già stato preso. Resti in lista: se se ne libera un altro ti avvisiamo.'
+  } else if (b.status === 'waitlist' && b.offered_at) {
+    // posto tenuto per lei: decide entro la scadenza, poi passa alla prossima
+    titolo = 'Si è liberato un posto per te'
+    testo = b.offer_expires_at
+      ? `Sei la prima in lista e il posto è tenuto per te fino ${entroLe(b.offer_expires_at)}. Se lo prendi, la lezione si scala dal tuo pacchetto. Se non ti serve, il posto passa subito alla prossima.`
+      : 'Sei la prima in lista e il posto è tenuto per te. Se lo prendi, la lezione si scala dal tuo pacchetto. Se non ti serve, il posto passa subito alla prossima.'
     pulsanti = [
-      ...(libero ? [{ risposta: 'prendo' as const, label: 'Lo prendo', principale: true }] : []),
-      { risposta: 'esci', label: 'Esci dalla lista' },
+      { risposta: 'prendo', label: 'Lo prendo', principale: r !== 'lascia' },
+      { risposta: 'lascia', label: 'Questa volta no', principale: r === 'lascia' },
     ]
+  } else if (b.status === 'waitlist') {
+    const { data: posizione } = await admin.rpc('lista_posizione', { p_booking_id: b.id })
+    titolo = 'Sei in lista d’attesa'
+    testo =
+      posizione === 1
+        ? 'Sei la prima in lista. Se si libera un posto è tenuto per te e ti avvisiamo subito: avrai mezz’ora per dire se lo prendi.'
+        : `Sei la numero ${posizione} in lista. Quando tocca a te ti avvisiamo, e avrai mezz’ora per dire se prendi il posto.`
+    pulsanti = [{ risposta: 'esci', label: 'Esci dalla lista' }]
   } else if (attiva && b.fixed_slot_id) {
     if (b.response === 'ci_sono') {
       titolo = 'Ti aspettiamo'
@@ -127,6 +138,12 @@ export default async function PresenzaPage({
     testo = 'Il posto è tuo. Ti aspettiamo in studio.'
     pulsanti = [{ risposta: 'non_vengo', label: 'Non posso più venire' }]
     nota = notaTardi
+  } else if (b.response === 'lascia' || b.response === 'scaduta') {
+    titolo = b.response === 'lascia' ? 'Posto lasciato alla prossima' : 'Il tempo per rispondere è scaduto'
+    testo =
+      b.response === 'lascia'
+        ? 'Grazie per averlo detto: il posto è passato alla prossima in lista.'
+        : 'Il posto è passato alla prossima in lista. Se ti serve ancora una lezione, guarda il palinsesto.'
   } else {
     titolo = b.response === 'non_vengo' ? 'Posto liberato' : 'Prenotazione cancellata'
     testo = b.fixed_slot_id

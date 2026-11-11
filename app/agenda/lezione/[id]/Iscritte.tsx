@@ -18,6 +18,7 @@ export type Iscritta = {
   daStudio: boolean
   presenza: 'presente' | 'assente' | null
   prenotataIl: string
+  offerta?: string | null
 }
 
 export type Cliente = { id: string; nome: string; first: string | null; last: string | null; foto: string | null }
@@ -116,7 +117,11 @@ export default function Iscritte({
             <p className="font-inter font-light text-xs text-meetoo-accent-dark/40 mt-1">
               {r.fissa
                 ? 'Posto fisso'
-                : r.stato === 'lista'
+                : r.stato === 'lista' && r.offerta
+                  ? r.offerta === 'in_arrivo'
+                    ? 'Posto tenuto per lei, l’avviso parte alle 8'
+                    : `Posto tenuto per lei, risponde entro ${quando(r.offerta)}`
+                  : r.stato === 'lista'
                   ? `In lista dal ${quando(r.prenotataIl)}`
                   : `Prenotata il ${quando(r.prenotataIl)} ${r.daStudio ? 'dallo studio' : 'dall’app'}`}
             </p>
