@@ -1307,3 +1307,23 @@ app su App Store; per ora notifiche web (su iPhone solo con l'app sulla schermat
   (admin o insegnante della lezione, colonna `presenza`, lo stato non cambia), rendi fissa. `booked_by` app/studio/fisso.
   UI: menu "..." in `/agenda/lezione/[id]`, schede Iscritte/Aggiungi, Presente/Assente in vista, il resto dietro "···".
   "Multimedia" di App Palestre (contenuto prima della lezione) mai usato da Giorgia: non rifatto.
+
+## S34 — 11 novembre 2026 · Lista d'attesa con precedenza, preparazione del rilascio
+
+Richiesta di Mattia e Giorgia dopo aver visto l'anteprima: la lista d'attesa rispetta l'ordine di iscrizione.
+- Migrazione `20261111100000_lista_precedenza.sql`: il posto liberato e' **tenuto per la prima in lista**
+  (`bookings.offered_at`, conta in `current_bookings`, nel palinsesto risulta pieno). Avviso solo a lei con
+  "Lo prendo" / "Questa volta no"; **30 minuti** per rispondere contati solo dalle 8 alle 21
+  (`_scadenza_offerta`, mai oltre le 12 ore prima della lezione). No, scadenza o uscita dalla lista: il trigger
+  `trg_lista_offerta_chiusa` libera il posto e lo offre alla prossima (`_offer_next`, uno per posto libero).
+  "Lo prendo" = `lista_rispondi` (scala con `book_lesson_for`; pacchetto che non basta = passa avanti).
+  `lista_scadenze` nel giro; dopo un no l'avviso alla prossima parte subito dalla pagina `/presenza`.
+  `lista_posizione` per "sei la numero N". Testi in `lib/posti-fissi/testi.ts`.
+- Prove: `posti_fissi.sql` **30/30**, `azioni_lezione.sql` 16/16; prova dal vivo sul dev (Bea libera, Carla
+  lascia, Anna prende e viene scalata). `e2e_book_cancel_rpc.sql` cerca un client fisso che sul dev non c'e'.
+- Rilascio preparato (insegnanti rimandate da Mattia): blocco unico per il SQL Editor di prod (pulizia yoga
+  S29 + le 4 migrazioni + job `posti-fissi-giro` con la chiave `gift_cron_secret`) e script per chiavi VAPID
+  + push `posti-fissi:main`, in `~/Desktop/MEE TOO PILATES/APP ONLINE/` (fuori dal repo). Li lancia Mattia:
+  il classificatore blocca scritture su prod e sui segreti. Copia di sicurezza nella stessa cartella.
+- Prod verificato l'11/11 prima del rilascio: helper (`get_user_*`, `refund_booking_full`, `gift_cron_secret`)
+  e tabelle toccate identici al dev; `book_lesson`/`cancel_booking` di prod = versione di main; 4 prenotazioni.
