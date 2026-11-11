@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Package, Clock, Wallet } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { utenteDaSessione } from '@/lib/supabase/utente'
 import { iniziali, linkFoto } from '@/lib/foto'
 import FotoProfilo from './FotoProfilo'
 
@@ -78,9 +79,7 @@ function fmtEuro(n: number): string {
 
 export default async function ProfiloPage() {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await utenteDaSessione(supabase)
 
   if (!user) redirect('/login')
 

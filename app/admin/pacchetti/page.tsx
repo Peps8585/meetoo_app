@@ -1,12 +1,11 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { utenteDaSessione } from '@/lib/supabase/utente'
 import PacchettiManager from './PacchettiManager'
 
 export default async function PacchettiPage() {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await utenteDaSessione(supabase)
   if (!user) redirect('/login')
 
   const { data: profile } = await supabase

@@ -90,9 +90,12 @@ export default function AgendaPage() {
   useEffect(() => {
     async function loadUser() {
       const supabase = createClient()
+      // la sessione salvata sul telefono basta a sapere chi e': nessun viaggio in piu'.
+      // I dati restano protetti dalle regole del database (RLS) a ogni lettura.
       const {
-        data: { user },
-      } = await supabase.auth.getUser()
+        data: { session },
+      } = await supabase.auth.getSession()
+      const user = session?.user
       if (!user) return
       setUserId(user.id)
       const { data: profile } = await supabase

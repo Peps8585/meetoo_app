@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { utenteDaSessione } from '@/lib/supabase/utente'
 import { linkFoto } from '@/lib/foto'
 import Iscritte, { type Cliente, type Iscritta } from './Iscritte'
 import AzioniLezione from './AzioniLezione'
@@ -59,38 +60,36 @@ const nomeDi = (p: { first_name: string | null; last_name: string | null } | nul
 export default async function LezionePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await utenteDaSessione(supabase)
   if (!user) redirect('/login')
-  const { data: io } = await supabase.from('profiles').select('role, studio_id').eq('id', user.id).single()
-  const ruolo = io?.role === 'admin' ? 'admin' : 'instructor'
-
-  const { data } = await supabase
-    .from('schedules')
-    .select(
-      `id, starts_at, ends_at, max_spots, notes, is_cancelled, bookings_locked, instructor_id,
+  // tutte le letture partono insieme: una sola attesa invece di quattro in fila.
+  // Insegnanti e clienti servono solo all'admin; si filtrano sullo studio qui.
+  const [{ data: io }, { data }, insRes, cliRes] = await Promise.all([
+    supabase.from('profiles').select('role, studio_id').eq('id', user.id).single(),
+    supabase
+      .from('schedules')
+      .select(
+        `id, starts_at, ends_at, max_spots, notes, is_cancelled, bookings_locked, instructor_id,
        classes:class_id(name, color),
        profiles:instructor_id(first_name, last_name),
        bookings(id, client_id, status, booked_at, booked_by, presenza, fixed_slot_id, response, reminder_sent_at, offered_at, offer_expires_at,
          profiles:client_id(first_name, last_name, avatar_url))`
-    )
-    .eq('id', id)
-    .maybeSingle()
+      )
+      .eq('id', id)
+      .maybeSingle(),
+    supabase.from('profiles').select('id, first_name, last_name, studio_id').eq('role', 'instructor').eq('is_active', true).order('first_name'),
+    supabase.from('profiles').select('id, first_name, last_name, avatar_url, studio_id').eq('role', 'client').order('first_name'),
+  ])
+  const ruolo = io?.role === 'admin' ? 'admin' : 'instructor'
   const s = data as unknown as Riga | null
   if (!s) notFound()
-
-  // per l'admin: insegnanti (Modifica) e clienti dello studio (Aggiungi)
-  const [insRes, cliRes] =
-    ruolo === 'admin'
-      ? await Promise.all([
-          supabase.from('profiles').select('id, first_name, last_name').eq('studio_id', io!.studio_id).eq('role', 'instructor').eq('is_active', true).order('first_name'),
-          supabase.from('profiles').select('id, first_name, last_name, avatar_url').eq('studio_id', io!.studio_id).eq('role', 'client').order('first_name'),
-        ])
-      : [{ data: [] }, { data: [] }]
+  const delloStudio = <T extends { studio_id: string | null }>(righe: T[] | null) =>
+    ruolo === 'admin' ? (righe ?? []).filter((r) => r.studio_id === io?.studio_id) : []
+  const insRighe = delloStudio(insRes.data as ({ id: string; first_name: string | null; last_name: string | null; studio_id: string | null })[] | null)
+  const cliRighe = delloStudio(cliRes.data as ({ id: string; studio_id: string | null } & Persona)[] | null)
 
   const bookings = s.bookings ?? []
-  const clientiRows = (cliRes.data ?? []) as ({ id: string } & Persona)[]
+  const clientiRows = cliRighe
   const foto = await linkFoto(supabase, [...bookings.map((b) => b.profiles?.avatar_url), ...clientiRows.map((c) => c.avatar_url)])
 
   const righe: Iscritta[] = bookings
@@ -158,7 +157,7 @@ export default async function LezionePage({ params }: { params: Promise<{ id: st
               bloccate={s.bookings_locked}
               annullata={!!s.is_cancelled}
               conIscritte={conIscritte}
-              insegnanti={((insRes.data ?? []) as { id: string; first_name: string | null; last_name: string | null }[]).map((i) => ({
+              insegnanti={insRighe.map((i) => ({
                 id: i.id,
                 nome: nomeDi(i),
               }))}

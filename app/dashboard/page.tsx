@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Calendar, User, Play } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { utenteDaSessione } from '@/lib/supabase/utente'
 import { Logo } from '../Logo'
 import DecisionCard from './DecisionCard'
 import Notifiche from './Notifiche'
@@ -61,9 +62,7 @@ function fmtTodayLong(): string {
 
 export default async function DashboardPage() {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await utenteDaSessione(supabase)
 
   if (!user) redirect('/login')
 

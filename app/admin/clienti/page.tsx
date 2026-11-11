@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { utenteDaSessione } from '@/lib/supabase/utente'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import ClientiList from './ClientiList'
 import type { ClientRow } from './ClientiList'
@@ -24,9 +25,7 @@ type RawProfile = {
 export default async function ClientiPage() {
   // Secondary guard — primary is app/admin/layout.tsx
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await utenteDaSessione(supabase)
   if (!user) redirect('/login')
 
   const { data: selfProfile } = await supabase
