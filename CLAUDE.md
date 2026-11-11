@@ -1327,3 +1327,10 @@ Richiesta di Mattia e Giorgia dopo aver visto l'anteprima: la lista d'attesa ris
   il classificatore blocca scritture su prod e sui segreti. Copia di sicurezza nella stessa cartella.
 - Prod verificato l'11/11 prima del rilascio: helper (`get_user_*`, `refund_booking_full`, `gift_cron_secret`)
   e tabelle toccate identici al dev; `book_lesson`/`cancel_booking` di prod = versione di main; 4 prenotazioni.
+- **ONLINE l'11/11/2026 alle 20.30.** Mattia ha lanciato il blocco nel SQL Editor (verifica "tutto a posto",
+  ricontrollata: tabelle, funzioni, bucket `avatars`, job `posti-fissi-giro` attivo, yoga S29 tolte, 4
+  prenotazioni intatte) e lo script dal Terminale (chiavi VAPID di prod su `meetoo-app-ntls`, push
+  `posti-fissi:main` = acaa014, deploy READY). Primo giro delle 20.30: 200 con il riepilogo JSON.
+  Nota: l'accesso della CLI Vercel scade; lo script ora fa `vercel whoami` prima, che lo rinnova.
+- Da fare: insegnanti (email, cognomi, MAM del martedi'), prima fissa segnata da Giorgia, eventuale tempo
+  diverso dai 30 minuti e frequenza dei promemoria se Giorgia li trova insistenti.
