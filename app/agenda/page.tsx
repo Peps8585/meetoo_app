@@ -280,9 +280,12 @@ export default function AgendaPage() {
                   key={s.id}
                   className="bg-white/60 backdrop-blur-sm border border-white/80 rounded-2xl shadow-sm overflow-hidden"
                 >
-                  {/* Un tocco apre la pagina della lezione con le iscritte */}
+                  {/* Un tocco apre la pagina della lezione con le iscritte.
+                      prefetch: la pagina si prepara in anticipo mentre l'elenco e' a
+                      schermo, cosi' al tocco e' gia' pronta. */}
                   <Link
                     href={`/agenda/lezione/${s.id}`}
+                    prefetch={true}
                     className="w-full text-left flex items-center gap-3 px-5 py-4 hover:bg-white/40 transition-colors"
                   >
                     {/* Color stripe */}
