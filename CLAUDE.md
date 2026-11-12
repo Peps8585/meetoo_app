@@ -1243,14 +1243,14 @@ la persona, quindi il regalo **si attiva in studio con un QR** invece di caricar
   `GIFT_SCHEDULING=on` su Vercel.
 - **SMTP custom su prod** (Resend, mittente noreply@send.meetoopilates.com) acceso da Mattia: le email di
   Supabase Auth arrivano a tutti (prova di recupero password arrivata). Redirect URL aggiunto:
-  `https://regali.meetoopilates.com/**`. Limite email Auth salito a 30/ora. Template ancora in inglese.
+  `https://regali.meetoopilates.com/**`. Limite email Auth salito a 30/ora. Template in italiano caricati su prod il 2/11 (dossier gift card; sorgente scripts/genera-email-auth.py).
 - Giorgia attiva i regali con l'account admin `francescato_giorgia@...`; l'account istruttrice
   `giorgia_francescato@...` (8 lezioni assegnate) non e' mai stato usato: doppione da decidere prima del lancio.
 
 ### Aperto
 - Riaprire il QR il giorno dopo: l'app non ha piu' il middleware che rinnova la sessione (tolto a luglio),
   rischio "Invalid Refresh Token" e rientro forzato per chi attiva.
-- Satispay su Stripe da verificare, rimborsi Stripe non collegati all'app, template email Auth in italiano.
+- Satispay su Stripe da verificare, rimborsi Stripe non collegati all'app (template email Auth in italiano: FATTO il 2/11).
 
 ## S32 — 4 novembre 2026 · Macchine il mercoledì alle 8.30
 
