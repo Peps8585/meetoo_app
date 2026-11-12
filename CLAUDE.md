@@ -1349,3 +1349,14 @@ Richiesta di Giorgia via Mattia. Anteprima disegnata: `~/Desktop/MEE TOO PILATES
    verifica attivita', collegamento numero dal suo telefono, approvazione del testo tipo, pagamento. Il Facebook
    di Mattia e' bloccato dal 2FA australiano: i passaggi Meta li fa Giorgia. Coesistenza: niente liste
    broadcast/gruppi sul numero, app da aprire ogni 14 giorni (fonti di terzi, verificare sui documenti Meta).
+
+### Lista di Mattia del 12/11 (da tenere a mente, dopo S35)
+- Collegamento con AI per gestione e automazione di messaggi, CRM, compleanni, promozioni, contenuti nuovi.
+- Pagamento con bonifico (IBAN) come modalita' di pagamento.
+- Palinsesto come centro di tutto: tocco sulla lezione = modifica, opzioni, cancellazioni, presenze/assenze,
+  aggiungere/togliere lezioni, **sostituzioni**; ogni modifica deve aggiornare in automatico la sezione **conti**
+  (i conti sono della scrivania Studio e Conti: ogni cambio dalla loro parte va concordato con loro).
+- Barra menu fissa in basso nell'app cliente con icone e scritte: Home, Palinsesto, Le mie prenotazioni, Eventi
+  (i video restano un'opzione nella home).
+- Messaggistica interna con **risposte delle clienti dall'app** (supera la scelta "solo dallo studio" di S35).
+- Dalla lezione: messaggio di gruppo alle partecipanti **su WhatsApp**.
