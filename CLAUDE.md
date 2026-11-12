@@ -1334,3 +1334,18 @@ Richiesta di Mattia e Giorgia dopo aver visto l'anteprima: la lista d'attesa ris
   Nota: l'accesso della CLI Vercel scade; lo script ora fa `vercel whoami` prima, che lo rinnova.
 - Da fare: insegnanti (email, cognomi, MAM del martedi'), prima fissa segnata da Giorgia, eventuale tempo
   diverso dai 30 minuti e frequenza dei promemoria se Giorgia li trova insistenti.
+
+## S35 — piano deciso il 12/11/2026, costruzione da venerdì 13/11 dopo le 18 (consumi del piano)
+
+Richiesta di Giorgia via Mattia. Anteprima disegnata: `~/Desktop/MEE TOO PILATES/APP ANTEPRIME/bacheca/`.
+1. **Bacheca eventi**: Giorgia (o noi) crea un post con foto, titolo, data, descrizione; compare in cima alla
+   home delle clienti e sparisce da solo dopo la data. Ogni evento ha una **pagina pubblica** (link condivisibile).
+2. **Messaggi dello studio**: a tutte / alle iscritte di una lezione / a una cliente; notifica sul telefono +
+   riquadro in home; Giorgia vede chi ha letto. **Le clienti non rispondono nell'app** (rispondono su WhatsApp).
+3. **Avviso evento "parte tutto dall'app"** (scelta di Mattia 11.24, no copia/incolla): quando Giorgia decide,
+   post + notifica + email + **WhatsApp automatico** con link, via WhatsApp Cloud API in coesistenza sul numero
+   dello studio 389 2952958. Costo ~0,066-0,08 euro a messaggio marketing in Italia (listino da rileggere
+   all'attivazione). Solo a chi ha dato il consenso (casella nell'app). Prerequisiti Meta da fare con Giorgia:
+   verifica attivita', collegamento numero dal suo telefono, approvazione del testo tipo, pagamento. Il Facebook
+   di Mattia e' bloccato dal 2FA australiano: i passaggi Meta li fa Giorgia. Coesistenza: niente liste
+   broadcast/gruppi sul numero, app da aprire ogni 14 giorni (fonti di terzi, verificare sui documenti Meta).
