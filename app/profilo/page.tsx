@@ -5,12 +5,14 @@ import { createClient } from '@/lib/supabase/server'
 import { utenteDaSessione } from '@/lib/supabase/utente'
 import { iniziali, linkFoto } from '@/lib/foto'
 import FotoProfilo from './FotoProfilo'
+import ConsensoWhatsApp from './ConsensoWhatsApp'
 
 type Profile = {
   first_name: string | null
   last_name: string | null
   phone: string | null
   avatar_url: string | null
+  whatsapp_eventi: boolean | null
 }
 
 type ClientPackage = {
@@ -86,7 +88,7 @@ export default async function ProfiloPage() {
   // ── Dati personali ──────────────────────────────────────────────────
   const { data: profileData } = await supabase
     .from('profiles')
-    .select('first_name, last_name, phone, avatar_url')
+    .select('first_name, last_name, phone, avatar_url, whatsapp_eventi')
     .eq('id', user.id)
     .single()
 
@@ -219,6 +221,20 @@ export default async function ProfiloPage() {
                 Modifica dati
               </button>
             </div>
+          </div>
+        </section>
+
+        {/* ── Avvisi su WhatsApp ── */}
+        <section className="mb-8">
+          <h2 className="font-inter font-extrabold uppercase tracking-widest text-[11px] text-meetoo-accent-dark mb-4">
+            Avvisi dello studio
+          </h2>
+          <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-sm border border-white/80 px-6 sm:px-8 py-6">
+            <ConsensoWhatsApp
+              userId={user.id}
+              attivo={!!profile?.whatsapp_eventi}
+              telefono={profile?.phone ?? null}
+            />
           </div>
         </section>
 

@@ -190,6 +190,15 @@ export default async function LezionePage({ params }: { params: Promise<{ id: st
           </div>
         </div>
 
+        {ruolo === 'admin' && dentro > 0 && !s.is_cancelled && (
+          <Link
+            href={`/admin/messaggi?lezione=${s.id}`}
+            className="mb-6 block rounded-full border border-meetoo-accent-dark/30 py-3 text-center font-inter font-normal uppercase tracking-widest text-[11px] text-meetoo-accent-dark hover:bg-meetoo-accent-dark hover:text-meetoo-bg-light transition-colors"
+          >
+            Scrivi alle iscritte
+          </Link>
+        )}
+
         <Iscritte scheduleId={s.id} righe={righe} clienti={clienti} ruolo={ruolo} passata={passata || !!s.is_cancelled} />
       </div>
     </main>

@@ -12,6 +12,8 @@ const links = [
   { href: '/admin/lezioni', label: 'Tipologie Lezioni' },
   { href: '/admin/palinsesto', label: 'Palinsesto' },
   { href: '/agenda', label: 'Agenda' },
+  { href: '/admin/eventi', label: 'Eventi' },
+  { href: '/admin/messaggi', label: 'Messaggi' },
   { href: '/admin/clienti', label: 'Clienti' },
   { href: '/admin/pacchetti', label: 'Pacchetti' },
   { href: '/admin/gift-card', label: 'Gift card' },

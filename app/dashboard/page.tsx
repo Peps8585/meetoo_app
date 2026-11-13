@@ -1,11 +1,13 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Calendar, User, Play } from 'lucide-react'
+import { Calendar, User, Play, MessageCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { utenteDaSessione } from '@/lib/supabase/utente'
 import { Logo } from '../Logo'
 import DecisionCard from './DecisionCard'
 import Notifiche from './Notifiche'
+import { eventiInArrivo } from '@/lib/eventi'
+import CartaEvento from '@/components/eventi/CartaEvento'
 
 // Pagina costruita sul server a ogni richiesta: leggere l'ora qui e' voluto.
 const adesso = () => Date.now()
@@ -121,6 +123,20 @@ export default async function DashboardPage() {
     upcoming = (data as unknown as UpcomingLesson[]) ?? []
   }
 
+  // Bacheca: i prossimi eventi dello studio (spariscono da soli quando sono passati)
+  const eventi = await eventiInArrivo(supabase, undefined, 3)
+
+  // Messaggi dallo studio non ancora letti: l'ultimo si vede in cima alla home
+  const { data: nonLetti } = await supabase
+    .from('messaggi')
+    .select('id, testo, created_at')
+    .eq('client_id', user.id)
+    .eq('da', 'studio')
+    .is('letto_at', null)
+    .order('created_at', { ascending: false })
+    .limit(5)
+  const daLeggere = (nonLetti ?? []) as { id: string; testo: string; created_at: string }[]
+
   // Fetch pending subthreshold decision (if any)
   const { data: decisionRow } = await supabase
     .from('subthreshold_decisions')
@@ -227,6 +243,53 @@ export default async function DashboardPage() {
 
         <Notifiche />
 
+        {/* ── Messaggi dallo studio da leggere ── */}
+        {daLeggere.length > 0 && (
+          <section className="mb-8">
+            <h3 className="font-inter font-extrabold uppercase tracking-widest text-[11px] text-meetoo-accent-dark mb-4">
+              Messaggi dallo studio
+            </h3>
+            <Link
+              href="/messaggi"
+              className="block bg-white/60 backdrop-blur-sm rounded-2xl border border-white/80 border-l-4 border-l-meetoo-bg-dark px-5 py-4 shadow-sm"
+            >
+              <p className="flex items-center gap-2 font-inter font-normal text-[10px] uppercase tracking-[0.2em] text-meetoo-accent-dark/50">
+                <span aria-hidden className="h-2 w-2 rounded-full bg-meetoo-accent-light" />
+                {fmtDay(daLeggere[0].created_at)}, {fmtTime(daLeggere[0].created_at)}
+                {daLeggere.length > 1 ? ` · altri ${daLeggere.length - 1}` : ''}
+              </p>
+              <p className="mt-1.5 whitespace-pre-line line-clamp-4 font-inter font-light text-[15px] leading-relaxed text-meetoo-accent-dark">
+                {daLeggere[0].testo}
+              </p>
+              <p className="mt-2 font-inter font-normal text-[10px] uppercase tracking-widest text-meetoo-accent-dark/50">
+                Leggi e rispondi →
+              </p>
+            </Link>
+          </section>
+        )}
+
+        {/* ── In studio: la bacheca degli eventi ── */}
+        {eventi.length > 0 && (
+          <section className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-inter font-extrabold uppercase tracking-widest text-[11px] text-meetoo-accent-dark">
+                In studio
+              </h3>
+              <Link
+                href="/eventi"
+                className="font-inter font-light text-xs text-meetoo-accent-dark/45 hover:text-meetoo-accent-dark transition-colors"
+              >
+                Tutti gli eventi →
+              </Link>
+            </div>
+            <div className="space-y-4">
+              {eventi.map((e) => (
+                <CartaEvento key={e.id} evento={e} />
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* ── Le tue prossime lezioni ── */}
         <section className="mb-8">
           <div className="flex items-center justify-between mb-4">
@@ -310,7 +373,22 @@ export default async function DashboardPage() {
             Accesso rapido
           </h3>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
+            <Link
+              href="/messaggi"
+              className="group bg-white/60 backdrop-blur-sm rounded-2xl border border-white/80 px-5 py-7 flex flex-col justify-between gap-6 hover:bg-white/80 transition-colors shadow-sm"
+            >
+              <MessageCircle className="w-6 h-6 text-[#2c2c2c]" />
+              <div>
+                <p className="font-inter font-normal uppercase tracking-widest text-sm text-meetoo-accent-dark">
+                  Messaggi
+                </p>
+                <p className="font-inter font-light text-xs text-meetoo-accent-dark/40 mt-0.5">
+                  Scrivi allo studio
+                </p>
+              </div>
+            </Link>
+
             <Link
               href="/palinsesto"
               className="group bg-white/60 backdrop-blur-sm rounded-2xl border border-white/80 px-5 py-7 flex flex-col justify-between gap-6 hover:bg-white/80 transition-colors shadow-sm"
