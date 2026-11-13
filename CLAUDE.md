@@ -1350,6 +1350,40 @@ Richiesta di Giorgia via Mattia. Anteprima disegnata: `~/Desktop/MEE TOO PILATES
    di Mattia e' bloccato dal 2FA australiano: i passaggi Meta li fa Giorgia. Coesistenza: niente liste
    broadcast/gruppi sul numero, app da aprire ogni 14 giorni (fonti di terzi, verificare sui documenti Meta).
 
+### S35, costruzione del 13/11/2026 sera (ramo `posti-fissi`, NON online, solo database di prova)
+- **Barra in basso** per le clienti (`components/BarraCliente.tsx`), `/prenotazioni`. Commit 125212a.
+- **Bacheca eventi** (56d605a). Migrazione `20261113100000_bacheca_eventi.sql`: tabella `eventi`, spazio foto
+  pubblico `eventi` (`<studio_id>/<file>`). `/admin/eventi` (`EventiManager`: foto ridotta a 1600 px nel browser,
+  bozza o in bacheca, avviso si'/no), `lib/eventi.ts` (un evento resta finche' non e' finito: `fine`, o 2 ore
+  dall'inizio), carta in home e in `/eventi`, pagina pubblica `/evento/[id]` (service role, solo pubblicati,
+  Open Graph). Avviso `lib/eventi-avviso.ts`: presa in carico su `avviso_at` (uno solo per evento), notifica o
+  email (`avvisa` dei posti fissi), esito in `avviso_esito`.
+- **Messaggi** (d849bf8). Migrazione `20261113110000_messaggi.sql`: un filo per cliente (`messaggi`), invii dello
+  studio (`messaggi_invii`); si scrive solo dalle funzioni `studio_invia_messaggio` (tutte / lezione / cliente),
+  `messaggio_rispondi` (max 20 l'ora), `messaggi_segna_letti`, `studio_segna_letti`; elenchi `studio_fili_messaggi`
+  e `studio_invii_messaggi`. Decisione di Mattia del 12/11: **le clienti rispondono dall'app**. App: `/messaggi`
+  (cliente), `/admin/messaggi` e `/admin/messaggi/[clientId]` (studio), riquadro in home per i non letti, pulsante
+  "Scrivi alle iscritte" nella lezione. Risposta della cliente: notifica agli admin, altrimenti email allo studio.
+- **WhatsApp** pronto ma spento: `lib/whatsapp/send.ts` (Cloud API, testi tipo `evento` e `lezione`), acceso solo
+  con `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID`, `WHATSAPP_MODELLO_EVENTO`/`_LEZIONE`; `WHATSAPP_PROVA=1` scrive solo
+  nel registro `whatsapp_invii`. Consenso: `profiles.whatsapp_eventi` (casella nel profilo, con il numero).
+  Segnaposto dei testi tipo: evento {{1}} nome, {{2}} titolo, {{3}} quando, {{4}} link; lezione {{1}} nome, {{2}} testo.
+  Versione dell'API e listino da rileggere sui documenti Meta all'attivazione.
+- **Falla chiusa sul dev** (7f67703), `20261113120000_profili_campi_protetti.sql`: la regola "Utente aggiorna il
+  proprio profilo" lasciava cambiare anche `role`/`studio_id`/`is_active` (verificato su dev e prod il 13/11:
+  nessun trigger). Ora trigger che lo rifiuta per `authenticated`/`anon`. **In produzione manca ancora**: va col
+  rilascio di S35, o prima se Mattia dice si'. Nota a parte: `/admin/istruttori` modifica i profili altrui dal
+  browser e la regola non lo permette (0 righe, senza errore): da sistemare con una funzione o la service role.
+- Prove sul dev da telefono finto (`APP ANTEPRIME/strumenti/guida-app.mjs`, passi in JSON): post con foto, home,
+  eventi, pagina pubblica senza account, filo nei due sensi, messaggio alla lezione con WhatsApp di prova, letto.
+  Prova di sicurezza con l'account di Anna: ruolo/studio/stato rifiutati, telefono accettato, niente fili altrui.
+  **Email spente durante le prove** (`RESEND_API_KEY="" next start`): sul dev c'e' un indirizzo di una persona vera
+  (Silvia), un "avvisa tutte" le arriverebbe. Schermate in `APP ANTEPRIME/bacheca/prova-13-11/`.
+- Il classificatore blocca `supabase db query -f` di una migrazione anche sul dev: le applica Mattia con
+  `bash scripts/applica-su-prova.sh <file>` (si ferma se il repo non e' collegato al dev, esito in `_out/`).
+- Rilascio preparato, non lanciato: `~/Desktop/MEE TOO PILATES/APP ONLINE/3-bacheca-messaggi-incolla-nel-sql-editor.sql`
+  (le 3 migrazioni in un blocco con verifica). Poi push `posti-fissi:main`. Serve il si' di Mattia.
+
 ### Lista di Mattia del 12/11 (da tenere a mente, dopo S35)
 - Collegamento con AI per gestione e automazione di messaggi, CRM, compleanni, promozioni, contenuti nuovi.
 - Pagamento con bonifico (IBAN) come modalita' di pagamento.
