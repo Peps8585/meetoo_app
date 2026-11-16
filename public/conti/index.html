@@ -430,7 +430,7 @@ function esempio(){
   E.slot['Mar|19.00'].comp={singola:1,p5:0,p10:2,p15:0,p20:1}; E.slot['Mar|19.00'].presenze=4;
   return E;
 }
-let S=DEFAULT(); ricalcolaPAL(); let CODICE=null; let RUOLO='titolare'; let IO=null; let VERI=null; let TIMER=null; let IN_ATTESA=false; let ULTIMO=null;
+let S=DEFAULT(); ricalcolaPAL(); let CODICE=null; let RUOLO='titolare'; let IO=null; let VERI=null; let TIMER=null; let IN_ATTESA=false; let ULTIMO=null; let ECC_APP={}; // sostituzioni e saltate lette dall'app (solo dalla data di partenza decisa)
 const SUPA={url:'https://lcyexugqinabjoinrsku.supabase.co',key:'sb_publishable_NPC1pH54XM8b8RBvCeZOeQ_Mn4AlZhX',id:'meetoo'};
 const CODICE_KEY='meetoo-conti-codice';
 const APP=new URLSearchParams(location.search).get('app')==='1'; let APP_TOKEN=null;
@@ -439,7 +439,7 @@ async function rpc(fn,args,keepalive){ if(APP_TOKEN){ fn=FN_ADMIN[fn]||fn; args=
   const r=await fetch(`${SUPA.url}/rest/v1/rpc/${fn}`,{method:'POST',keepalive:!!keepalive,headers:{'Content-Type':'application/json','apikey':SUPA.key,'Authorization':'Bearer '+(APP_TOKEN||SUPA.key)},body:JSON.stringify(args)}); if(!r.ok) throw new Error('http '+r.status); return r.json(); }
 async function entraAdmin(){ const out=$('#c-app'); try{ const r=await rpc('conti_entra_admin',{p_id:SUPA.id});
     if(!r.ok){ out.textContent=r.errore==='non_admin'?'Questa sezione è riservata all’amministrazione dello studio.':('Errore: '+r.errore); return; }
-    RUOLO='titolare'; ULTIMO=r.aggiornato_il; VERI=null;
+    RUOLO='titolare'; ULTIMO=r.aggiornato_il; VERI=null; ECC_APP=r.ecc_app||{};
     if(r.dati&&typeof r.dati==='object'&&Array.isArray(r.dati.spese)){ S=Object.assign(DEFAULT(),r.dati); S.esempio=false; } else S=DEFAULT();
     $('#cancello').hidden=true; indicatore(ULTIMO?'Salvato alle '+ora(ULTIMO):'',true); render(); }
   catch(e){ out.textContent='Non riesco a collegarmi. Ricarica la pagina.'; } }
@@ -462,7 +462,7 @@ function mostraCancello(msg){ const c=$('#cancello'); c.hidden=false; $('#c-msg'
 async function entra(codice,persistente,silenzioso){ codice=(codice||'').trim(); if(!codice){ mostraCancello('Scrivi il codice.'); return; } $('#c-entra').disabled=true; if(!silenzioso) $('#c-msg').textContent='Un attimo…';
   try{ const r=await rpc('conti_entra',{p_id:SUPA.id,p_codice:codice});
     if(!r.ok){ if(r.errore==='codice') dimenticaCodice(); mostraCancello(silenzioso&&r.errore==='codice'?'':(MSG[r.errore]||('Errore: '+r.errore))); return; }
-    CODICE=codice; ricordaCodice(codice,persistente); ULTIMO=r.aggiornato_il; VERI=null;
+    CODICE=codice; ricordaCodice(codice,persistente); ULTIMO=r.aggiornato_il; VERI=null; ECC_APP=r.ecc_app||{};
     if(r.ruolo==='istruttore'){ RUOLO='istruttore'; IO=r; S=DEFAULT(); S.insegnanti=[r.insegnante]; S.slot=r.slot||{}; S.extra=r.extra||[]; S.rimosse=r.rimosse||[]; S.eccezioni=r.eccezioni||{}; S.mix=Object.assign(S.mix,r.mix||{});
       S.chiusure={}; for(const ym in (r.chiusure||{})){ const c=r.chiusure[ym]; S.chiusure[ym]={chiuso:!!c.chiuso,lezioni:c.lezioni!=null?{[r.insegnante.id]:c.lezioni}:{},importi:c.importo!=null?{[r.insegnante.id]:c.importo}:{},riepilogo:c.riepilogo?{perIns:{[r.insegnante.id]:c.riepilogo},chiusoIl:c.chiusoIl}:null}; }
       document.body.classList.add('istruttore'); $('#avvisi').innerHTML=''; $('#cancello').hidden=true; $('#c-codice').value=''; ricalcolaPAL(); renderIstruttore(); return; }
@@ -572,8 +572,8 @@ function renderOggi(){
   const ls=gsel?PAL.filter(l=>l.g===gsel&&attiva(l)):[];
   h+=`<div><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px"><h2>Le lezioni di ${etic}</h2><input type="date" value="${dsel}" data-scegli-giorno="1" aria-label="Scegli il giorno" style="width:auto;min-height:40px;padding:4px 8px"></div>
     <p class="nota" style="margin-bottom:8px">Se una lezione è saltata o l’ha tenuta un’altra insegnante, segnalo qui: la chiusura del mese ne tiene conto da sola.</p>
-    <div class="giorno">${gsel?(ls.map(l=>{ const e=eccDi(dsel,key(l)); const ins=insDi(l); const salt=!!(e&&e.tipo==='saltata'); const sel=e&&e.tipo==='sostituita'?e.ins:(ins?ins.id:'');
-      return `<div class="lezecc ${e?'conecc':''}">${cardLez(l,dsel)}<div class="ecc"><button class="dicui ${salt?'on':''}" data-az="ecc-salta" data-data="${dsel}" data-k="${esc(key(l))}" aria-pressed="${salt}">${salt?'Saltata ✓':'Saltata'}</button><label class="piccolo muto">tenuta da <select data-ecc="sost" data-data="${dsel}" data-k="${esc(key(l))}" ${salt?'disabled':''} aria-label="Tenuta da"><option value="" ${sel===''?'selected':''}>da assegnare</option>${S.insegnanti.map(i=>`<option value="${esc(i.id)}" ${sel===i.id?'selected':''}>${esc(i.nome)}</option>`).join('')}</select></label>${e&&e.tipo==='sostituita'?'<span class="piccolo" style="color:var(--att)">sostituzione segnata</span>':''}</div></div>`; }).join('')||'<p class="nota">Nessuna lezione in palinsesto.</p>'):'<p class="nota">Domenica: studio chiuso.</p>'}</div></div>`;
+    <div class="giorno">${gsel?(ls.map(l=>{ const e=eccDi(dsel,key(l)); const dApp=!!appDi(dsel,key(l)); const ins=insDi(l); const salt=!!(e&&e.tipo==='saltata'); const sel=e&&e.tipo==='sostituita'?e.ins:(ins?ins.id:'');
+      return `<div class="lezecc ${e?'conecc':''}">${cardLez(l,dsel)}<div class="ecc"><button class="dicui ${salt?'on':''}" data-az="ecc-salta" data-data="${dsel}" data-k="${esc(key(l))}" aria-pressed="${salt}" ${dApp?'disabled':''}>${salt?'Saltata ✓':'Saltata'}</button><label class="piccolo muto">tenuta da <select data-ecc="sost" data-data="${dsel}" data-k="${esc(key(l))}" ${(salt||dApp)?'disabled':''} aria-label="Tenuta da"><option value="" ${sel===''?'selected':''}>da assegnare</option>${S.insegnanti.map(i=>`<option value="${esc(i.id)}" ${sel===i.id?'selected':''}>${esc(i.nome)}</option>`).join('')}</select></label>${e&&e.tipo==='sostituita'?'<span class="piccolo" style="color:var(--att)">sostituzione segnata</span>':''}${dApp?'<span class="piccolo muto">segnata dall’app</span>':''}</div></div>`; }).join('')||'<p class="nota">Nessuna lezione in palinsesto.</p>'):'<p class="nota">Domenica: studio chiuso.</p>'}</div></div>`;
   el.innerHTML=h;
 }
 function renderSettimana(){
@@ -633,9 +633,9 @@ function apriDettaglio(k,data){
   const l=PAL.find(x=>key(x)===k); if(!l) return;
   const dlg=$('#dettaglio'); dlg.dataset.k=k; if(data) dlg.dataset.data=data; else delete dlg.dataset.data; dlg.innerHTML=htmlDettaglio(l,data||null); if(!dlg.open) dlg.showModal();
 }
-function bloccoEcc(l,data){ const e=eccDi(data,key(l)); const ins=insDi(l); const salt=!!(e&&e.tipo==='saltata'); const sel=e&&e.tipo==='sostituita'?e.ins:(ins?ins.id:'');
+function bloccoEcc(l,data){ const e=eccDi(data,key(l)); const dApp=!!appDi(data,key(l)); const ins=insDi(l); const salt=!!(e&&e.tipo==='saltata'); const sel=e&&e.tipo==='sostituita'?e.ins:(ins?ins.id:'');
   const quando=new Date(data+'T12:00:00').toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'});
-  return `<div class="campo" style="border-top:1px solid var(--bordo);padding-top:10px"><label>Questa lezione, ${quando}</label><div class="ecc" style="padding:0"><button class="dicui ${salt?'on':''}" data-az="ecc-salta" data-data="${data}" data-k="${esc(key(l))}" aria-pressed="${salt}">${salt?'Saltata ✓':'Saltata'}</button><label class="piccolo muto">tenuta da <select data-ecc="sost" data-data="${data}" data-k="${esc(key(l))}" ${salt?'disabled':''} aria-label="Tenuta da"><option value="" ${sel===''?'selected':''}>da assegnare</option>${S.insegnanti.map(i=>`<option value="${esc(i.id)}" ${sel===i.id?'selected':''}>${esc(i.nome)}</option>`).join('')}</select></label>${e&&e.tipo==='sostituita'?'<span class="piccolo" style="color:var(--att)">sostituzione segnata</span>':''}</div><span class="piccolo muto">Vale solo per questo giorno e finisce nella chiusura del mese.</span></div>`; }
+  return `<div class="campo" style="border-top:1px solid var(--bordo);padding-top:10px"><label>Questa lezione, ${quando}</label><div class="ecc" style="padding:0"><button class="dicui ${salt?'on':''}" data-az="ecc-salta" data-data="${data}" data-k="${esc(key(l))}" aria-pressed="${salt}" ${dApp?'disabled':''}>${salt?'Saltata ✓':'Saltata'}</button><label class="piccolo muto">tenuta da <select data-ecc="sost" data-data="${data}" data-k="${esc(key(l))}" ${(salt||dApp)?'disabled':''} aria-label="Tenuta da"><option value="" ${sel===''?'selected':''}>da assegnare</option>${S.insegnanti.map(i=>`<option value="${esc(i.id)}" ${sel===i.id?'selected':''}>${esc(i.nome)}</option>`).join('')}</select></label>${e&&e.tipo==='sostituita'?'<span class="piccolo" style="color:var(--att)">sostituzione segnata</span>':''}${dApp?'<span class="piccolo muto">segnata dall’app</span>':''}</div><span class="piccolo muto">Vale solo per questo giorno e finisce nella chiusura del mese.</span></div>`; }
 function htmlDettaglio(l,data){
   const sl=S.slot[key(l)]||{}; const s=statoDi(l); const ins=insDi(l); const pm=prezzoMedioLez(l); const qf=quotaFissa(); const pronto=datiPronti();
   const cd=compDi(l); const n=presenzeDi(l); const c=n!=null?conto(l,n):null; const pz=DISC[l.disc].prezzi;
@@ -826,7 +826,8 @@ function occorrenze(ym){ const [a,m]=ym.split('-').map(Number); const c={Lun:0,M
 function aliquotaTasse(){ const F=S.fisco; if(F.modo==='forfettario'){ const c=num(F.coeff)/100, k=num(F.contributi)/100, i=num(F.imposta)/100; return {suIncasso:true, pct:c*k+c*(1-k)*i}; } return {suIncasso:false, pct:num(F.percentuale)/100}; }
 const INIZIO_PALINSESTO='2026-09-07';
 const oggiISO=()=>{ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
-const eccDi=(d,k)=>(S.eccezioni&&S.eccezioni[d]&&S.eccezioni[d][k])||null;
+const appDi=(d,k)=>(ECC_APP&&ECC_APP[d]&&ECC_APP[d][k])||null;
+const eccDi=(d,k)=>{ const a=appDi(d,k); if(a) return a.tipo==='regolare'?null:a; return (S.eccezioni&&S.eccezioni[d]&&S.eccezioni[d][k])||null; };
 function setEcc(d,k,v){ S.eccezioni=S.eccezioni||{}; if(v){ (S.eccezioni[d]=S.eccezioni[d]||{})[k]=v; } else if(S.eccezioni[d]){ delete S.eccezioni[d][k]; if(!Object.keys(S.eccezioni[d]).length) delete S.eccezioni[d]; } }
 const dataBreve=ds=>new Date(ds+'T12:00:00').toLocaleDateString('it-IT',{weekday:'short',day:'numeric'});
 function stimaMese(ym){ const [a,m]=ym.split('-').map(Number); const occ=occorrenze(ym); const perIns={}; let guadagno=0, lezTot=0; const ecc=[]; const mensili=new Set();
@@ -863,7 +864,7 @@ function renderMese(){
     ${k.righe.map(r=>`<div class="insriga"><span><b>${esc(r.ins.nome)}</b><small>${descIns(r.ins)}</small></span><input type="number" min="0" step="1" inputmode="numeric" value="${r.n}" data-k="chiusure/${ym}/lezioni/${esc(r.ins.id)}" data-tipo="num" aria-label="Lezioni di ${esc(r.ins.nome)}" ${chiuso?'disabled':''}><input type="number" min="0" step="1" inputmode="decimal" style="${r.override?'border-color:var(--att)':''}" value="${Math.round(r.imp)}" data-k="chiusure/${ym}/importi/${esc(r.ins.id)}" data-tipo="num" aria-label="Importo per ${esc(r.ins.nome)}" ${chiuso?'disabled':''}></div>`).join('')}
     ${k.tit?`<div class="insriga"><span class="muto"><b>${esc(k.tit.nome)} (tu)</b><small>le tue lezioni non si bonificano qui</small></span><input type="number" min="0" step="1" inputmode="numeric" value="${k.lezTit}" data-k="chiusure/${ym}/lezioni/${esc(k.tit.id)}" data-tipo="num" aria-label="Lezioni tue" ${chiuso?'disabled':''}><span class="muto" style="text-align:right">–</span></div>`:''}
     <div class="insriga tot"><span>Totale insegnanti</span><span></span><span class="num">${eur(k.insTot)}</span></div></div>
-  <div class="blocco"><h2>Lezioni saltate e sostituzioni di ${titolo}</h2>${k.st.ecc.length?`<div class="conto">${k.st.ecc.map(x=>`<div class="r"><span>${dataBreve(x.data)} · ${x.l.ora} ${esc(x.l.nome)}<small>${x.e.tipo==='saltata'?'saltata':'tenuta da '+esc((S.insegnanti.find(i=>i.id===x.e.ins)||{}).nome||'?')+(insDi(x.l)?' invece di '+esc(insDi(x.l).nome):'')}</small></span><span class="v"><button class="dicui" data-az="ecc-togli" data-data="${x.data}" data-k="${esc(x.k)}" ${chiuso?'disabled':''}>togli</button></span></div>`).join('')}</div>`:`<p class="nota">Nessuna segnalata. Si segnano dalla schermata Oggi, giorno per giorno.</p>`}</div>
+  <div class="blocco"><h2>Lezioni saltate e sostituzioni di ${titolo}</h2>${k.st.ecc.length?`<div class="conto">${k.st.ecc.map(x=>`<div class="r"><span>${dataBreve(x.data)} · ${x.l.ora} ${esc(x.l.nome)}<small>${x.e.tipo==='saltata'?'saltata':'tenuta da '+esc((S.insegnanti.find(i=>i.id===x.e.ins)||{}).nome||'?')+(insDi(x.l)?' invece di '+esc(insDi(x.l).nome):'')}</small></span><span class="v"><button class="dicui" data-az="ecc-togli" data-data="${x.data}" data-k="${esc(x.k)}" ${(chiuso||x.e.app)?'disabled':''}>${x.e.app?'dall’app':'togli'}</button></span></div>`).join('')}</div>`:`<p class="nota">Nessuna segnalata. Si segnano dalla schermata Oggi, giorno per giorno.</p>`}</div>
   <div class="blocco"><h2>3. Spese di ${titolo}</h2>
     <div class="riga"><span>Spese fisse <small class="muto" style="display:block">da “I tuoi dati”</small></span><span class="num" style="text-align:right">${eur(k.fisse)}</span></div>
     ${(C.spese||[]).map((s,i)=>`<div class="riga tre" style="grid-template-columns:1fr 130px 36px"><input type="text" value="${esc(s.voce)}" placeholder="spesa straordinaria" data-k="chiusure/${ym}/spese/${i}/voce" data-tipo="str" aria-label="Voce" ${chiuso?'disabled':''}><input type="number" min="0" step="1" inputmode="decimal" value="${s.importo??''}" placeholder="€" data-k="chiusure/${ym}/spese/${i}/importo" data-tipo="num" aria-label="Importo" ${chiuso?'disabled':''}><button class="x" data-az="togli-spesa-mese" data-i="${i}" aria-label="Togli" ${chiuso?'disabled':''}>×</button></div>`).join('')}
@@ -998,7 +999,7 @@ document.addEventListener('input',e=>{ const el=e.target;
 document.addEventListener('change',e=>{ const el=e.target; if(el.dataset.sim) return; if(el.dataset.mese){ meseSel=el.value||meseSel; renderMese(); return; }
   if(el.dataset.scegliGiorno){ if(el.value) dataSel=el.value; renderOggi(); return; }
   if(el.dataset.meseIns){ if(el.value) meseIns=el.value; renderIstruttore(); return; }
-  if(el.dataset.ecc){ const d=el.dataset.data,k=el.dataset.k; const ass=(S.slot[k]||{}).ins||''; const v=el.value; setEcc(d,k,(v===ass)?null:{tipo:'sostituita',ins:v}); salva(); dopoEcc(); return; }
+  if(el.dataset.ecc){ const d=el.dataset.data,k=el.dataset.k; if(appDi(d,k)) return; const ass=(S.slot[k]||{}).ins||''; const v=el.value; setEcc(d,k,(v===ass)?null:{tipo:'sostituita',ins:v}); salva(); dopoEcc(); return; }
   if(!el.dataset.k) return;
   setPath(el.dataset.k,leggi(el)); const mk=el.dataset.k.match(/^chiusure\/([^/]+)\/lezioni\/(.+)$/); if(mk&&S.chiusure[mk[1]]&&S.chiusure[mk[1]].importi) delete S.chiusure[mk[1]].importi[mk[2]]; salva();
   const dlg=$('#dettaglio'); if(dlg.open&&dlg.contains(el)){ const l=PAL.find(x=>key(x)===dlg.dataset.k); const f=document.activeElement&&document.activeElement.id; dlg.innerHTML=htmlDettaglio(l); if(f){const nf=$('#'+f); if(nf&&nf.tagName!=='INPUT') nf.focus();} render(); return; }
@@ -1023,8 +1024,8 @@ document.addEventListener('click',e=>{
     (async()=>{ try{ let r; if(a==='ins-codice'){ const nuovo=(inp.value||'').trim(); if(nuovo.length<6){ out.textContent=MSG.corto; return; } r=await rpc('conti_istruttore_codice',{p_id:SUPA.id,p_codice:CODICE,p_ins:ins.id,p_nuovo:nuovo}); if(r.ok){ ins.accesso=true; salva(); renderDati(); const o2=$(`[data-esito-codins="${i}"]`); if(o2) o2.textContent='Codice attivo: daglielo a voce, entra dallo stesso link.'; return; } }
         else { r=await rpc('conti_istruttore_togli_codice',{p_id:SUPA.id,p_codice:CODICE,p_ins:ins.id}); if(r.ok){ ins.accesso=false; salva(); renderDati(); return; } }
         out.textContent=MSG[r.errore]||('Errore: '+r.errore); }catch(e){ out.textContent='Non riesco a collegarmi: riprova.'; } })(); return; }
-  if(a==='ecc-salta'){ const d=az.dataset.data,k=az.dataset.k; const e=eccDi(d,k); setEcc(d,k,(e&&e.tipo==='saltata')?null:{tipo:'saltata'}); salva(); dopoEcc(); return; }
-  if(a==='ecc-togli'){ setEcc(az.dataset.data,az.dataset.k,null); salva(); renderMese(); return; }
+  if(a==='ecc-salta'){ const d=az.dataset.data,k=az.dataset.k; if(appDi(d,k)) return; const e=eccDi(d,k); setEcc(d,k,(e&&e.tipo==='saltata')?null:{tipo:'saltata'}); salva(); dopoEcc(); return; }
+  if(a==='ecc-togli'){ if(appDi(az.dataset.data,az.dataset.k)) return; setEcc(az.dataset.data,az.dataset.k,null); salva(); renderMese(); return; }
   if(a==='togli-lez'){ const kk=az.dataset.k; const l=PAL.find(x=>key(x)===kk); if(!l) return; if(l.extra){ S.extra=(S.extra||[]).filter(e=>(e.g+'|'+e.ora)!==kk); } else { S.rimosse=S.rimosse||[]; if(!S.rimosse.includes(kk)) S.rimosse.push(kk); } salva(); render(); return; }
   if(a==='rimetti-lez'){ S.rimosse=(S.rimosse||[]).filter(x=>x!==az.dataset.k); salva(); render(); return; }
   if(a==='aggiungi-lez'){ const f=az.closest('.lezform'); const g=f.dataset.g; const q=c=>f.querySelector(`[data-campo="${c}"]`); const err=q('errore'); let ora=(q('ora').value||'').trim().replace(':','.'); const mm=ora.match(/^(\d{1,2})\.(\d{2})$/); if(!mm||+mm[1]>23||+mm[2]>59){ err.textContent='Scrivi l’ora come 12.30'; return; } ora=(+mm[1])+'.'+mm[2];
