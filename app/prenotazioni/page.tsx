@@ -27,6 +27,12 @@ type Riga = {
 
 const adesso = () => Date.now()
 
+// quante lezioni in arrivo restano in vista senza toccare niente
+const IN_VISTA = 3
+
+const apri =
+  'block cursor-pointer list-none rounded-full border border-meetoo-accent-dark/25 py-3 text-center font-inter text-[11px] uppercase tracking-widest text-meetoo-accent-dark [&::-webkit-details-marker]:hidden'
+
 function quando(iso: string) {
   const d = new Date(iso)
   return {
@@ -126,22 +132,42 @@ export default async function PrenotazioniPage() {
             </Link>
           </div>
         ) : (
-          <div className="space-y-2">
-            {inArrivo.map((r) => (
-              <Scheda key={r.id} r={r} futura />
-            ))}
-          </div>
+          <>
+            {/* In vista le prossime tre: le altre (un posto fisso ne ha una fila
+                fino alla scadenza del pacchetto) si aprono con un tocco. */}
+            <div className="space-y-2">
+              {inArrivo.slice(0, IN_VISTA).map((r) => (
+                <Scheda key={r.id} r={r} futura />
+              ))}
+            </div>
+            {inArrivo.length > IN_VISTA && (
+              <details className="group mt-2">
+                <summary className={apri}>
+                  <span className="group-open:hidden">Vedi le altre {inArrivo.length - IN_VISTA}</span>
+                  <span className="hidden group-open:inline">Mostra solo le prossime</span>
+                </summary>
+                <div className="mt-2 space-y-2">
+                  {inArrivo.slice(IN_VISTA).map((r) => (
+                    <Scheda key={r.id} r={r} futura />
+                  ))}
+                </div>
+              </details>
+            )}
+          </>
         )}
 
         {storico.length > 0 && (
-          <>
-            <h2 className="mb-3 mt-10 font-inter text-xs font-bold uppercase tracking-widest text-meetoo-accent-dark">Storico</h2>
-            <div className="space-y-2 opacity-80">
+          <details className="group mt-8">
+            <summary className={apri}>
+              <span className="group-open:hidden">Lezioni passate e cancellate ({storico.length})</span>
+              <span className="hidden group-open:inline">Chiudi le lezioni passate</span>
+            </summary>
+            <div className="mt-2 space-y-2 opacity-80">
               {storico.map((r) => (
                 <Scheda key={r.id} r={r} futura={false} />
               ))}
             </div>
-          </>
+          </details>
         )}
       </div>
     </main>

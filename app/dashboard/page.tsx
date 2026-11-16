@@ -268,28 +268,6 @@ export default async function DashboardPage() {
           </section>
         )}
 
-        {/* ── In studio: la bacheca degli eventi ── */}
-        {eventi.length > 0 && (
-          <section className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-inter font-extrabold uppercase tracking-widest text-[11px] text-meetoo-accent-dark">
-                In studio
-              </h3>
-              <Link
-                href="/eventi"
-                className="font-inter font-light text-xs text-meetoo-accent-dark/45 hover:text-meetoo-accent-dark transition-colors"
-              >
-                Tutti gli eventi →
-              </Link>
-            </div>
-            <div className="space-y-4">
-              {eventi.map((e) => (
-                <CartaEvento key={e.id} evento={e} />
-              ))}
-            </div>
-          </section>
-        )}
-
         {/* ── Le tue prossime lezioni ── */}
         <section className="mb-8">
           <div className="flex items-center justify-between mb-4">
@@ -367,69 +345,67 @@ export default async function DashboardPage() {
           )}
         </section>
 
+        {/* ── In studio: la bacheca degli eventi ── */}
+        {eventi.length > 0 && (
+          <section className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-inter font-extrabold uppercase tracking-widest text-[11px] text-meetoo-accent-dark">
+                In studio
+              </h3>
+              <Link
+                href="/eventi"
+                className="font-inter font-light text-xs text-meetoo-accent-dark/45 hover:text-meetoo-accent-dark transition-colors"
+              >
+                Tutti gli eventi →
+              </Link>
+            </div>
+            <div className="space-y-2">
+              {eventi.map((e) => (
+                <CartaEvento key={e.id} evento={e} compatta />
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* ── Accesso rapido ── */}
         <section>
           <h3 className="font-inter font-extrabold uppercase tracking-widest text-[11px] text-meetoo-accent-dark mb-4">
-            Accesso rapido
+            Altro
           </h3>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-2">
             <Link
               href="/messaggi"
-              className="group bg-white/60 backdrop-blur-sm rounded-2xl border border-white/80 px-5 py-7 flex flex-col justify-between gap-6 hover:bg-white/80 transition-colors shadow-sm"
+              className="group bg-white/60 backdrop-blur-sm rounded-2xl border border-white/80 px-2 py-4 flex flex-col items-center text-center gap-2 hover:bg-white/80 transition-colors shadow-sm"
             >
               <MessageCircle className="w-6 h-6 text-[#2c2c2c]" />
               <div>
-                <p className="font-inter font-normal uppercase tracking-widest text-sm text-meetoo-accent-dark">
+                <p className="font-inter font-normal uppercase tracking-widest text-[10px] text-meetoo-accent-dark">
                   Messaggi
-                </p>
-                <p className="font-inter font-light text-xs text-meetoo-accent-dark/40 mt-0.5">
-                  Scrivi allo studio
-                </p>
-              </div>
-            </Link>
-
-            <Link
-              href="/palinsesto"
-              className="group bg-white/60 backdrop-blur-sm rounded-2xl border border-white/80 px-5 py-7 flex flex-col justify-between gap-6 hover:bg-white/80 transition-colors shadow-sm"
-            >
-              <Calendar className="w-6 h-6 text-[#2c2c2c]" />
-              <div>
-                <p className="font-inter font-normal uppercase tracking-widest text-sm text-meetoo-accent-dark">
-                  Palinsesto
-                </p>
-                <p className="font-inter font-light text-xs text-meetoo-accent-dark/40 mt-0.5">
-                  Prenota lezioni
                 </p>
               </div>
             </Link>
 
             <Link
               href="/profilo"
-              className="group bg-white/60 backdrop-blur-sm rounded-2xl border border-white/80 px-5 py-7 flex flex-col justify-between gap-6 hover:bg-white/80 transition-colors shadow-sm"
+              className="group bg-white/60 backdrop-blur-sm rounded-2xl border border-white/80 px-2 py-4 flex flex-col items-center text-center gap-2 hover:bg-white/80 transition-colors shadow-sm"
             >
               <User className="w-6 h-6 text-[#2c2c2c]" />
               <div>
-                <p className="font-inter font-normal uppercase tracking-widest text-sm text-meetoo-accent-dark">
-                  Il mio profilo
-                </p>
-                <p className="font-inter font-light text-xs text-meetoo-accent-dark/40 mt-0.5">
-                  Dati &amp; abbonamento
+                <p className="font-inter font-normal uppercase tracking-widest text-[10px] text-meetoo-accent-dark">
+                  Profilo
                 </p>
               </div>
             </Link>
 
             <Link
               href="/contenuti"
-              className="group bg-white/60 backdrop-blur-sm rounded-2xl border border-white/80 px-5 py-7 flex flex-col justify-between gap-6 hover:bg-white/80 transition-colors shadow-sm"
+              className="group bg-white/60 backdrop-blur-sm rounded-2xl border border-white/80 px-2 py-4 flex flex-col items-center text-center gap-2 hover:bg-white/80 transition-colors shadow-sm"
             >
               <Play className="w-6 h-6 text-[#2c2c2c]" />
               <div>
-                <p className="font-inter font-normal uppercase tracking-widest text-sm text-meetoo-accent-dark">
+                <p className="font-inter font-normal uppercase tracking-widest text-[10px] text-meetoo-accent-dark">
                   Contenuti
-                </p>
-                <p className="font-inter font-light text-xs text-meetoo-accent-dark/40 mt-0.5">
-                  Video on demand
                 </p>
               </div>
             </Link>
