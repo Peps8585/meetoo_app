@@ -69,10 +69,34 @@ function effectivePrice(s: Schedule): number | null {
 }
 
 const DAYS_IT = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica']
+const DAYS_BREVI = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom']
+
+function startOfDay(d: Date): Date {
+  const r = new Date(d)
+  r.setHours(0, 0, 0, 0)
+  return r
+}
+
+// posizione del giorno nella settimana, con il lunedi' a 0
+function indiceGiorno(d: Date): number {
+  const g = d.getDay()
+  return g === 0 ? 6 : g - 1
+}
+
+// yyyy-mm-dd nel giorno locale (il valore che vuole <input type="date">)
+function dataIso(d: Date): string {
+  const z = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}`
+}
 
 export default function PalinsestoPage() {
   const [schedules, setSchedules] = useState<Schedule[]>([])
-  const [weekStart, setWeekStart] = useState<Date>(() => getMonday(new Date()))
+  // Si guarda un giorno alla volta (richiesta di Mattia del 16/11/2026): la
+  // striscia in alto sceglie il giorno della settimana, il calendario salta a
+  // qualsiasi data. La settimana caricata e' quella del giorno scelto.
+  const [giorno, setGiorno] = useState<Date>(() => startOfDay(new Date()))
+  const lunedi = getMonday(giorno).getTime()
+  const weekStart = useMemo(() => new Date(lunedi), [lunedi])
   const [loading, setLoading] = useState(true)
   const [feedback, setFeedback] = useState<Feedback | null>(null)
   const [studioId, setStudioId] = useState<string | null>(null)
@@ -277,15 +301,14 @@ export default function PalinsestoPage() {
     toggleBusy(scheduleId, false)
   }
 
-  const isEmpty = byDay.every((d) => d.length === 0)
-  const weekLabel = `${addDays(weekStart, 0).toLocaleDateString('it-IT', {
-    day: 'numeric',
-    month: 'long',
-  })} — ${addDays(weekStart, 6).toLocaleDateString('it-IT', {
+  const scelto = indiceGiorno(giorno)
+  const oggi = startOfDay(new Date()).getTime()
+  const giornoLabel = giorno.toLocaleDateString('it-IT', {
+    weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric',
-  })}`
+  })
 
   return (
     <main className="min-h-screen bg-meetoo-bg-light px-6 py-12">
@@ -332,21 +355,72 @@ export default function PalinsestoPage() {
           </div>
         )}
 
-        {/* Week navigation */}
-        <div className="flex items-center justify-between mb-8">
+        {/* Giorno scelto: toccando la data si apre il calendario del telefono */}
+        <div className="flex items-center justify-between gap-2 mb-4">
           <button
-            onClick={() => setWeekStart((prev) => addDays(prev, -7))}
-            className="w-10 h-10 rounded-full border border-meetoo-accent-dark/20 flex items-center justify-center text-meetoo-accent-dark/50 hover:text-meetoo-accent-dark hover:border-meetoo-accent-dark/40 transition-colors font-inter text-sm"
+            onClick={() => setGiorno((prev) => addDays(prev, -7))}
+            aria-label="Settimana precedente"
+            className="w-10 h-10 rounded-full border border-meetoo-accent-dark/20 flex items-center justify-center text-meetoo-accent-dark/50 hover:text-meetoo-accent-dark hover:border-meetoo-accent-dark/40 transition-colors font-inter text-sm shrink-0"
           >
             ←
           </button>
-          <span className="font-inter font-light text-sm text-meetoo-accent-dark">{weekLabel}</span>
+          <label className="relative inline-flex items-center gap-1.5 min-w-0 font-inter font-light text-sm text-meetoo-accent-dark cursor-pointer">
+            <span className="truncate capitalize underline decoration-meetoo-accent-dark/25 underline-offset-4">{giornoLabel}</span>
+            <span aria-hidden className="text-meetoo-accent-dark/40 text-xs">▾</span>
+            <input
+              type="date"
+              aria-label="Scegli il giorno dal calendario"
+              value={dataIso(giorno)}
+              onChange={(e) => {
+                if (!e.target.value) return
+                const [y, m, d] = e.target.value.split('-').map(Number)
+                setGiorno(new Date(y, m - 1, d))
+              }}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            />
+          </label>
           <button
-            onClick={() => setWeekStart((prev) => addDays(prev, 7))}
-            className="w-10 h-10 rounded-full border border-meetoo-accent-dark/20 flex items-center justify-center text-meetoo-accent-dark/50 hover:text-meetoo-accent-dark hover:border-meetoo-accent-dark/40 transition-colors font-inter text-sm"
+            onClick={() => setGiorno((prev) => addDays(prev, 7))}
+            aria-label="Settimana successiva"
+            className="w-10 h-10 rounded-full border border-meetoo-accent-dark/20 flex items-center justify-center text-meetoo-accent-dark/50 hover:text-meetoo-accent-dark hover:border-meetoo-accent-dark/40 transition-colors font-inter text-sm shrink-0"
           >
             →
           </button>
+        </div>
+
+        {/* I sette giorni della settimana: un tocco e si vede solo quel giorno */}
+        <div className="grid grid-cols-7 gap-1.5 mb-8" role="tablist" aria-label="Giorni della settimana">
+          {Array.from({ length: 7 }, (_, i) => {
+            const d = addDays(weekStart, i)
+            const attivo = i === scelto
+            const eOggi = d.getTime() === oggi
+            const lezioni = byDay[i].length
+            const mia = byDay[i].some((x) => myBookings.has(x.id))
+            return (
+              <button
+                key={i}
+                type="button"
+                role="tab"
+                aria-selected={attivo}
+                aria-label={`${DAYS_IT[i]} ${d.getDate()}${lezioni === 0 && !loading ? ', nessuna lezione' : ''}`}
+                onClick={() => setGiorno(d)}
+                className={`flex flex-col items-center rounded-2xl py-2.5 transition-colors ${
+                  attivo
+                    ? 'bg-meetoo-accent-dark text-meetoo-bg-light'
+                    : `bg-white/60 border ${eOggi ? 'border-meetoo-accent-dark/50' : 'border-white/80'} text-meetoo-accent-dark`
+                } ${!attivo && lezioni === 0 && !loading ? 'opacity-45' : ''}`}
+              >
+                <span className="font-inter text-[10px] uppercase tracking-widest">{DAYS_BREVI[i]}</span>
+                <span className="font-inter font-semibold text-base leading-tight">{d.getDate()}</span>
+                <span
+                  aria-hidden
+                  className={`mt-1 h-1.5 w-1.5 rounded-full ${
+                    mia ? (attivo ? 'bg-meetoo-bg-light' : 'bg-meetoo-accent-light') : 'bg-transparent'
+                  }`}
+                />
+              </button>
+            )
+          })}
         </div>
 
         {/* Content */}
@@ -354,53 +428,22 @@ export default function PalinsestoPage() {
           <div className="py-20 text-center font-inter text-sm text-meetoo-accent-dark/40">
             Caricamento…
           </div>
-        ) : isEmpty ? (
-          <div className="py-20 text-center bg-white/40 rounded-2xl border border-white/80">
-            <p className="font-inter text-sm text-meetoo-accent-dark/40">
-              Nessuna lezione programmata questa settimana
+        ) : byDay[scelto].length === 0 ? (
+          <div className="py-16 text-center bg-white/40 rounded-2xl border border-white/80">
+            <p className="font-inter text-sm text-meetoo-accent-dark/60">
+              {DAYS_IT[scelto]} non ci sono lezioni in programma.
             </p>
           </div>
         ) : (
           <div className="space-y-8">
-            {Array.from({ length: 7 }, (_, i) => {
+            {[scelto].map((i) => {
               const day = addDays(weekStart, i)
               const daySchedules = byDay[i]
-              if (daySchedules.length === 0) return null
-              const isToday = day.toDateString() === new Date().toDateString()
 
               return (
-                <section key={i}>
-                  {/* Day label */}
-                  <div className="flex items-center gap-3 mb-3">
-                    <div
-                      className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
-                        isToday ? 'bg-meetoo-accent-dark' : 'bg-white/60 border border-white/80'
-                      }`}
-                    >
-                      <span
-                        className={`font-inter font-bold text-xs ${
-                          isToday ? 'text-meetoo-bg-light' : 'text-meetoo-accent-dark'
-                        }`}
-                      >
-                        {day.getDate()}
-                      </span>
-                    </div>
-                    <div>
-                      <p
-                        className={`font-inter font-light uppercase tracking-widest text-xs ${
-                          isToday ? 'text-meetoo-accent-dark' : 'text-meetoo-accent-dark/50'
-                        }`}
-                      >
-                        {DAYS_IT[i]}
-                      </p>
-                      <p className="font-inter font-light text-[10px] text-meetoo-accent-dark/30 uppercase tracking-widest">
-                        {day.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })}
-                      </p>
-                    </div>
-                  </div>
-
+                <section key={i} aria-label={`${DAYS_IT[i]} ${day.getDate()}`}>
                   {/* Lessons */}
-                  <div className="space-y-2 sm:pl-12">
+                  <div className="space-y-2">
                     {daySchedules.map((s) => {
                       const mine = myBookings.get(s.id)
                       const isBooked = mine !== undefined && mine.status !== 'waitlist'
