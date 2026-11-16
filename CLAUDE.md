@@ -1460,6 +1460,14 @@ tutto; gli eventi studiati col social manager entrano nell'app da qui. Prima di 
 - Pagina dell'evento senza modo di tornare (segnalato da Mattia alle 13.20): aggiunto «← Indietro» per chi e'
   collegata (`components/eventi/Indietro.tsx`), lo studio la apre nella stessa finestra. Online dalle 13.27
   (`main` = 33d1506, ramo `indietro-evento`). Mattia alle 13.30: «fatto tutto e tutto sembra funzionare».
+- **Lezioni colorate** (scelta di Mattia tra tre prove, 14.55): la card prende lo sfondo del colore del tipo di
+  lezione (`lib/coloreLezione.ts`, `stileLezione(classes.color)`), via la lineetta. Usata in palinsesto, home,
+  prenotazioni, agenda e pagina della lezione: ogni card nuova di una lezione deve usarla. Il colore lo cambia lo
+  studio da `/admin/lezioni` (selettore gia' esistente); e' per tipo, non per singola lezione. Online dalle 15.08
+  (`main` = 111169e, ramo `colori-lezioni`). Non visto da dentro in produzione.
+- **Pagina dei conti** (`public/conti/index.html`): versione di Studio e Conti che legge `ecc_app`, online nello stesso
+  rilascio, impronta online = la loro (669b62f8). Il file lo producono loro (`pubblica.sh`), qui si copia e basta.
+  Colonne della vista `conti_lezioni_app` lette da una loro funzione: studio_id, data, chiave, effettiva, saltata.
 - `posti-fissi` e' rimasto indietro (45d332c): il lavoro nuovo parte da `main`, su un ramo nuovo.
 - `applica-su-vero.sh` va lanciato da solo, senza altri comandi in coda: altrimenti il permesso fisso non lo riconosce.
 
