@@ -1410,6 +1410,27 @@ Richiesta di Giorgia via Mattia. Anteprima disegnata: `~/Desktop/MEE TOO PILATES
   produzione): chiesto a Mattia di aprirle dal telefono.
 - WhatsApp spento (nessuna env WHATSAPP_*). In attesa: Giorgia amministratrice su Meta Business?
 
+### 16/11/2026 · Regola di Mattia: niente da scorrere, poche pagine da cui si fa tutto
+Dopo aver visto il palinsesto della cliente con la settimana in colonna: «un grosso difetto di UX». Regola fissa:
+mai costringere a scorrere per trovare un orario o un dato; poche pagine da cui si fa tutto; una modifica aggiorna
+tutto; gli eventi studiati col social manager entrano nell'app da qui. Prima di mostrare una pagina la si misura a
+390 px (giro di tutte le pagine fatto con `guida-app.mjs`).
+- **Palinsesto della cliente a giorni** (8a44983): striscia dei 7 giorni, frecce di settimana, calendario sulla data,
+  puntino sui giorni con una sua prenotazione. **Online dalle 11.36** (push di Mattia, produzione READY, verificato).
+- **Pagine corte della cliente** (0bdbf22, ramo `posti-fissi`, NON online, aspetta la riga di Mattia): Prenotazioni
+  con le prossime 3 in vista e il resto in `<details>` (2015 -> 920 px); Profilo con credito in cima, movimenti chiusi,
+  via lo storico doppio (2659 -> 1628); Home con lezioni prima, eventi in una riga (`CartaEvento compatta`), via la
+  voce Palinsesto doppia (2325 -> 1465).
+- **Pagina unica dello studio** (cd76b84, ramo `pagina-unica-studio`, NON online, aspetta l'ok di Mattia): `/agenda`
+  si chiama Palinsesto, carica la settimana, striscia dei giorni col numero di lezioni, `NuovaLezione.tsx` (posti
+  proposti dall'ultima lezione dello stesso tipo); `/admin/palinsesto` fa redirect a `/agenda`; nel menu una voce sola.
+  Da unire in `posti-fissi` solo dopo il suo ok, per non mescolarla col push delle pagine corte.
+- Mancano: sostituzione come azione a se' e collegamento coi conti (chiesto a Studio e Conti cosa le serve,
+  argomento w3WEL6PZ0HZ7hw4kdqbc: proposta = lei legge dall'app, l'app non scrive nei suoi dati); eventi dal social
+  manager (chiesto dove tiene la scheda evento, argomento yMcTV6gp8Q0CaIezSQrZ; idea: blocco che inserisce l'evento
+  come bozza con la foto a un indirizzo stabile del sito, `eventi.foto` accetta anche un indirizzo intero).
+- Evento di prova di Mattia in produzione («Pilates con Alessia», 19/11): segnalato, lo toglie lui se e' inventato.
+
 ### Lista di Mattia del 12/11 (da tenere a mente, dopo S35)
 - Collegamento con AI per gestione e automazione di messaggi, CRM, compleanni, promozioni, contenuti nuovi.
 - Pagamento con bonifico (IBAN) come modalita' di pagamento.
