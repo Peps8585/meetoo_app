@@ -1,28 +1,28 @@
 // Sfondo della schermata di apertura: le foto dello studio a tutto schermo che
-// si danno il cambio in dissolvenza lenta (scelte da Mattia il 16/11/2026).
-// Solo CSS, niente JavaScript: la prima foto e' gia' a schermo al caricamento,
-// le altre arrivano dopo. Il velo scuro e' uniforme su tutta l'immagine, cosi'
-// logo e pulsanti restano leggibili su qualsiasi foto.
+// scorrono come un carosello, una dopo l'altra verso sinistra (scelta di Mattia
+// del 16/11/2026: le dissolvenze lente non gli piacevano).
+// Solo CSS, niente JavaScript: la prima foto e' gia' a schermo al caricamento.
+// In fondo alla fila la prima foto e' ripetuta, cosi' il giro ricomincia senza
+// salti. Il velo scuro e' uniforme su tutta l'immagine (0.45, scelto da Mattia),
+// cosi' logo e pulsanti restano leggibili su qualsiasi foto.
 const FOTO = ['/apertura/1.jpg', '/apertura/2.jpg', '/apertura/3.jpg', '/apertura/4.jpg']
 
-export default function SfondoApertura({ velo = 0.45 }: { velo?: number }) {
+export default function SfondoApertura() {
   return (
-    <div aria-hidden className="mt-sfondo absolute inset-0 overflow-hidden bg-meetoo-accent-dark">
-      {/* base ferma: e' quello che si vede subito e con le animazioni ridotte */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={FOTO[0]} alt="" fetchPriority="high" className="absolute inset-0 h-full w-full object-cover" />
-      {FOTO.map((src, i) => (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          key={src}
-          src={src}
-          alt=""
-          loading={i === 0 ? 'eager' : 'lazy'}
-          className="mt-sfondo-foto absolute inset-0 h-full w-full object-cover"
-          style={{ animationDelay: `${i * 6}s` }}
-        />
-      ))}
-      <div className="absolute inset-0" style={{ backgroundColor: `rgba(20, 18, 16, ${velo})` }} />
+    <div aria-hidden className="absolute inset-0 overflow-hidden bg-meetoo-accent-dark">
+      <div className="mt-sfondo-fila flex h-full w-[500%]">
+        {[...FOTO, FOTO[0]].map((src, i) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={i}
+            src={src}
+            alt=""
+            fetchPriority={i === 0 ? 'high' : undefined}
+            className="h-full w-1/5 shrink-0 object-cover"
+          />
+        ))}
+      </div>
+      <div className="absolute inset-0 bg-[rgba(20,18,16,0.45)]" />
     </div>
   )
 }

@@ -3,13 +3,10 @@ import { Logo } from './Logo'
 import WelcomeChoreography from './WelcomeChoreography'
 import SfondoApertura from './SfondoApertura'
 
-export default async function Home({ searchParams }: { searchParams: Promise<{ velo?: string }> }) {
-  // PROVA (16/11): ?velo=0.35 per confrontare due intensita' di scuro. Da togliere a scelta fatta.
-  const v = Number((await searchParams).velo)
-  const velo = v >= 0.2 && v <= 0.7 ? v : 0.45
+export default function Home() {
   return (
     <main className="mt-apertura relative flex flex-1 flex-col items-center justify-center min-h-screen bg-meetoo-accent-dark px-6 py-24">
-      <SfondoApertura velo={velo} />
+      <SfondoApertura />
 
       {/* h1 reale per accessibilità/SEO: la landing non resta senza intestazione
           testuale anche se il wordmark è un'immagine. */}

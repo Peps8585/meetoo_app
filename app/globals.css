@@ -273,23 +273,23 @@
 
 /* ============================================================
    Apertura con le foto dello studio (16/11/2026).
-   Le foto si danno il cambio in dissolvenza: 4 foto, 6 secondi l'una, giro di
-   24 secondi. Ogni foto entra in 2 secondi, resta, esce in 2 secondi, e intanto
-   si avvicina appena (1 -> 1.06).
-   L'entrata di logo e pulsanti qui e' una sola dissolvenza lunga e morbida,
-   senza gli spostamenti a scatti della coreografia di prima.
+   Carosello: la fila di foto scorre verso sinistra, una foto alla volta.
+   Ogni foto resta ferma 3 secondi e in 0,9 secondi lascia il posto alla
+   successiva; 4 foto, giro di 15,6 secondi. La quinta della fila e' di nuovo
+   la prima, cosi' il giro ricomincia senza salti.
+   L'entrata di logo e pulsanti qui e' una sola dissolvenza morbida, senza gli
+   spostamenti a scatti della coreografia di prima.
    ============================================================ */
-@keyframes mt-sfondo-giro {
-  0% { opacity: 0; transform: scale(1); }
-  8.33% { opacity: 1; }
-  25% { opacity: 1; }
-  33.33% { opacity: 0; transform: scale(1.06); }
-  100% { opacity: 0; transform: scale(1.06); }
+@keyframes mt-sfondo-scorri {
+  0%, 19.2% { transform: translateX(0); }
+  25%, 44.2% { transform: translateX(-20%); }
+  50%, 69.2% { transform: translateX(-40%); }
+  75%, 94.2% { transform: translateX(-60%); }
+  100% { transform: translateX(-80%); }
 }
-.mt-sfondo-foto {
-  opacity: 0;
-  animation: mt-sfondo-giro 24s linear infinite both;
-  will-change: opacity, transform;
+.mt-sfondo-fila {
+  animation: mt-sfondo-scorri 15.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  will-change: transform;
 }
 @keyframes mt-morbido {
   from { opacity: 0; transform: translateY(6px); }
@@ -316,5 +316,5 @@
 .mt-apertura [data-mt-animate="play"] .mt-cta { animation-delay: 1.4s; }
 .mt-apertura [data-mt-animate="play"] .mt-login { animation-delay: 1.7s; }
 @media (prefers-reduced-motion: reduce) {
-  .mt-sfondo-foto { animation: none; opacity: 0; }
+  .mt-sfondo-fila { animation: none; }
 }
