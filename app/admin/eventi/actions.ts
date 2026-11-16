@@ -13,6 +13,9 @@ import { avvisaEvento, riassuntoAvviso } from '@/lib/eventi-avviso'
 
 export type Esito = { ok: boolean; messaggio?: string; id?: string }
 
+// le foto del sito dello studio: indirizzo intero, non un file caricato dall'app
+const FOTO_DEL_SITO = /^https:\/\/www\.meetoopilates\.com\/foto\/[A-Za-z0-9._-]+\.(jpg|jpeg|png|webp)$/
+
 export type DatiEvento = {
   id?: string
   titolo: string
@@ -44,7 +47,10 @@ export async function salvaEvento(v: DatiEvento): Promise<Esito> {
   if (!inizio) return { ok: false, messaggio: 'Indica il giorno e l’ora di inizio.' }
   const fine = v.fine ? daRoma(v.giorno, v.fine) : null
   if (v.fine && (!fine || fine <= inizio)) return { ok: false, messaggio: 'L’ora di fine deve venire dopo quella di inizio.' }
-  if (v.foto && !v.foto.startsWith(`${staff.studioId}/`)) return { ok: false, messaggio: 'La foto non è valida.' }
+  // la foto e' un file caricato nello spazio dello studio, oppure una foto del sito
+  // (gli eventi preparati sul sito entrano in bacheca con la loro immagine)
+  if (v.foto && !v.foto.startsWith(`${staff.studioId}/`) && !FOTO_DEL_SITO.test(v.foto))
+    return { ok: false, messaggio: 'La foto non è valida.' }
 
   const supabase = await createClient()
   const riga = {
@@ -62,7 +68,7 @@ export async function salvaEvento(v: DatiEvento): Promise<Esito> {
     const { data: prima } = await supabase.from('eventi').select('foto').eq('id', id).maybeSingle()
     const { error } = await supabase.from('eventi').update(riga).eq('id', id)
     if (error) return { ok: false, messaggio: 'Non è stato possibile salvare. Riprova.' }
-    if (prima?.foto && prima.foto !== v.foto) await supabase.storage.from('eventi').remove([prima.foto])
+    if (prima?.foto && prima.foto !== v.foto && !FOTO_DEL_SITO.test(prima.foto)) await supabase.storage.from('eventi').remove([prima.foto])
   } else {
     const { data, error } = await supabase
       .from('eventi')
@@ -105,7 +111,7 @@ export async function eliminaEvento(id: string): Promise<Esito> {
   const { data: e } = await supabase.from('eventi').select('foto').eq('id', id).maybeSingle()
   const { error } = await supabase.from('eventi').delete().eq('id', id)
   if (error) return { ok: false, messaggio: 'Non è stato possibile cancellare. Riprova.' }
-  if (e?.foto) await supabase.storage.from('eventi').remove([e.foto])
+  if (e?.foto && !FOTO_DEL_SITO.test(e.foto)) await supabase.storage.from('eventi').remove([e.foto])
   aggiorna(id)
   return { ok: true }
 }
