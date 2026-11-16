@@ -3,6 +3,9 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { cache } from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
+import { utenteDaSessione } from '@/lib/supabase/utente'
+import Indietro from '@/components/eventi/Indietro'
 import { CAMPI_EVENTO, eventoPassato, fotoEvento, INDIRIZZO_STUDIO, quandoEvento, whatsappEvento, type Evento } from '@/lib/eventi'
 import { Logo } from '../../Logo'
 
@@ -37,13 +40,18 @@ export default async function EventoPage({ params }: { params: Promise<{ id: str
   if (!e) notFound()
   const foto = fotoEvento(e.foto)
   const passato = eventoPassato(e)
+  // chi e' collegata (cliente o studio) deve poter tornare nell'app; chi apre il link da fuori vede solo il logo
+  const collegata = !!(await utenteDaSessione(await createClient()))
 
   return (
     <main className="min-h-screen bg-meetoo-bg-light px-4 py-8 sm:px-6 sm:py-12">
       <div className="mx-auto max-w-xl">
-        <Link href="/" aria-label="Mee Too Pilates" className="mb-8 inline-block">
-          <Logo variant="compact" className="text-meetoo-accent-dark [--mt-logo-w:96px]" />
-        </Link>
+        <div className="mb-6 flex items-center justify-between">
+          {collegata ? <Indietro /> : <span />}
+          <Link href="/" aria-label="Mee Too Pilates" className="inline-block">
+            <Logo variant="compact" className="text-meetoo-accent-dark [--mt-logo-w:96px]" />
+          </Link>
+        </div>
 
         <article className="overflow-hidden rounded-2xl border border-white/80 bg-white/60 shadow-sm">
           {foto && (

@@ -315,7 +315,7 @@ export default function EventiManager({
             </button>
           )}
           {e.pubblicato && (
-            <a href={`/evento/${e.id}`} target="_blank" rel="noopener noreferrer" className={chiaro}>
+            <a href={`/evento/${e.id}`} className={chiaro}>
               Apri la pagina
             </a>
           )}
