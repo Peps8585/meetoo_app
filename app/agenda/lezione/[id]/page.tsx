@@ -6,6 +6,7 @@ import { utenteDaSessione } from '@/lib/supabase/utente'
 import { linkFoto } from '@/lib/foto'
 import Iscritte, { type Cliente, type Iscritta } from './Iscritte'
 import AzioniLezione from './AzioniLezione'
+import { stileLezione } from '@/lib/coloreLezione'
 
 // La pagina di una lezione per lo studio (admin e insegnanti: lo garantisce il
 // layout di /agenda). Sul modello della "Gestione prenotazioni" di App Palestre:
@@ -173,8 +174,7 @@ export default async function LezionePage({ params }: { params: Promise<{ id: st
           )}
         </div>
 
-        <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-sm border border-white/80 px-5 sm:px-7 py-6 mb-6 flex gap-4">
-          <div className="w-1 rounded-full self-stretch shrink-0" style={{ backgroundColor: s.classes?.color ?? '#a8876a' }} />
+        <div className="rounded-2xl shadow-sm border px-5 sm:px-7 py-6 mb-6 flex gap-4" style={stileLezione(s.classes?.color)}>
           <div className="min-w-0 flex-1">
             <p className="font-inter font-light text-[10px] uppercase tracking-[0.2em] text-meetoo-accent-dark/45">{inizio.giorno}</p>
             <h1 className="font-inter font-semibold text-xl text-meetoo-accent-dark leading-snug mt-1">{s.classes?.name ?? 'Lezione'}</h1>

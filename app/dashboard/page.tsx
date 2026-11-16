@@ -8,6 +8,7 @@ import DecisionCard from './DecisionCard'
 import Notifiche from './Notifiche'
 import { eventiInArrivo } from '@/lib/eventi'
 import CartaEvento from '@/components/eventi/CartaEvento'
+import { stileLezione } from '@/lib/coloreLezione'
 
 // Pagina costruita sul server a ogni richiesta: leggere l'ora qui e' voluto.
 const adesso = () => Date.now()
@@ -304,12 +305,8 @@ export default async function DashboardPage() {
                 <div
                   key={lesson.id}
                   className="bg-white/60 backdrop-blur-sm border border-white/80 rounded-2xl px-4 sm:px-5 py-4 flex items-center gap-4 shadow-sm"
+                  style={stileLezione(lesson.classes?.color)}
                 >
-                  {/* Color stripe */}
-                  <div
-                    className="w-1 rounded-full self-stretch shrink-0"
-                    style={{ backgroundColor: lesson.classes?.color ?? 'var(--meetoo-accent-light)' }}
-                  />
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">

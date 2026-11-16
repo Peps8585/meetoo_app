@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { utenteDaSessione } from '@/lib/supabase/utente'
+import { stileLezione } from '@/lib/coloreLezione'
 
 // Le mie prenotazioni: le lezioni in arrivo con il loro stato (prenotata, posto
 // fisso, in lista d'attesa) e lo storico. Per cancellare o rispondere si apre la
@@ -95,8 +96,7 @@ export default async function PrenotazioniPage() {
     // chi tiene davvero la lezione: la sostituta, se c'e'
     const chi = s.sostituta_id ?? s.instructor_id
     const contenuto = (
-      <div className="flex items-center gap-3 rounded-2xl border border-white/80 bg-white/60 px-5 py-4 shadow-sm">
-        <div className="h-10 w-1 shrink-0 rounded-full" style={{ backgroundColor: s.classes?.color ?? '#a8876a' }} />
+      <div className="flex items-center gap-3 rounded-2xl border px-5 py-4 shadow-sm" style={stileLezione(s.classes?.color)}>
         <div className="min-w-0 flex-1">
           <p className="font-inter text-[10px] font-normal uppercase tracking-widest text-meetoo-accent-dark/45">{giorno}</p>
           <p className="font-inter font-medium leading-snug text-meetoo-accent-dark">{s.classes?.name ?? 'Lezione'}</p>

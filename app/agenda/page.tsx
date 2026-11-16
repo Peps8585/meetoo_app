@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { stileLezione, type ProvaColore } from '@/lib/coloreLezione'
+import { stileLezione } from '@/lib/coloreLezione'
 import NuovaLezione from './NuovaLezione'
 
 type BookingProfile = {
@@ -99,12 +99,6 @@ export default function AgendaPage() {
     return m ? new Date(+m[1], +m[2] - 1, +m[3]) : startOfDay(new Date())
   })
   const [loading, setLoading] = useState(true)
-  // PROVA (16/11): ?prova=a|b|c mostra le tre colorazioni delle card. Da togliere a scelta fatta.
-  const [prova, setProva] = useState<ProvaColore>(null)
-  useEffect(() => {
-    const v = new URLSearchParams(window.location.search).get('prova')
-    if (v === 'a' || v === 'b' || v === 'c') setProva(v)
-  }, [])
   const [error, setError] = useState<string | null>(null)
   const [studioId, setStudioId] = useState<string | null>(null)
   const [role, setRole] = useState<string | null>(null)
@@ -374,7 +368,7 @@ export default function AgendaPage() {
                 <section
                   key={s.id}
                   className="bg-white/60 backdrop-blur-sm border border-white/80 rounded-2xl shadow-sm overflow-hidden"
-                          style={stileLezione(s.classes?.color, prova)}
+                          style={stileLezione(s.classes?.color)}
                         >
                   {/* Un tocco apre la pagina della lezione con le iscritte.
                       prefetch: la pagina si prepara in anticipo mentre l'elenco e' a
@@ -384,10 +378,6 @@ export default function AgendaPage() {
                     prefetch={true}
                     className="w-full text-left flex items-center gap-3 px-4 py-2.5 hover:bg-white/40 transition-colors"
                   >
-                    {/* Color stripe */}
-                    {!prova && (
-                      <div className="w-1 h-10 rounded-full shrink-0" style={{ backgroundColor: s.classes?.color ?? '#a8876a' }} />
-                    )}
 
                     {/* Time */}
                     <div className="shrink-0 w-14">

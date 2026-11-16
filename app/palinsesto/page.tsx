@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { stileLezione, type ProvaColore } from '@/lib/coloreLezione'
+import { stileLezione } from '@/lib/coloreLezione'
 import { sendBookingConfirmationEmail } from './actions'
 
 type Schedule = {
@@ -100,12 +100,6 @@ export default function PalinsestoPage() {
   const lunedi = getMonday(giorno).getTime()
   const weekStart = useMemo(() => new Date(lunedi), [lunedi])
   const [loading, setLoading] = useState(true)
-  // PROVA (16/11): ?prova=a|b|c mostra le tre colorazioni delle card. Da togliere a scelta fatta.
-  const [prova, setProva] = useState<ProvaColore>(null)
-  useEffect(() => {
-    const v = new URLSearchParams(window.location.search).get('prova')
-    if (v === 'a' || v === 'b' || v === 'c') setProva(v)
-  }, [])
   const [feedback, setFeedback] = useState<Feedback | null>(null)
   const [studioId, setStudioId] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
@@ -470,12 +464,8 @@ export default function PalinsestoPage() {
                         <div
                           key={s.id}
                           className="bg-white/60 backdrop-blur-sm border border-white/80 rounded-2xl px-5 py-4 flex items-center gap-3 shadow-sm"
-                          style={stileLezione(s.classes?.color, prova)}
+                          style={stileLezione(s.classes?.color)}
                         >
-                          {/* Color stripe */}
-                          {!prova && (
-                            <div className="w-1 h-10 rounded-full shrink-0" style={{ backgroundColor: s.classes?.color ?? '#a8876a' }} />
-                          )}
 
                           {/* Time */}
                           <div className="shrink-0 w-14">
