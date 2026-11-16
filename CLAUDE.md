@@ -1449,6 +1449,17 @@ tutto; gli eventi studiati col social manager entrano nell'app da qui. Prima di 
   scrive in `blocchi/` il blocco che inserisce l'evento come bozza (foto = indirizzo del sito, accettato da
   `salvaEvento` dal commit 45d332c). Primo blocco pronto: workshop del 21/11, codice d26725ba, in attesa del si'.
 
+### 16/11/2026, ore 13 · Tutto il giro e' online
+- Database vero: blocco `6-sostituzioni.sql` (codice 4ced8e0c) applicato alle 13.03 col si' di Mattia; verifica
+  «tutto a posto», profili/prenotazioni/pacchetti/lezioni identici (6, 4, 1, 615), tabelle 33 -> 34, funzioni 79 -> 80.
+- Pagine: `main` = b06bb9d (= `pagina-unica-studio`), push di Mattia alle 13.09, deployment di produzione READY.
+  Online: pagine corte della cliente, pagina unica dello studio (Agenda + Palinsesto), sostituzioni.
+  Non ancora visto dall'interno: sull'app vera non c'e' un account di prova, la conferma dal telefono spetta a Mattia.
+- Workshop di yoga del 21/11 (codice d26725ba) inserito alle 13.16 come BOZZA (`pubblicato = false`): lo pubblica
+  Mattia dall'app (Eventi, «In bacheca», Salva).
+- `posti-fissi` e' rimasto indietro (45d332c): il lavoro nuovo parte da `main`, su un ramo nuovo.
+- `applica-su-vero.sh` va lanciato da solo, senza altri comandi in coda: altrimenti il permesso fisso non lo riconosce.
+
 ### Lista di Mattia del 12/11 (da tenere a mente, dopo S35)
 - Collegamento con AI per gestione e automazione di messaggi, CRM, compleanni, promozioni, contenuti nuovi.
 - Pagamento con bonifico (IBAN) come modalita' di pagamento.
