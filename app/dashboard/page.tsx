@@ -34,6 +34,7 @@ type UpcomingLesson = {
   ends_at: string
   location: string | null
   instructor_id: string | null
+  sostituta_id: string | null
   classes: { name: string; color: string | null } | null
   profiles: { first_name: string | null; last_name: string | null } | null
 }
@@ -112,7 +113,7 @@ export default async function DashboardPage() {
     const { data } = await supabase
       .from('schedules')
       .select(
-        `id, starts_at, ends_at, location, instructor_id,
+        `id, starts_at, ends_at, location, instructor_id, sostituta_id,
          classes:class_id(name, color),
          profiles:instructor_id(first_name, last_name)`
       )
@@ -120,7 +121,10 @@ export default async function DashboardPage() {
       .gte('starts_at', now)
       .order('starts_at')
       .limit(4)
-    upcoming = (data as unknown as UpcomingLesson[]) ?? []
+    // chi tiene davvero la lezione: se c'e' una sostituta si mostra lei
+    upcoming = ((data as unknown as UpcomingLesson[]) ?? []).map((l) =>
+      l.sostituta_id ? { ...l, instructor_id: l.sostituta_id, profiles: null } : l
+    )
   }
 
   // Bacheca: i prossimi eventi dello studio (spariscono da soli quando sono passati)

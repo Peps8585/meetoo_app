@@ -26,6 +26,8 @@ const ERRORI: Record<string, string> = {
   has_bookings: 'Ci sono iscritte: usa "Annulla lezione".',
   has_payments: 'Su questa lezione ci sono stati pagamenti: si può annullare, non cancellare.',
   client_not_found: 'Cliente non trovata.',
+  instructor_not_found: 'Insegnante non trovata.',
+  stessa_insegnante: 'È già l’insegnante di questa lezione: scegline un’altra.',
 }
 
 const errore = (msg: string) => ({ ok: false, messaggio: ERRORI[msg] ?? 'Non è andata a buon fine. Riprova.' })
@@ -136,6 +138,16 @@ export async function bloccaIscrizioni(scheduleId: string, bloccate: boolean): P
 export async function segnaPresenza(scheduleId: string, bookingId: string, presenza: 'presente' | 'assente' | null): Promise<Esito> {
   const supabase = await createClient()
   const { error } = await supabase.rpc('segna_presenza', { p_booking_id: bookingId, p_presenza: presenza })
+  if (error) return errore(error.message)
+  aggiorna(scheduleId)
+  return { ok: true }
+}
+
+// Sostituzione: la lezione tiene la sua insegnante prevista e si segna chi la
+// tiene al suo posto (null = toglie la sostituzione). I conti la leggono da qui.
+export async function segnaSostituzione(scheduleId: string, sostitutaId: string | null): Promise<Esito> {
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('studio_segna_sostituzione', { p_schedule_id: scheduleId, p_sostituta: sostitutaId })
   if (error) return errore(error.message)
   aggiorna(scheduleId)
   return { ok: true }

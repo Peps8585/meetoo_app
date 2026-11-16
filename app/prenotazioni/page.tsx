@@ -20,6 +20,7 @@ type Riga = {
     starts_at: string
     ends_at: string
     instructor_id: string | null
+    sostituta_id: string | null
     is_cancelled: boolean | null
     classes: { name: string; color: string | null } | null
   } | null
@@ -63,7 +64,7 @@ export default async function PrenotazioniPage() {
       .from('bookings')
       .select(
         `id, status, action_token, fixed_slot_id, response, offered_at,
-         schedules:schedule_id!inner(starts_at, ends_at, instructor_id, is_cancelled, classes:class_id(name, color))`
+         schedules:schedule_id!inner(starts_at, ends_at, instructor_id, sostituta_id, is_cancelled, classes:class_id(name, color))`
       )
       .eq('client_id', user.id)
       .in('status', ['confirmed', 'held', 'waitlist', 'attended', 'cancelled'])
@@ -91,14 +92,16 @@ export default async function PrenotazioniPage() {
     const s = r.schedules!
     const { giorno, ora: alle } = quando(s.starts_at)
     const st = stato(r, futura)
+    // chi tiene davvero la lezione: la sostituta, se c'e'
+    const chi = s.sostituta_id ?? s.instructor_id
     const contenuto = (
       <div className="flex items-center gap-3 rounded-2xl border border-white/80 bg-white/60 px-5 py-4 shadow-sm">
         <div className="h-10 w-1 shrink-0 rounded-full" style={{ backgroundColor: s.classes?.color ?? '#a8876a' }} />
         <div className="min-w-0 flex-1">
           <p className="font-inter text-[10px] font-normal uppercase tracking-widest text-meetoo-accent-dark/45">{giorno}</p>
           <p className="font-inter font-medium leading-snug text-meetoo-accent-dark">{s.classes?.name ?? 'Lezione'}</p>
-          {s.instructor_id && insegnanti.get(s.instructor_id) && (
-            <p className="truncate font-inter text-xs font-light text-meetoo-accent-dark/50">{insegnanti.get(s.instructor_id)}</p>
+          {chi && insegnanti.get(chi) && (
+            <p className="truncate font-inter text-xs font-light text-meetoo-accent-dark/50">{insegnanti.get(chi)}</p>
           )}
           <p className={`mt-1 font-inter text-[10px] uppercase tracking-widest ${st.cls}`}>{st.testo}</p>
         </div>

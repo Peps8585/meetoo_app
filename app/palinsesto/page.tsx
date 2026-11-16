@@ -13,6 +13,7 @@ type Schedule = {
   current_bookings: number
   location: string | null
   instructor_id: string | null
+  sostituta_id: string | null
   price_override: number | null
   classes: { name: string; color: string | null; price: number | null } | null
   profiles: { first_name: string | null; last_name: string | null } | null
@@ -156,7 +157,7 @@ export default function PalinsestoPage() {
     const { data: schData, error: schErr } = await supabase
       .from('schedules')
       .select(
-        `id, starts_at, ends_at, max_spots, current_bookings, location, price_override, instructor_id,
+        `id, starts_at, ends_at, max_spots, current_bookings, location, price_override, instructor_id, sostituta_id,
          classes:class_id(name, color, price),
          profiles:instructor_id(first_name, last_name)`
       )
@@ -484,13 +485,18 @@ export default function PalinsestoPage() {
                             <p className="font-inter font-medium text-meetoo-accent-dark leading-snug">
                               {s.classes?.name ?? '—'}
                             </p>
-                            {(s.profiles || (s.instructor_id && insegnanti.get(s.instructor_id))) && (
-                              <p className="font-inter font-light text-xs text-meetoo-accent-dark/50 truncate">
-                                {s.profiles
+                            {/* chi tiene davvero la lezione: la sostituta, se c'e' */}
+                            {(() => {
+                              const chi = s.sostituta_id ?? s.instructor_id
+                              const nome =
+                                (chi && insegnanti.get(chi)) ||
+                                (!s.sostituta_id && s.profiles
                                   ? `${s.profiles.first_name ?? ''} ${s.profiles.last_name ?? ''}`.trim()
-                                  : insegnanti.get(s.instructor_id!)}
-                              </p>
-                            )}
+                                  : '')
+                              return nome ? (
+                                <p className="font-inter font-light text-xs text-meetoo-accent-dark/50 truncate">{nome}</p>
+                              ) : null
+                            })()}
                             {s.location && (
                               <p className="font-inter font-light text-xs text-meetoo-accent-dark/35 truncate">
                                 {s.location}

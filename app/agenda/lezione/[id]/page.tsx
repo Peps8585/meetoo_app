@@ -25,8 +25,10 @@ type Riga = {
   is_cancelled: boolean | null
   bookings_locked: boolean
   instructor_id: string | null
+  sostituta_id: string | null
   classes: { name: string; color: string | null } | null
   profiles: { first_name: string | null; last_name: string | null } | null
+  sostituta: { first_name: string | null; last_name: string | null } | null
   bookings:
     | {
         id: string
@@ -69,15 +71,17 @@ export default async function LezionePage({ params }: { params: Promise<{ id: st
     supabase
       .from('schedules')
       .select(
-        `id, starts_at, ends_at, max_spots, notes, is_cancelled, bookings_locked, instructor_id,
+        `id, starts_at, ends_at, max_spots, notes, is_cancelled, bookings_locked, instructor_id, sostituta_id,
        classes:class_id(name, color),
        profiles:instructor_id(first_name, last_name),
+       sostituta:sostituta_id(first_name, last_name),
        bookings(id, client_id, status, booked_at, booked_by, presenza, fixed_slot_id, response, reminder_sent_at, offered_at, offer_expires_at,
          profiles:client_id(first_name, last_name, avatar_url))`
       )
       .eq('id', id)
       .maybeSingle(),
-    supabase.from('profiles').select('id, first_name, last_name, studio_id').eq('role', 'instructor').eq('is_active', true).order('first_name'),
+    // insegnanti e titolare: la titolare puo' sostituire, ma non e' un'insegnante assegnabile
+    supabase.from('profiles').select('id, first_name, last_name, studio_id, role').in('role', ['instructor', 'admin']).eq('is_active', true).order('first_name'),
     supabase.from('profiles').select('id, first_name, last_name, avatar_url, studio_id').eq('role', 'client').order('first_name'),
   ])
   const ruolo = io?.role === 'admin' ? 'admin' : 'instructor'
@@ -85,7 +89,8 @@ export default async function LezionePage({ params }: { params: Promise<{ id: st
   if (!s) notFound()
   const delloStudio = <T extends { studio_id: string | null }>(righe: T[] | null) =>
     ruolo === 'admin' ? (righe ?? []).filter((r) => r.studio_id === io?.studio_id) : []
-  const insRighe = delloStudio(insRes.data as ({ id: string; first_name: string | null; last_name: string | null; studio_id: string | null })[] | null)
+  const staffRighe = delloStudio(insRes.data as ({ id: string; first_name: string | null; last_name: string | null; studio_id: string | null; role: string })[] | null)
+  const insRighe = staffRighe.filter((r) => r.role === 'instructor')
   const cliRighe = delloStudio(cliRes.data as ({ id: string; studio_id: string | null } & Persona)[] | null)
 
   const bookings = s.bookings ?? []
@@ -133,6 +138,7 @@ export default async function LezionePage({ params }: { params: Promise<{ id: st
   const dentro = righe.filter((r) => r.stato !== 'lista' && r.stato !== 'non_viene').length
   const conIscritte = bookings.some((b) => b.status !== 'cancelled')
   const insegnante = nomeDi(s.profiles)
+  const sostituta = nomeDi(s.sostituta)
   const passata = new Date(s.starts_at).getTime() <= adesso()
 
   return (
@@ -144,7 +150,7 @@ export default async function LezionePage({ params }: { params: Promise<{ id: st
             className="inline-flex items-center gap-1.5 font-inter font-light text-[11px] uppercase tracking-widest text-meetoo-accent-dark/45 hover:text-meetoo-accent-dark transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            Agenda
+            Palinsesto
           </Link>
           {ruolo === 'admin' && (
             <AzioniLezione
@@ -161,6 +167,8 @@ export default async function LezionePage({ params }: { params: Promise<{ id: st
                 id: i.id,
                 nome: nomeDi(i),
               }))}
+              sostitute={staffRighe.filter((i) => i.id !== s.instructor_id).map((i) => ({ id: i.id, nome: nomeDi(i) }))}
+              sostitutaId={s.sostituta_id}
             />
           )}
         </div>
@@ -172,7 +180,13 @@ export default async function LezionePage({ params }: { params: Promise<{ id: st
             <h1 className="font-inter font-semibold text-xl text-meetoo-accent-dark leading-snug mt-1">{s.classes?.name ?? 'Lezione'}</h1>
             <p className="font-inter font-light text-sm text-meetoo-accent-dark/70 mt-0.5">
               dalle {inizio.ora} alle {fine.ora}
-              {insegnante ? <> · {insegnante}</> : <> · <span className="text-amber-700">insegnante da assegnare</span></>}
+              {sostituta ? (
+                <> · {sostituta} <span className="text-meetoo-accent-dark/60">(sostituisce {insegnante || 'l’insegnante prevista'})</span></>
+              ) : insegnante ? (
+                <> · {insegnante}</>
+              ) : (
+                <> · <span className="text-amber-700">insegnante da assegnare</span></>
+              )}
             </p>
             {s.notes && <p className="font-inter font-light text-xs text-meetoo-accent-dark/45 mt-1">{s.notes}</p>}
             {(s.is_cancelled || s.bookings_locked) && (

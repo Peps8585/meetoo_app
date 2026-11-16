@@ -2,14 +2,14 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { MoreHorizontal, Pencil, Copy, Ban, Trash2, LockOpen, X } from 'lucide-react'
-import { annullaLezione, bloccaIscrizioni, duplicaLezione, eliminaLezione, modificaLezione } from './actions'
+import { MoreHorizontal, Pencil, Copy, Ban, Trash2, LockOpen, X, UserRoundCog } from 'lucide-react'
+import { annullaLezione, bloccaIscrizioni, duplicaLezione, eliminaLezione, modificaLezione, segnaSostituzione } from './actions'
 
 // Il menu "..." della pagina lezione (solo admin), sul modello di App Palestre.
 // Le scelte che non si possono annullare chiedono conferma dentro la pagina,
 // mai con una finestra del browser.
 
-type Pannello = null | 'menu' | 'modifica' | 'duplica' | 'annulla' | 'elimina'
+type Pannello = null | 'menu' | 'modifica' | 'sostituzione' | 'duplica' | 'annulla' | 'elimina'
 
 const input =
   'w-full bg-meetoo-bg-light border border-meetoo-accent-dark/20 rounded-xl px-3 py-2.5 font-inter font-light text-sm text-meetoo-accent-dark'
@@ -44,6 +44,8 @@ export default function AzioniLezione({
   annullata,
   conIscritte,
   insegnanti,
+  sostitute,
+  sostitutaId,
 }: {
   scheduleId: string
   inizio: string
@@ -55,6 +57,8 @@ export default function AzioniLezione({
   annullata: boolean
   conIscritte: boolean
   insegnanti: { id: string; nome: string }[]
+  sostitute: { id: string; nome: string }[]
+  sostitutaId: string | null
 }) {
   const router = useRouter()
   const [pannello, setPannello] = useState<Pannello>(null)
@@ -69,6 +73,7 @@ export default function AzioniLezione({
   const [mIns, setMIns] = useState(insegnanteId ?? '')
   const [mPosti, setMPosti] = useState(posti)
   const [mNote, setMNote] = useState(note ?? '')
+  const [sost, setSost] = useState(sostitutaId ?? '')
   const settimanaDopo = partiRoma(new Date(new Date(inizio).getTime() + 7 * 864e5).toISOString())
   const [dData, setDData] = useState(settimanaDopo.data)
   const [dOra, setDOra] = useState(a.ora)
@@ -121,6 +126,7 @@ export default function AzioniLezione({
                 {!annullata && (
                   <>
                     <button className={voce} onClick={() => setPannello('modifica')}><Pencil className="w-5 h-5" />Modifica</button>
+                    <button className={voce} onClick={() => setPannello('sostituzione')}><UserRoundCog className="w-5 h-5" />{sostitutaId ? 'Cambia la sostituzione' : 'Segna una sostituzione'}</button>
                     <button className={voce} onClick={() => setPannello('duplica')}><Copy className="w-5 h-5" />Duplica su un altro giorno</button>
                     <button
                       className={voce}
@@ -139,6 +145,35 @@ export default function AzioniLezione({
                   )
                 ) : (
                   <button className={`${voce} text-red-600`} onClick={() => setPannello('elimina')}><Trash2 className="w-5 h-5" />Elimina lezione</button>
+                )}
+              </div>
+            )}
+
+            {pannello === 'sostituzione' && (
+              <div className="px-5 space-y-4">
+                <h2 className="font-inter font-semibold text-lg text-meetoo-accent-dark">Sostituzione</h2>
+                <p className="font-inter font-light text-sm text-meetoo-accent-dark/70">
+                  Vale solo per questa lezione: le altre settimane restano con l’insegnante di sempre.
+                </p>
+                <div>
+                  <label className={etichetta}>Chi tiene la lezione</label>
+                  <select className={input} value={sost} onChange={(e) => setSost(e.target.value)}>
+                    <option value="">Scegli</option>
+                    {sostitute.map((i) => <option key={i.id} value={i.id}>{i.nome}</option>)}
+                  </select>
+                </div>
+                {esito && !esito.ok && <p className="font-inter font-light text-xs text-amber-700">{esito.testo}</p>}
+                <button className={scuro} disabled={busy || !sost} onClick={() => esegui(() => segnaSostituzione(scheduleId, sost), 'Sostituzione segnata.')}>
+                  {busy ? 'Un attimo…' : 'Salva la sostituzione'}
+                </button>
+                {sostitutaId && (
+                  <button
+                    className="w-full rounded-full border border-meetoo-accent-dark/30 py-3 font-inter text-xs uppercase tracking-widest text-meetoo-accent-dark disabled:opacity-40"
+                    disabled={busy}
+                    onClick={() => esegui(() => segnaSostituzione(scheduleId, null), 'Sostituzione tolta.')}
+                  >
+                    Togli la sostituzione
+                  </button>
                 )}
               </div>
             )}
