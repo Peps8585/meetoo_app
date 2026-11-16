@@ -270,3 +270,51 @@
     transform: none !important;
   }
 }
+
+/* ============================================================
+   Apertura con le foto dello studio (16/11/2026).
+   Le foto si danno il cambio in dissolvenza: 4 foto, 6 secondi l'una, giro di
+   24 secondi. Ogni foto entra in 2 secondi, resta, esce in 2 secondi, e intanto
+   si avvicina appena (1 -> 1.06).
+   L'entrata di logo e pulsanti qui e' una sola dissolvenza lunga e morbida,
+   senza gli spostamenti a scatti della coreografia di prima.
+   ============================================================ */
+@keyframes mt-sfondo-giro {
+  0% { opacity: 0; transform: scale(1); }
+  8.33% { opacity: 1; }
+  25% { opacity: 1; }
+  33.33% { opacity: 0; transform: scale(1.06); }
+  100% { opacity: 0; transform: scale(1.06); }
+}
+.mt-sfondo-foto {
+  opacity: 0;
+  animation: mt-sfondo-giro 24s linear infinite both;
+  will-change: opacity, transform;
+}
+@keyframes mt-morbido {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.mt-apertura [data-mt-animate="play"] .mt-mark-ring-left,
+.mt-apertura [data-mt-animate="play"] .mt-mark-ring-right,
+.mt-apertura [data-mt-animate="play"] .mt-logo-wordmark {
+  animation-name: mt-fade;
+  animation-duration: 1.8s;
+  animation-delay: 0.2s;
+  animation-timing-function: ease-in-out;
+  animation-fill-mode: both;
+}
+.mt-apertura [data-mt-animate="play"] .mt-copy,
+.mt-apertura [data-mt-animate="play"] .mt-cta,
+.mt-apertura [data-mt-animate="play"] .mt-login {
+  animation-name: mt-morbido;
+  animation-duration: 1.4s;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
+}
+.mt-apertura [data-mt-animate="play"] .mt-copy { animation-delay: 1.1s; }
+.mt-apertura [data-mt-animate="play"] .mt-cta { animation-delay: 1.4s; }
+.mt-apertura [data-mt-animate="play"] .mt-login { animation-delay: 1.7s; }
+@media (prefers-reduced-motion: reduce) {
+  .mt-sfondo-foto { animation: none; opacity: 0; }
+}
