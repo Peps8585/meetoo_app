@@ -1398,6 +1398,18 @@ Richiesta di Giorgia via Mattia. Anteprima disegnata: `~/Desktop/MEE TOO PILATES
   `~/Progetti/MEE-TOO-APP-RILASCI/` (`applica-su-prova.sh <migrazione>`, `applica-su-vero.sh <blocco>` con blocchi in
   `blocchi/`, fotografie prima/dopo in `esiti/`). Finche' il permesso non c'e', resta la riga o l'incolla di Mattia.
 
+### 16/11/2026 · S35 ONLINE (bacheca eventi, messaggi, barra in basso)
+- Permesso fisso attivo dalle 10.35 (controllato dal direttore): `~/Progetti/MEE-TOO-APP-RILASCI/applica-su-vero.sh <blocco>`
+  applica un blocco di `blocchi/` solo se nel Loft c'e' un messaggio di Mattia degli ultimi 2 giorni con «sì» e le
+  prime 8 lettere dell'impronta del blocco; prima salva copia dei dati e fotografia in `esiti/`. `applica-su-prova.sh`
+  per le migrazioni sul dev. Se si cambia uno script va detto prima al direttore (impronte controllate ogni mattina).
+- Blocco `5-bacheca-messaggi.sql` (codice 667ecd0c, si' di Mattia alle 10.48) applicato alle 10.50: verifica
+  "tutto a posto", tabelle 29->33, funzioni 73->79, regole 46->53; profili, prenotazioni, pacchetti, lezioni invariati.
+- Push `posti-fissi:main` lanciato da Mattia: produzione READY su d31a4b7 alle 10.52. Pagine nuove raggiungibili,
+  da non collegati rimandano a /login. **Non verificate da dentro con un account vero** (nessun account di prova in
+  produzione): chiesto a Mattia di aprirle dal telefono.
+- WhatsApp spento (nessuna env WHATSAPP_*). In attesa: Giorgia amministratrice su Meta Business?
+
 ### Lista di Mattia del 12/11 (da tenere a mente, dopo S35)
 - Collegamento con AI per gestione e automazione di messaggi, CRM, compleanni, promozioni, contenuti nuovi.
 - Pagamento con bonifico (IBAN) come modalita' di pagamento.
