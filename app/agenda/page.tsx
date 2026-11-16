@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import NuovaLezione from './NuovaLezione'
 
 type BookingProfile = {
   first_name: string | null
@@ -63,6 +64,21 @@ function dataIso(d: Date): string {
 }
 
 
+const DAYS_BREVI = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom']
+
+function getMonday(d: Date): Date {
+  const date = startOfDay(d)
+  const g = date.getDay()
+  date.setDate(date.getDate() + (g === 0 ? -6 : 1 - g))
+  return date
+}
+
+// posizione del giorno nella settimana, con il lunedi' a 0
+function indiceGiorno(d: Date): number {
+  const g = d.getDay()
+  return g === 0 ? 6 : g - 1
+}
+
 const DAYS_IT = [
   'Domenica',
   'Lunedì',
@@ -75,7 +91,7 @@ const DAYS_IT = [
 
 export default function AgendaPage() {
   const router = useRouter()
-  const [schedules, setSchedules] = useState<Schedule[]>([])
+  const [settimana, setSettimana] = useState<Schedule[]>([])
   const giorno = useSearchParams().get('giorno')
   const [day, setDay] = useState<Date>(() => {
     const m = giorno?.match(/^(\d{4})-(\d{2})-(\d{2})$/)
@@ -86,6 +102,11 @@ export default function AgendaPage() {
   const [studioId, setStudioId] = useState<string | null>(null)
   const [role, setRole] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
+  const [nuova, setNuova] = useState(false)
+  // Si carica la settimana del giorno scelto: la striscia dei giorni sa dove ci
+  // sono lezioni, e cambiare giorno nella stessa settimana non aspetta il server.
+  const lunedi = getMonday(day).getTime()
+  const weekStart = useMemo(() => new Date(lunedi), [lunedi])
 
   useEffect(() => {
     async function loadUser() {
@@ -113,7 +134,7 @@ export default function AgendaPage() {
     if (!studioId || !role || !userId) return
     void loadSchedules()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [day, studioId, role, userId])
+  }, [weekStart, studioId, role, userId])
 
   async function loadSchedules() {
     if (!studioId || !role || !userId) return
@@ -121,8 +142,8 @@ export default function AgendaPage() {
     setError(null)
 
     const supabase = createClient()
-    const dayStart = startOfDay(day)
-    const dayEnd = addDays(dayStart, 1)
+    const dayStart = weekStart
+    const dayEnd = addDays(weekStart, 7)
 
     let query = supabase
       .from('schedules')
@@ -151,7 +172,7 @@ export default function AgendaPage() {
     }
 
     const righe = (data as unknown as Schedule[]) ?? []
-    setSchedules(righe)
+    setSettimana(righe)
     setLoading(false)
 
   }
@@ -162,6 +183,14 @@ export default function AgendaPage() {
     router.replace('/login')
   }
 
+  const perGiorno = useMemo(() => {
+    const gruppi: Schedule[][] = Array.from({ length: 7 }, () => [])
+    for (const s of settimana) gruppi[indiceGiorno(new Date(s.starts_at))].push(s)
+    return gruppi
+  }, [settimana])
+  const scelto = indiceGiorno(day)
+  const schedules = perGiorno[scelto]
+  const oggi = startOfDay(new Date()).getTime()
   const isToday = day.toDateString() === new Date().toDateString()
   const dayLabel = `${DAYS_IT[day.getDay()]} ${day.toLocaleDateString('it-IT', {
     day: 'numeric',
@@ -179,7 +208,7 @@ export default function AgendaPage() {
               Mee Too Pilates
             </p>
             <h1 className="font-inter font-extrabold uppercase tracking-widest text-4xl text-meetoo-accent-dark leading-none">
-              Agenda
+              Palinsesto
             </h1>
           </div>
           {role === 'admin' ? (
@@ -207,10 +236,10 @@ export default function AgendaPage() {
         )}
 
         {/* Day navigation */}
-        <div className="flex items-center justify-between gap-3 mb-8">
+        <div className="flex items-center justify-between gap-3 mb-4">
           <button
-            onClick={() => { setDay((prev) => startOfDay(addDays(prev, -1))) }}
-            aria-label="Giorno precedente"
+            onClick={() => { setDay((prev) => startOfDay(addDays(prev, -7))) }}
+            aria-label="Settimana precedente"
             className="w-10 h-10 rounded-full border border-meetoo-accent-dark/20 flex items-center justify-center text-meetoo-accent-dark/50 hover:text-meetoo-accent-dark hover:border-meetoo-accent-dark/40 transition-colors font-inter text-sm shrink-0"
           >
             ←
@@ -242,13 +271,72 @@ export default function AgendaPage() {
             )}
           </div>
           <button
-            onClick={() => { setDay((prev) => startOfDay(addDays(prev, 1))) }}
-            aria-label="Giorno successivo"
+            onClick={() => { setDay((prev) => startOfDay(addDays(prev, 7))) }}
+            aria-label="Settimana successiva"
             className="w-10 h-10 rounded-full border border-meetoo-accent-dark/20 flex items-center justify-center text-meetoo-accent-dark/50 hover:text-meetoo-accent-dark hover:border-meetoo-accent-dark/40 transition-colors font-inter text-sm shrink-0"
           >
             →
           </button>
         </div>
+
+        {/* I sette giorni della settimana: un tocco e si vede solo quel giorno.
+            Sotto il numero, quante lezioni ci sono. */}
+        <div className="grid grid-cols-7 gap-1.5 mb-6" role="tablist" aria-label="Giorni della settimana">
+          {Array.from({ length: 7 }, (_, i) => {
+            const d = addDays(weekStart, i)
+            const attivo = i === scelto
+            const eOggi = d.getTime() === oggi
+            const lezioni = perGiorno[i].length
+            return (
+              <button
+                key={i}
+                type="button"
+                role="tab"
+                aria-selected={attivo}
+                aria-label={`${DAYS_IT[d.getDay()]} ${d.getDate()}, ${lezioni} lezioni`}
+                onClick={() => setDay(d)}
+                className={`flex flex-col items-center rounded-2xl py-2.5 transition-colors ${
+                  attivo
+                    ? 'bg-meetoo-accent-dark text-meetoo-bg-light'
+                    : `bg-white/60 border ${eOggi ? 'border-meetoo-accent-dark/50' : 'border-white/80'} text-meetoo-accent-dark`
+                } ${!attivo && lezioni === 0 && !loading ? 'opacity-45' : ''}`}
+              >
+                <span className="font-inter text-[10px] uppercase tracking-widest">{DAYS_BREVI[i]}</span>
+                <span className="font-inter font-semibold text-base leading-tight">{d.getDate()}</span>
+                <span className={`font-inter text-[10px] ${attivo ? 'text-meetoo-bg-light/70' : 'text-meetoo-accent-dark/60'}`}>
+                  {loading ? '·' : lezioni}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Aggiungere una lezione: solo lo studio, direttamente da qui */}
+        {role === 'admin' && studioId && (
+          nuova ? (
+            <NuovaLezione
+              studioId={studioId}
+              giorno={dataIso(day)}
+              onChiudi={() => setNuova(false)}
+              onFatta={(g) => {
+                setNuova(false)
+                const [y, m, d] = g.split('-').map(Number)
+                const nuovoGiorno = new Date(y, m - 1, d)
+                // stessa settimana: il giorno non cambia la settimana caricata, si rilegge a mano
+                if (getMonday(nuovoGiorno).getTime() === weekStart.getTime()) void loadSchedules()
+                setDay(nuovoGiorno)
+              }}
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setNuova(true)}
+              className="mb-6 w-full rounded-full border border-meetoo-accent-dark/30 py-3 font-inter text-[11px] uppercase tracking-widest text-meetoo-accent-dark transition-colors hover:bg-meetoo-accent-dark hover:text-meetoo-bg-light"
+            >
+              + Aggiungi lezione
+            </button>
+          )
+        )}
 
         {/* Content */}
         {loading ? (
@@ -262,7 +350,7 @@ export default function AgendaPage() {
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-2">
             {schedules.map((s) => {
               const active = (s.bookings ?? []).filter(
                 (b) => b.status !== 'cancelled'
@@ -286,7 +374,7 @@ export default function AgendaPage() {
                   <Link
                     href={`/agenda/lezione/${s.id}`}
                     prefetch={true}
-                    className="w-full text-left flex items-center gap-3 px-5 py-4 hover:bg-white/40 transition-colors"
+                    className="w-full text-left flex items-center gap-3 px-4 py-2.5 hover:bg-white/40 transition-colors"
                   >
                     {/* Color stripe */}
                     <div
@@ -306,7 +394,7 @@ export default function AgendaPage() {
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">
-                      <p className="font-inter font-medium text-meetoo-accent-dark leading-snug">
+                      <p className="font-inter font-medium text-meetoo-accent-dark leading-snug truncate">
                         {s.classes?.name ?? '—'}
                       </p>
                       {s.profiles && (

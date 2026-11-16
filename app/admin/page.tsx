@@ -12,7 +12,7 @@ const sections = [
     desc: 'Gestisci i tipi di lezione disponibili',
   },
   {
-    href: '/admin/palinsesto',
+    href: '/agenda',
     title: 'Palinsesto',
     desc: 'Visualizza e gestisci il calendario settimanale delle lezioni',
   },
