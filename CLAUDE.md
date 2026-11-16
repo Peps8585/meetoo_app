@@ -1457,6 +1457,9 @@ tutto; gli eventi studiati col social manager entrano nell'app da qui. Prima di 
   Non ancora visto dall'interno: sull'app vera non c'e' un account di prova, la conferma dal telefono spetta a Mattia.
 - Workshop di yoga del 21/11 (codice d26725ba) inserito alle 13.16 come BOZZA (`pubblicato = false`): lo pubblica
   Mattia dall'app (Eventi, «In bacheca», Salva).
+- Pagina dell'evento senza modo di tornare (segnalato da Mattia alle 13.20): aggiunto «← Indietro» per chi e'
+  collegata (`components/eventi/Indietro.tsx`), lo studio la apre nella stessa finestra. Online dalle 13.27
+  (`main` = 33d1506, ramo `indietro-evento`). Mattia alle 13.30: «fatto tutto e tutto sembra funzionare».
 - `posti-fissi` e' rimasto indietro (45d332c): il lavoro nuovo parte da `main`, su un ramo nuovo.
 - `applica-su-vero.sh` va lanciato da solo, senza altri comandi in coda: altrimenti il permesso fisso non lo riconosce.
 
