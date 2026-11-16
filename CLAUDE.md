@@ -1431,6 +1431,24 @@ tutto; gli eventi studiati col social manager entrano nell'app da qui. Prima di 
   come bozza con la foto a un indirizzo stabile del sito, `eventi.foto` accetta anche un indirizzo intero).
 - Evento di prova di Mattia in produzione («Pilates con Alessia», 19/11): segnalato, lo toglie lui se e' inventato.
 
+### 16/11/2026 · Sostituzioni e lettura per i conti (ramo `pagina-unica-studio`, solo dev)
+- Migrazione `20261116100000_sostituzioni.sql` (applicata sul dev con `applica-su-prova.sh`): `schedules.sostituta_id`
+  e `sostituzione_at`, `studio_segna_sostituzione(schedule, sostituta|null)` (insegnante o titolare dello studio),
+  `segna_presenza` anche per chi sostituisce, `nomi_insegnanti` include chi sostituisce, `profiles.conti_id`,
+  vista `conti_lezioni_app` (security_invoker, non leggibile da anon/authenticated).
+- App: voce "Segna una sostituzione" nel menu della lezione; in testa "X (sostituisce Y)"; palinsesto, home e
+  prenotazioni della cliente mostrano chi tiene davvero la lezione. Nessun avviso alle iscritte (da decidere Mattia).
+- Accordi con Studio e Conti (argomento Loft w3WEL6PZ0HZ7hw4kdqbc): leggono loro, l'app non scrive nei conti;
+  colonne della vista approvate e da non cambiare; chiave 'Gio|7.00'; corrispondenza per id in `profiles.conti_id`
+  (gli id dei conti stanno in quell'argomento, non vanno scritti qui: il repo e' pubblico); dalla vista prendono solo
+  le righe con `effettiva` non null o `saltata` vera, e la collegano ai conteggi solo da una data decisa con Mattia
+  (lancio, gennaio 2027). **Condizione presa con loro:** l'annullamento automatico per poche iscritte (in produzione
+  oggi NON gira: nessun job, 0 lezioni annullate, verificato il 16/11) non si accende senza prima un campo sulla
+  lezione che dica chi l'ha annullata, portato nella vista.
+- Eventi dal sito: `~/Progetti/MEE-TOO-APP-RILASCI/evento-dal-sito.py [slug]` legge `meetoo-sito/lib/eventi.ts` e
+  scrive in `blocchi/` il blocco che inserisce l'evento come bozza (foto = indirizzo del sito, accettato da
+  `salvaEvento` dal commit 45d332c). Primo blocco pronto: workshop del 21/11, codice d26725ba, in attesa del si'.
+
 ### Lista di Mattia del 12/11 (da tenere a mente, dopo S35)
 - Collegamento con AI per gestione e automazione di messaggi, CRM, compleanni, promozioni, contenuti nuovi.
 - Pagamento con bonifico (IBAN) come modalita' di pagamento.
