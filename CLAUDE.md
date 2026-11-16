@@ -1384,6 +1384,20 @@ Richiesta di Giorgia via Mattia. Anteprima disegnata: `~/Desktop/MEE TOO PILATES
 - Rilascio preparato, non lanciato: `~/Desktop/MEE TOO PILATES/APP ONLINE/3-bacheca-messaggi-incolla-nel-sql-editor.sql`
   (le 3 migrazioni in un blocco con verifica). Poi push `posti-fissi:main`. Serve il si' di Mattia.
 
+### 16/11/2026 · Protezione del ruolo ONLINE
+- Priorita' data dal direttore: prima la falla, poi bacheca e messaggi (fermi sul dev finche' Mattia non dice si').
+- Riprovata sul dev nei due sensi: cliente rifiutata su ruolo/studio/stato; admin con la sua sessione lavora
+  (`studio_aggiungi_cliente`, `segna_presenza`, `studio_togli_prenotazione`, `studio_blocca_iscrizioni`), il server
+  con la service role disattiva e riattiva un'istruttrice, la cliente salva nome e cognome, prenota e cancella.
+  Non provata la registrazione completa di una cliente nuova (manda un'email vera).
+- **In produzione dalle 10.07** (blocco incollato da Mattia nel SQL Editor; `execute_sql` via MCP rifiutato dal
+  classificatore anche col suo si'). Verificato alle 10.10: trigger `profili_campi_protetti` attivo, funzione con la
+  stessa impronta del dev, profili invariati (6: 2 admin, 3 clienti, 1 istruttrice), 4 prenotazioni, app 200.
+  Per tornare indietro: `APP ONLINE/4b-protezione-ruolo-per-tornare-indietro.sql`.
+- Permesso fisso in preparazione (si' di Mattia, controllo del direttore in corso): script fuori dal repo in
+  `~/Progetti/MEE-TOO-APP-RILASCI/` (`applica-su-prova.sh <migrazione>`, `applica-su-vero.sh <blocco>` con blocchi in
+  `blocchi/`, fotografie prima/dopo in `esiti/`). Finche' il permesso non c'e', resta la riga o l'incolla di Mattia.
+
 ### Lista di Mattia del 12/11 (da tenere a mente, dopo S35)
 - Collegamento con AI per gestione e automazione di messaggi, CRM, compleanni, promozioni, contenuti nuovi.
 - Pagamento con bonifico (IBAN) come modalita' di pagamento.
