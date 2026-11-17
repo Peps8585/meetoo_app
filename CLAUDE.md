@@ -1468,6 +1468,17 @@ tutto; gli eventi studiati col social manager entrano nell'app da qui. Prima di 
 - **Pagina dei conti** (`public/conti/index.html`): versione di Studio e Conti che legge `ecc_app`, online nello stesso
   rilascio, impronta online = la loro (669b62f8). Il file lo producono loro (`pubblica.sh`), qui si copia e basta.
   Colonne della vista `conti_lezioni_app` lette da una loro funzione: studio_id, data, chiave, effettiva, saltata.
+- **Apertura dell'app con le foto dello studio** (`app/SfondoApertura.tsx`, foto in `public/apertura/1-4.jpg`, prese dal
+  sito: reformer-quadrupedia, yoga-lezione-piegamento, dettaglio-palla-borraccia, yoga-lezione-torsione): carosello che
+  scorre a sinistra, 3 s ferma + 0,9 s di passaggio, velo scuro uniforme 0.45, logo e pulsanti chiari, entrata del logo
+  in una dissolvenza sola (regole sotto `.mt-apertura` in globals.css). Mattia aveva scartato le dissolvenze lente.
+  Online dalle 16.02 (`main` = 86b3656), visto da lui dal telefono: «per ora va bene cosi' mi piace». La `/` si vede
+  anche da collegati (start_url). Le anteprime Vercel dei rami chiedono l'accesso a Vercel: per fargli vedere una
+  prova dal telefono si passa da `main`. Per registrare un video di prova: screencast di Chrome (guida-app.mjs forza
+  le animazioni ridotte, non va bene per i movimenti).
+- WhatsApp (17/11): Mattia ha mandato una schermata di Gestione inserzioni (entra nell'account ads dentro un Business
+  Meta). Non basta: chieste due schermate, Impostazioni > Utenti > Persone (chi ha il Controllo completo) e Account >
+  Account WhatsApp (numero gia' collegato o no).
 - `posti-fissi` e' rimasto indietro (45d332c): il lavoro nuovo parte da `main`, su un ramo nuovo.
 - `applica-su-vero.sh` va lanciato da solo, senza altri comandi in coda: altrimenti il permesso fisso non lo riconosce.
 
