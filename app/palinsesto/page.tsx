@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
+import { X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { stileLezione } from '@/lib/coloreLezione'
@@ -16,7 +17,7 @@ type Schedule = {
   instructor_id: string | null
   sostituta_id: string | null
   price_override: number | null
-  classes: { name: string; color: string | null; price: number | null } | null
+  classes: { name: string; color: string | null; price: number | null; description: string | null } | null
   profiles: { first_name: string | null; last_name: string | null } | null
 }
 
@@ -25,7 +26,7 @@ type Feedback = { message: string; type: 'error' | 'success' | 'warning' }
 const RPC_ERRORS: Record<string, string> = {
   no_credits:         'Non hai crediti disponibili. Acquista un pacchetto per prenotare.',
   full:               'Lezione al completo.',
-  already_booked:     'Hai già prenotato questa lezione.',
+  already_booked:     'Sei prenotata per questa lezione.',
   schedule_cancelled: 'Questa lezione è stata annullata.',
   schedule_past:      'Non puoi prenotare una lezione già iniziata.',
   not_authenticated:  'Devi effettuare l\'accesso.',
@@ -105,6 +106,9 @@ export default function PalinsestoPage() {
   const [userId, setUserId] = useState<string | null>(null)
   const [myBookings, setMyBookings] = useState<Map<string, MyBooking>>(new Map())
   const [busyIds, setBusyIds] = useState<Set<string>>(new Set())
+  // Lezione aperta nel riquadro dal basso (richiesta di Mattia del 17/11/2026:
+  // la card si tocca tutta, non solo il tasto). Il riquadro non prenota da solo.
+  const [aperta, setAperta] = useState<string | null>(null)
   // nome e cognome delle insegnanti: una cliente non legge i loro profili
   const [insegnanti, setInsegnanti] = useState<Map<string, string>>(new Map())
 
@@ -159,7 +163,7 @@ export default function PalinsestoPage() {
       .from('schedules')
       .select(
         `id, starts_at, ends_at, max_spots, current_bookings, location, price_override, instructor_id, sostituta_id,
-         classes:class_id(name, color, price),
+         classes:class_id(name, color, price, description),
          profiles:instructor_id(first_name, last_name)`
       )
       .eq('studio_id', studioId)
@@ -303,6 +307,104 @@ export default function PalinsestoPage() {
     toggleBusy(scheduleId, false)
   }
 
+  // tutto quello che serve per decidere quale tasto mostrare su una lezione
+  function statoLezione(s: Schedule) {
+    const mine = myBookings.get(s.id)
+    const isBooked = mine !== undefined && mine.status !== 'waitlist'
+    const inWaitlist = mine?.status === 'waitlist'
+    const freeSpots = Math.max(0, s.max_spots - s.current_bookings)
+    const isFull = freeSpots === 0 && !isBooked
+    const inizio = new Date(s.starts_at).getTime() - Date.now()
+    const closed = inizio < 12 * 60 * 60 * 1000
+    const within24h = inizio < 24 * 60 * 60 * 1000
+    const busy = busyIds.has(s.id)
+    const price = effectivePrice(s)
+    const showPrice = price !== null && price > 0
+    return { mine, isBooked, inWaitlist, freeSpots, isFull, closed, within24h, busy, price, showPrice }
+  }
+
+  // chi tiene davvero la lezione: la sostituta, se c'e'
+  function nomeInsegnante(s: Schedule): string {
+    const chi = s.sostituta_id ?? s.instructor_id
+    return (
+      (chi && insegnanti.get(chi)) ||
+      (!s.sostituta_id && s.profiles
+        ? `${s.profiles.first_name ?? ''} ${s.profiles.last_name ?? ''}`.trim()
+        : '')
+    )
+  }
+
+  // Il tasto della lezione: piccolo sulla card, grande nel riquadro. Dal
+  // riquadro, finita l'azione, si torna al palinsesto e l'esito compare in basso.
+  function tastoLezione(s: Schedule, grande: boolean) {
+    const { mine, isBooked, inWaitlist, isFull, closed, within24h, busy } = statoLezione(s)
+    const misura = grande
+      ? 'w-full text-xs py-4'
+      : 'text-[10px] px-4 py-1.5'
+    const poi = (azione: () => Promise<void>) => async (e: React.MouseEvent) => {
+      e.stopPropagation()
+      await azione()
+      if (grande) setAperta(null)
+    }
+
+    if (isBooked || inWaitlist) {
+      return (
+        <button
+          disabled={busy}
+          onClick={poi(() => handleCancel(s.id, mine!.id, within24h, mine!.status))}
+          className={`font-inter font-normal uppercase tracking-widest ${misura} rounded-full border transition-colors ${
+            busy
+              ? 'border-meetoo-accent-dark/15 text-meetoo-accent-dark/25 cursor-wait'
+              : 'border-red-300 text-red-500 hover:bg-red-50'
+          }`}
+        >
+          {busy ? '…' : inWaitlist ? 'Esci dalla lista' : grande ? 'Cancella la prenotazione' : 'Cancella'}
+        </button>
+      )
+    }
+    if (isFull && !closed) {
+      return (
+        <button
+          disabled={busy}
+          onClick={poi(() => handleWaitlist(s.id))}
+          className={`font-inter font-normal uppercase tracking-widest ${misura} rounded-full border transition-colors ${
+            busy
+              ? 'border-meetoo-accent-dark/15 text-meetoo-accent-dark/25 cursor-wait'
+              : 'border-meetoo-accent-dark/40 text-meetoo-accent-dark hover:bg-meetoo-accent-dark hover:text-meetoo-bg-light'
+          }`}
+        >
+          {busy ? '…' : grande ? 'Mettimi in lista d\'attesa' : 'Lista d\'attesa'}
+        </button>
+      )
+    }
+    if (isFull) {
+      return (
+        <button
+          disabled
+          onClick={(e) => e.stopPropagation()}
+          className={`font-inter font-normal uppercase tracking-widest ${misura} rounded-full border border-meetoo-accent-dark/15 text-meetoo-accent-dark/25 cursor-not-allowed`}
+        >
+          Esaurito
+        </button>
+      )
+    }
+    return (
+      <button
+        disabled={busy}
+        onClick={poi(() => handleBook(s.id))}
+        className={`font-inter font-normal uppercase tracking-widest ${misura} rounded-full transition-colors ${
+          busy
+            ? 'bg-meetoo-accent-dark/40 text-meetoo-bg-light cursor-wait'
+            : 'bg-meetoo-accent-dark text-meetoo-bg-light hover:bg-meetoo-accent-light'
+        }`}
+      >
+        {busy ? '…' : 'Prenota'}
+      </button>
+    )
+  }
+
+  const lezioneAperta = aperta ? schedules.find((x) => x.id === aperta) ?? null : null
+
   const scelto = indiceGiorno(giorno)
   const oggi = startOfDay(new Date()).getTime()
   const giornoLabel = giorno.toLocaleDateString('it-IT', {
@@ -339,7 +441,7 @@ export default function PalinsestoPage() {
           <div
             role="status"
             aria-live="polite"
-            className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-[calc(1rem_+_env(safe-area-inset-bottom))] pointer-events-none"
+            className="fixed inset-x-0 bottom-0 z-[60] flex justify-center px-4 pb-[calc(1rem_+_env(safe-area-inset-bottom))] pointer-events-none"
           >
             <button
               type="button"
@@ -447,23 +549,23 @@ export default function PalinsestoPage() {
                   {/* Lessons */}
                   <div className="space-y-2">
                     {daySchedules.map((s) => {
-                      const mine = myBookings.get(s.id)
-                      const isBooked = mine !== undefined && mine.status !== 'waitlist'
-                      const inWaitlist = mine?.status === 'waitlist'
-                      const freeSpots = Math.max(0, s.max_spots - s.current_bookings)
-                      const isFull = freeSpots === 0 && !isBooked
-                      const closed =
-                        new Date(s.starts_at).getTime() - Date.now() < 12 * 60 * 60 * 1000
-                      const within24h =
-                        new Date(s.starts_at).getTime() - Date.now() < 24 * 60 * 60 * 1000
-                      const busy = busyIds.has(s.id)
-                      const price = effectivePrice(s)
-                      const showPrice = price !== null && price > 0
+                      const { mine, isBooked, inWaitlist, freeSpots, price, showPrice } = statoLezione(s)
+                      const nome = nomeInsegnante(s)
 
                       return (
                         <div
                           key={s.id}
-                          className="bg-white/60 backdrop-blur-sm border border-white/80 rounded-2xl px-5 py-4 flex items-center gap-3 shadow-sm"
+                          role="button"
+                          tabIndex={0}
+                          aria-label={`${s.classes?.name ?? 'Lezione'} alle ${formatTime(s.starts_at)}: apri i dettagli`}
+                          onClick={() => setAperta(s.id)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault()
+                              setAperta(s.id)
+                            }
+                          }}
+                          className="bg-white/60 backdrop-blur-sm border border-white/80 rounded-2xl px-5 py-4 flex items-center gap-3 shadow-sm cursor-pointer active:scale-[0.99] transition-transform"
                           style={stileLezione(s.classes?.color)}
                         >
 
@@ -482,18 +584,9 @@ export default function PalinsestoPage() {
                             <p className="font-inter font-medium text-meetoo-accent-dark leading-snug">
                               {s.classes?.name ?? '—'}
                             </p>
-                            {/* chi tiene davvero la lezione: la sostituta, se c'e' */}
-                            {(() => {
-                              const chi = s.sostituta_id ?? s.instructor_id
-                              const nome =
-                                (chi && insegnanti.get(chi)) ||
-                                (!s.sostituta_id && s.profiles
-                                  ? `${s.profiles.first_name ?? ''} ${s.profiles.last_name ?? ''}`.trim()
-                                  : '')
-                              return nome ? (
-                                <p className="font-inter font-light text-xs text-meetoo-accent-dark/50 truncate">{nome}</p>
-                              ) : null
-                            })()}
+                            {nome && (
+                              <p className="font-inter font-light text-xs text-meetoo-accent-dark/50 truncate">{nome}</p>
+                            )}
                             {s.location && (
                               <p className="font-inter font-light text-xs text-meetoo-accent-dark/35 truncate">
                                 {s.location}
@@ -516,7 +609,7 @@ export default function PalinsestoPage() {
                             <div className="flex flex-col items-end gap-0.5">
                               {showPrice && (
                                 <span className="font-inter font-normal text-xs text-meetoo-accent-dark/70">
-                                  {fmtEuro(price)}
+                                  {fmtEuro(price!)}
                                 </span>
                               )}
                               <span className="font-inter font-light text-[10px] uppercase tracking-widest text-meetoo-accent-dark/45">
@@ -524,50 +617,7 @@ export default function PalinsestoPage() {
                               </span>
                             </div>
 
-                            {isBooked || inWaitlist ? (
-                              <button
-                                disabled={busy}
-                                onClick={() => handleCancel(s.id, mine!.id, within24h, mine!.status)}
-                                className={`font-inter font-normal uppercase tracking-widest text-[10px] px-4 py-1.5 rounded-full border transition-colors ${
-                                  busy
-                                    ? 'border-meetoo-accent-dark/15 text-meetoo-accent-dark/25 cursor-wait'
-                                    : 'border-red-300 text-red-500 hover:bg-red-50'
-                                }`}
-                              >
-                                {busy ? '…' : inWaitlist ? 'Esci dalla lista' : 'Cancella'}
-                              </button>
-                            ) : isFull && !closed ? (
-                              <button
-                                disabled={busy}
-                                onClick={() => handleWaitlist(s.id)}
-                                className={`font-inter font-normal uppercase tracking-widest text-[10px] px-4 py-1.5 rounded-full border transition-colors ${
-                                  busy
-                                    ? 'border-meetoo-accent-dark/15 text-meetoo-accent-dark/25 cursor-wait'
-                                    : 'border-meetoo-accent-dark/40 text-meetoo-accent-dark hover:bg-meetoo-accent-dark hover:text-meetoo-bg-light'
-                                }`}
-                              >
-                                {busy ? '…' : 'Lista d\'attesa'}
-                              </button>
-                            ) : isFull ? (
-                              <button
-                                disabled
-                                className="font-inter font-normal uppercase tracking-widest text-[10px] px-4 py-1.5 rounded-full border border-meetoo-accent-dark/15 text-meetoo-accent-dark/25 cursor-not-allowed"
-                              >
-                                Esaurito
-                              </button>
-                            ) : (
-                              <button
-                                disabled={busy}
-                                onClick={() => handleBook(s.id)}
-                                className={`font-inter font-normal uppercase tracking-widest text-[10px] px-4 py-1.5 rounded-full transition-colors ${
-                                  busy
-                                    ? 'bg-meetoo-accent-dark/40 text-meetoo-bg-light cursor-wait'
-                                    : 'bg-meetoo-accent-dark text-meetoo-bg-light hover:bg-meetoo-accent-light'
-                                }`}
-                              >
-                                {busy ? '…' : 'Prenota'}
-                              </button>
-                            )}
+                            {tastoLezione(s, false)}
                           </div>
                         </div>
                       )
@@ -579,6 +629,96 @@ export default function PalinsestoPage() {
           </div>
         )}
       </div>
+
+      {lezioneAperta && (() => {
+        const s = lezioneAperta
+        const { isBooked, inWaitlist, mine, freeSpots, isFull, closed, price, showPrice } = statoLezione(s)
+        const nome = nomeInsegnante(s)
+        const quando = new Date(s.starts_at).toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' })
+        return (
+          <div
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40"
+            onClick={() => setAperta(null)}
+          >
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label={s.classes?.name ?? 'Lezione'}
+              className="w-full sm:max-w-md bg-meetoo-bg-light rounded-t-3xl sm:rounded-3xl max-h-[90vh] overflow-y-auto pb-[calc(1.5rem_+_env(safe-area-inset-bottom))]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="rounded-t-3xl px-6 pt-5 pb-5" style={stileLezione(s.classes?.color)}>
+                <div className="flex items-start justify-between gap-3">
+                  <h2 className="font-inter font-extrabold uppercase tracking-widest text-xl text-meetoo-accent-dark leading-tight">
+                    {s.classes?.name ?? 'Lezione'}
+                  </h2>
+                  <button
+                    type="button"
+                    aria-label="Chiudi"
+                    onClick={() => setAperta(null)}
+                    className="-mr-2 -mt-1 w-9 h-9 shrink-0 flex items-center justify-center text-meetoo-accent-dark/60"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <p className="font-inter text-sm text-meetoo-accent-dark mt-1 first-letter:uppercase">
+                  {quando}, dalle {formatTime(s.starts_at)} alle {formatTime(s.ends_at)}
+                </p>
+              </div>
+
+              <div className="px-6 pt-5 space-y-4">
+                {s.classes?.description && (
+                  <p className="font-inter font-light text-sm text-meetoo-accent-dark/80 leading-relaxed first-letter:uppercase">
+                    {s.classes.description}
+                  </p>
+                )}
+
+                <dl className="grid grid-cols-2 gap-x-4 gap-y-3 font-inter text-sm">
+                  {nome && (
+                    <div>
+                      <dt className="text-[10px] uppercase tracking-widest text-meetoo-accent-dark/45">Insegnante</dt>
+                      <dd className="text-meetoo-accent-dark">{nome}</dd>
+                    </div>
+                  )}
+                  {s.location && (
+                    <div>
+                      <dt className="text-[10px] uppercase tracking-widest text-meetoo-accent-dark/45">Sala</dt>
+                      <dd className="text-meetoo-accent-dark">{s.location}</dd>
+                    </div>
+                  )}
+                  <div>
+                    <dt className="text-[10px] uppercase tracking-widest text-meetoo-accent-dark/45">Posti liberi</dt>
+                    <dd className="text-meetoo-accent-dark">{freeSpots} su {s.max_spots}</dd>
+                  </div>
+                  {showPrice && (
+                    <div>
+                      <dt className="text-[10px] uppercase tracking-widest text-meetoo-accent-dark/45">Prezzo</dt>
+                      <dd className="text-meetoo-accent-dark">{fmtEuro(price!)}</dd>
+                    </div>
+                  )}
+                </dl>
+
+                {(isBooked || inWaitlist) && (
+                  <p className="font-inter text-sm text-meetoo-bg-dark">
+                    {inWaitlist
+                      ? 'Sei in lista d\'attesa: se si libera un posto ti avvisiamo.'
+                      : mine?.fixed
+                      ? 'Questo è il tuo posto fisso.'
+                      : 'Sei prenotata per questa lezione.'}
+                  </p>
+                )}
+                {isFull && closed && !isBooked && (
+                  <p className="font-inter text-sm text-meetoo-accent-dark/60">
+                    La lezione è al completo e le iscrizioni sono chiuse.
+                  </p>
+                )}
+
+                <div className="pt-1">{tastoLezione(s, true)}</div>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
     </main>
   )
 }
