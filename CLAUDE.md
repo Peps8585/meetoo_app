@@ -1498,3 +1498,12 @@ tutto; gli eventi studiati col social manager entrano nell'app da qui. Prima di 
   (i video restano un'opzione nella home).
 - Messaggistica interna con **risposte delle clienti dall'app** (supera la scelta "solo dallo studio" di S35).
 - Dalla lezione: messaggio di gruppo alle partecipanti **su WhatsApp**.
+
+### 17/11/2026 sera
+- Palinsesto cliente: la card si tocca tutta e apre un riquadro dal basso (descrizione, orario, insegnante, sala,
+  posti, prezzo, tasto grande). Non prenota da sola; il tastino sulla card resta. Ramo `lezione-tocco` (f1dee15),
+  provato sul dev con +anna (prenota, riapri, cancella). In attesa del push di Mattia.
+- WhatsApp: la coesistenza (numero dello studio sul telefono + Cloud API) secondo i documenti Meta richiede di
+  essere Solution Partner o Tech Provider. L'app "Mee Too Insights" non lo e' (non pubblicata, casi d'uso IG/Pagina/
+  Marketing: e' quella dei post, non aggiungerci WhatsApp senza sentire il social manager). Proposto a Mattia un
+  numero nuovo solo per gli avvisi (SIM dedicata, Cloud API diretta). Aspetto la sua scelta; niente creato su Meta.
