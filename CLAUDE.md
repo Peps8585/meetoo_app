@@ -1479,6 +1479,12 @@ tutto; gli eventi studiati col social manager entrano nell'app da qui. Prima di 
 - WhatsApp (17/11): Mattia ha mandato una schermata di Gestione inserzioni (entra nell'account ads dentro un Business
   Meta). Non basta: chieste due schermate, Impostazioni > Utenti > Persone (chi ha il Controllo completo) e Account >
   Account WhatsApp (numero gia' collegato o no).
+- WhatsApp (17/11 sera, letto dal browser di Mattia): nel Business Mattia e Giorgia hanno Accesso completo; Account
+  WhatsApp vuoto (numero NON collegato); azienda NON verificata (si puo' avviare); app esistente "Mee Too Insights".
+  Il 389 2952958 sta sul telefono dello studio con WhatsApp Business. Proposto a Mattia: coesistenza via
+  Embedded Signup sulla nostra app, prima la parte tecnica, poi il codice dal telefono dello studio. Aspetto il suo
+  "vai" prima di toccare l'app Meta. Da verificare: se l'Embedded Signup coesistenza si puo' fare da noi senza
+  essere Tech Provider o senza verifica azienda.
 - `posti-fissi` e' rimasto indietro (45d332c): il lavoro nuovo parte da `main`, su un ramo nuovo.
 - `applica-su-vero.sh` va lanciato da solo, senza altri comandi in coda: altrimenti il permesso fisso non lo riconosce.
 
