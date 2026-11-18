@@ -1507,3 +1507,13 @@ tutto; gli eventi studiati col social manager entrano nell'app da qui. Prima di 
   essere Solution Partner o Tech Provider. L'app "Mee Too Insights" non lo e' (non pubblicata, casi d'uso IG/Pagina/
   Marketing: e' quella dei post, non aggiungerci WhatsApp senza sentire il social manager). Proposto a Mattia un
   numero nuovo solo per gli avvisi (SIM dedicata, Cloud API diretta). Aspetto la sua scelta; niente creato su Meta.
+
+### 18/11/2026 · Giada sull'app (si' di Mattia alle 22.09)
+- `main` protetto su GitHub: serve una PR con 1 approvazione, niente force push; `enforce_admins` spento, quindi
+  il push di Mattia (proprietario) passa come prima. Da verificare al primo rilascio dopo il 18/11.
+- Giada (GiadaSimioni, scrittura) lavora su rami suoi e propone; online solo con la riga di Mattia.
+- Dev ripulito: l'unico account di una persona terza (cliente registrata a luglio) ha nome ed email finti; copia in
+  ~/Progetti/MEE-TOO-APP-RILASCI/copie/dev-anonimizza-20261118.json. Restano tre account di Mattia/LUMA.
+- Chiavi del dev per Giada: le copia Mattia da Supabase nel file "per-giada" su APP ANTEPRIME, glielo manda in privato.
+  Database vero: nessun accesso, si passa dai blocchi con il codice di Mattia.
+- Stanza Ala Luma appmeetoo: scrivania peps-sviluppo-app; verso le chat di Giada come peps-app-mee-too (ponte).
