@@ -1517,3 +1517,10 @@ tutto; gli eventi studiati col social manager entrano nell'app da qui. Prima di 
 - Chiavi del dev per Giada: le copia Mattia da Supabase nel file "per-giada" su APP ANTEPRIME, glielo manda in privato.
   Database vero: nessun accesso, si passa dai blocchi con il codice di Mattia.
 - Stanza Ala Luma appmeetoo: scrivania peps-sviluppo-app; verso le chat di Giada come peps-app-mee-too (ponte).
+
+### 19/11/2026 · Conferma delle clienti nuove (online 18.16)
+- Blocco `7-approvazione-clienti.sql` (codice deeba58d, si' di Mattia 15.24) applicato alle 15.25: copia 33 tabelle/752
+  righe, dati invariati, +2 funzioni (approva_cliente, bookings_solo_confermate) +1 trigger, colonna approvata_at.
+- Push `approvazione-clienti:main` di Mattia (2b4b3b0), produzione READY: il cancello su main lascia passare il proprietario.
+- Insieme: palinsesto cliente senza "Home", riquadro notifiche su una riga.
+- Le clienti importate in blocco (passo dopo) vanno caricate con approvata_at gia' valorizzato.
