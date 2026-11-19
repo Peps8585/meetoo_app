@@ -4,6 +4,7 @@ import { utenteDaSessione } from '@/lib/supabase/utente'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import ClientiList from './ClientiList'
 import type { ClientRow } from './ClientiList'
+import DaConfermare, { type InAttesa } from './DaConfermare'
 
 // Raw shapes returned by Supabase nested select
 type RawPackage = {
@@ -19,6 +20,8 @@ type RawProfile = {
   first_name: string | null
   last_name: string | null
   created_at: string
+  approvata_at: string | null
+  is_active: boolean | null
   client_packages: RawPackage[]
 }
 
@@ -51,7 +54,7 @@ export default async function ClientiPage() {
     adminClient
       .from('profiles')
       .select(
-        `id, first_name, last_name, created_at,
+        `id, first_name, last_name, created_at, approvata_at, is_active,
          client_packages ( id, credits_total, credits_used, expires_at,
            packages:package_id ( name )
          )`
@@ -66,7 +69,17 @@ export default async function ClientiPage() {
     (usersRes.data?.users ?? []).map((u) => [u.id, u.email ?? null])
   )
 
-  const clients: ClientRow[] = rawProfiles.map((p) => {
+  // iscritte dall'app che aspettano l'ok dello studio (19/11/2026)
+  const inAttesa: InAttesa[] = rawProfiles
+    .filter((p) => !p.approvata_at && p.is_active !== false)
+    .map((p) => ({
+      id: p.id,
+      nome: [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Senza nome',
+      email: emailMap.get(p.id) ?? null,
+      created_at: p.created_at,
+    }))
+
+  const clients: ClientRow[] = rawProfiles.filter((p) => !!p.approvata_at).map((p) => {
     const activePkg =
       p.client_packages.find(
         (pkg) => (pkg.credits_total ?? 0) - (pkg.credits_used ?? 0) > 0
@@ -104,6 +117,8 @@ export default async function ClientiPage() {
           </span>
         </div>
       </div>
+
+      <DaConfermare clienti={inAttesa} />
 
       <ClientiList clients={clients} />
     </div>

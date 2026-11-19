@@ -89,7 +89,7 @@ export function welcomeEmail(params: {
   const body = `
     <h1 style="${FONT} margin:0 0 20px; font-size:18px; font-weight:800; letter-spacing:0.14em; text-transform:uppercase; color:${INK}; text-align:center;">Benvenuta in Mee Too</h1>
     <p style="${FONT} margin:0 0 16px; font-size:15px; line-height:1.7; color:${INK};">${saluto}</p>
-    <p style="${FONT} margin:0 0 16px; font-size:15px; line-height:1.7; color:${INK};">il tuo account è stato creato. Dal tuo spazio personale puoi consultare il palinsesto, prenotare le lezioni e seguire il tuo credito.</p>
+    <p style="${FONT} margin:0 0 16px; font-size:15px; line-height:1.7; color:${INK};">il tuo account è stato creato. Prima di prenotare, lo studio conferma la tua iscrizione: di solito ci vuole poco e ti avvisiamo noi appena è fatto. Intanto puoi già guardare il palinsesto. Poi dal tuo spazio personale potrai prenotare le lezioni e seguire il tuo credito.</p>
     <p style="${FONT} margin:0; font-size:15px; line-height:1.7; color:${INK};">Ti aspettiamo in studio.</p>
     ${ctaButton(params.appUrl, 'Entra')}
   `

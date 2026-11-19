@@ -6,6 +6,7 @@ import { utenteDaSessione } from '@/lib/supabase/utente'
 import { Logo } from '../Logo'
 import DecisionCard from './DecisionCard'
 import Notifiche from './Notifiche'
+import InAttesaConferma from '@/components/InAttesaConferma'
 import { eventiInArrivo } from '@/lib/eventi'
 import CartaEvento from '@/components/eventi/CartaEvento'
 import { stileLezione } from '@/lib/coloreLezione'
@@ -80,7 +81,7 @@ export default async function DashboardPage() {
   // Fetch profile for personalized greeting
   const { data: profileData } = await supabase
     .from('profiles')
-    .select('first_name, last_name')
+    .select('first_name, last_name, approvata_at')
     .eq('id', user.id)
     .single()
 
@@ -245,6 +246,8 @@ export default async function DashboardPage() {
             <span className="font-semibold capitalize">{displayName}</span>!
           </h2>
         </div>
+
+        {profileData && !(profileData as { approvata_at: string | null }).approvata_at && <InAttesaConferma />}
 
         <Notifiche />
 

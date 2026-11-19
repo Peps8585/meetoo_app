@@ -3,8 +3,8 @@
 import { useEffect, useState, useMemo } from 'react'
 import { X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import Link from 'next/link'
 import { stileLezione } from '@/lib/coloreLezione'
+import InAttesaConferma from '@/components/InAttesaConferma'
 import { sendBookingConfirmationEmail } from './actions'
 
 type Schedule = {
@@ -36,6 +36,7 @@ const RPC_ERRORS: Record<string, string> = {
   booking_closed:     'Le iscrizioni a questa lezione sono chiuse.',
   not_full:           'Si è appena liberato un posto: puoi prenotare.',
   booking_locked:     'Le iscrizioni a questa lezione le ha chiuse lo studio.',
+  not_approved:       'Lo studio deve ancora confermare la tua iscrizione: appena lo fa potrai prenotare.',
 }
 
 type MyBooking = { id: string; status: 'confirmed' | 'held' | 'waitlist'; fixed: boolean }
@@ -109,6 +110,8 @@ export default function PalinsestoPage() {
   // Lezione aperta nel riquadro dal basso (richiesta di Mattia del 17/11/2026:
   // la card si tocca tutta, non solo il tasto). Il riquadro non prenota da solo.
   const [aperta, setAperta] = useState<string | null>(null)
+  // iscritta da poco e non ancora confermata dallo studio: guarda ma non prenota
+  const [inAttesa, setInAttesa] = useState(false)
   // nome e cognome delle insegnanti: una cliente non legge i loro profili
   const [insegnanti, setInsegnanti] = useState<Map<string, string>>(new Map())
 
@@ -122,10 +125,11 @@ export default function PalinsestoPage() {
       setUserId(user.id)
       const { data: profile } = await supabase
         .from('profiles')
-        .select('studio_id')
+        .select('studio_id, approvata_at')
         .eq('id', user.id)
         .single()
       if (profile?.studio_id) setStudioId(profile.studio_id)
+      setInAttesa(!!profile && !profile.approvata_at)
       const { data: nomi } = await supabase.rpc('nomi_insegnanti')
       setInsegnanti(
         new Map(
@@ -427,13 +431,9 @@ export default function PalinsestoPage() {
               Palinsesto
             </h1>
           </div>
-          <Link
-            href="/dashboard"
-            className="border border-meetoo-accent-dark/30 text-meetoo-accent-dark font-inter font-normal uppercase tracking-widest text-xs px-6 py-3 rounded-full transition-colors hover:bg-meetoo-accent-dark hover:text-meetoo-bg-light"
-          >
-            ← Home
-          </Link>
         </div>
+
+        {inAttesa && <InAttesaConferma />}
 
         {/* Feedback — toast fisso in basso allo schermo: visibile ovunque sia lo
             scroll, così l'avviso compare dov'è il dito e non fuori campo (mobile). */}

@@ -102,6 +102,8 @@ export default function AgendaPage() {
   const [error, setError] = useState<string | null>(null)
   const [studioId, setStudioId] = useState<string | null>(null)
   const [role, setRole] = useState<string | null>(null)
+  // clienti iscritte dall'app che aspettano l'ok dello studio (19/11/2026)
+  const [daConfermare, setDaConfermare] = useState(0)
   const [userId, setUserId] = useState<string | null>(null)
   const [nuova, setNuova] = useState(false)
   // Si carica la settimana del giorno scelto: la striscia dei giorni sa dove ci
@@ -127,6 +129,16 @@ export default function AgendaPage() {
         .single()
       if (profile?.studio_id) setStudioId(profile.studio_id)
       if (profile?.role) setRole(profile.role)
+      if (profile?.role === 'admin' && profile.studio_id) {
+        const { count } = await supabase
+          .from('profiles')
+          .select('id', { count: 'exact', head: true })
+          .eq('studio_id', profile.studio_id)
+          .eq('role', 'client')
+          .eq('is_active', true)
+          .is('approvata_at', null)
+        setDaConfermare(count ?? 0)
+      }
     }
     loadUser()
   }, [])
@@ -228,6 +240,20 @@ export default function AgendaPage() {
             </button>
           ) : null}
         </div>
+
+        {role === 'admin' && daConfermare > 0 && (
+          <Link
+            href="/admin/clienti"
+            className="mb-6 flex items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 font-inter text-sm text-amber-800"
+          >
+            <span>
+              {daConfermare === 1
+                ? 'Una cliente nuova aspetta la tua conferma'
+                : `${daConfermare} clienti nuove aspettano la tua conferma`}
+            </span>
+            <span className="shrink-0 uppercase tracking-widest text-[10px]">Vedi →</span>
+          </Link>
+        )}
 
         {/* Error */}
         {error && (

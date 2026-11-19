@@ -68,39 +68,35 @@ export default function Notifiche() {
 
   if (stato === 'caricamento' || stato === 'attive' || stato === 'non-supportate') return null
 
+  // Riquadro compatto (Mattia 19/11/2026): una riga con il tasto a destra.
   return (
-    <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-sm border border-white/80 px-6 py-5 mb-8 flex gap-4">
-      <div className="shrink-0 w-9 h-9 rounded-full bg-meetoo-bg-dark/15 flex items-center justify-center">
-        <Bell className="w-4 h-4 text-meetoo-bg-dark" />
-      </div>
+    <div className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-sm border border-white/80 px-4 py-3 mb-6 flex items-center gap-3">
+      <Bell className="shrink-0 w-4 h-4 text-meetoo-bg-dark" />
       <div className="min-w-0 flex-1">
-        <p className="font-inter font-medium text-sm text-meetoo-accent-dark">Attiva le notifiche</p>
         {stato === 'iphone-home' ? (
-          <p className="font-inter font-light text-[13px] leading-relaxed text-meetoo-accent-dark/60 mt-1">
-            Così ti ricordiamo le lezioni e ti avvisiamo se si libera un posto. Su iPhone prima aggiungi l’app alla
-            schermata Home: tocca <Share className="inline w-3.5 h-3.5 -mt-0.5" aria-label="Condividi" />, poi
-            «Aggiungi alla schermata Home», e aprila da lì.
+          <p className="font-inter font-light text-xs leading-snug text-meetoo-accent-dark/70">
+            Per le notifiche su iPhone: tocca <Share className="inline w-3 h-3 -mt-0.5" aria-label="Condividi" />,
+            «Aggiungi alla schermata Home» e apri l’app da lì.
           </p>
         ) : stato === 'negate' ? (
-          <p className="font-inter font-light text-[13px] leading-relaxed text-meetoo-accent-dark/60 mt-1">
-            Le notifiche sono bloccate per questa app. Puoi riattivarle dalle impostazioni del telefono. Intanto i
-            promemoria ti arrivano per email.
+          <p className="font-inter font-light text-xs leading-snug text-meetoo-accent-dark/70">
+            Notifiche bloccate: i promemoria ti arrivano per email.
           </p>
         ) : (
-          <>
-            <p className="font-inter font-light text-[13px] leading-relaxed text-meetoo-accent-dark/60 mt-1">
-              Così ti ricordiamo le lezioni e ti avvisiamo se si libera un posto, senza aprire l’app.
-            </p>
-            <button
-              disabled={busy}
-              onClick={attiva}
-              className="mt-3 font-inter font-normal uppercase tracking-widest text-[11px] px-6 py-2.5 rounded-full bg-meetoo-accent-dark text-meetoo-bg-light hover:bg-meetoo-accent-light disabled:opacity-50 transition-colors"
-            >
-              {busy ? 'Un attimo…' : 'Attiva'}
-            </button>
-          </>
+          <p className="font-inter font-light text-xs leading-snug text-meetoo-accent-dark/70">
+            Ricevi i promemoria e gli avvisi sui posti liberi.
+          </p>
         )}
       </div>
+      {stato !== 'iphone-home' && stato !== 'negate' && (
+        <button
+          disabled={busy}
+          onClick={attiva}
+          className="shrink-0 font-inter font-normal uppercase tracking-widest text-[10px] px-4 py-2 rounded-full bg-meetoo-accent-dark text-meetoo-bg-light hover:bg-meetoo-accent-light disabled:opacity-50 transition-colors"
+        >
+          {busy ? '…' : 'Attiva notifiche'}
+        </button>
+      )}
     </div>
   )
 }
