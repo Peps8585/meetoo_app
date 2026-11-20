@@ -6,6 +6,7 @@ import { utenteDaSessione } from '@/lib/supabase/utente'
 import { iniziali, linkFoto } from '@/lib/foto'
 import FotoProfilo from './FotoProfilo'
 import ConsensoWhatsApp from './ConsensoWhatsApp'
+import DatiPersonali from './DatiPersonali'
 
 type Profile = {
   first_name: string | null
@@ -229,37 +230,13 @@ export default async function ProfiloPage() {
                 iniziali={iniziali(profile?.first_name, profile?.last_name)}
               />
             </div>
-            <dl className="space-y-0">
-              {(
-                [
-                  { label: 'Nome', value: profile?.first_name },
-                  { label: 'Cognome', value: profile?.last_name },
-                  { label: 'Email', value: user.email },
-                  { label: 'Telefono', value: profile?.phone },
-                ] as { label: string; value: string | null | undefined }[]
-              ).map((field, i) => (
-                <div key={field.label}>
-                  {i > 0 && <div className="h-px bg-meetoo-accent-dark/5 my-4" />}
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-                    <dt className="font-inter font-light text-[10px] uppercase tracking-widest text-meetoo-accent-dark/40">
-                      {field.label}
-                    </dt>
-                    <dd className="font-inter font-normal text-sm text-meetoo-accent-dark">
-                      {field.value ?? '—'}
-                    </dd>
-                  </div>
-                </div>
-              ))}
-            </dl>
-
-            <div className="mt-6 pt-5 border-t border-meetoo-accent-dark/5">
-              <button
-                type="button"
-                className="font-inter font-normal uppercase tracking-widest text-[11px] px-6 py-3 rounded-full border border-meetoo-accent-dark/30 text-meetoo-accent-dark hover:bg-meetoo-accent-dark hover:text-meetoo-bg-light transition-colors duration-300"
-              >
-                Modifica dati
-              </button>
-            </div>
+            <DatiPersonali
+              userId={user.id}
+              nome={profile?.first_name ?? null}
+              cognome={profile?.last_name ?? null}
+              email={user.email ?? null}
+              telefono={profile?.phone ?? null}
+            />
           </div>
         </section>
 
