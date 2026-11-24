@@ -81,11 +81,13 @@ export default async function DashboardPage() {
   // Fetch profile for personalized greeting
   const { data: profileData } = await supabase
     .from('profiles')
-    .select('first_name, last_name, approvata_at')
+    .select('first_name, last_name, approvata_at, role')
     .eq('id', user.id)
     .single()
 
   const profile = profileData as Profile | null
+  const { data: appAperta } = await supabase.rpc('prenotazioni_app')
+  const appInProva = appAperta === false && (profileData as { role?: string } | null)?.role === 'client'
   const displayName = profile?.first_name ?? user.email?.split('@')[0] ?? 'ospite'
 
   // Prossime lezioni: prenotate, posto fisso (anche tenuto) e lista d'attesa
@@ -247,7 +249,9 @@ export default async function DashboardPage() {
           </h2>
         </div>
 
-        {profileData && !(profileData as { approvata_at: string | null }).approvata_at && <InAttesaConferma />}
+        {profileData && (!(profileData as { approvata_at: string | null }).approvata_at || appInProva) && (
+          <InAttesaConferma inProva={appInProva} />
+        )}
 
         <Notifiche />
 

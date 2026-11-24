@@ -88,10 +88,11 @@ export default async function ProfiloPage() {
 
   const transactions = (transactionsData as WalletTransaction[]) ?? []
 
-  // Crediti spenti dallo studio (febbraio 2027) e nessun pacchetto caricato:
+  // Crediti spenti o app in prova, e nessun pacchetto caricato:
   // il riquadro del credito non serve e direbbe solo "non hai credito".
   const { data: crediti } = await supabase.rpc('crediti_attivi')
-  const mostraPacchetti = crediti !== false || activePackages.length > 0
+  const { data: aperta } = await supabase.rpc('prenotazioni_app')
+  const mostraPacchetti = (crediti !== false && aperta !== false) || activePackages.length > 0
 
   return (
     <main className="min-h-screen bg-meetoo-bg-light px-4 sm:px-6 py-8 sm:py-12">

@@ -84,12 +84,16 @@ function fmtDateTime(iso: string): { date: string; time: string } {
 export function welcomeEmail(params: {
   firstName: string | null
   appUrl: string
+  inProva?: boolean
 }): { subject: string; html: string } {
   const saluto = params.firstName ? `Ciao ${params.firstName},` : 'Ciao,'
+  const testo = params.inProva
+    ? "grazie per esserti iscritta! Questa è una versione di prova della nuova app di Mee Too: puoi già entrare, guardare il palinsesto e completare il tuo profilo. Ti avviseremo noi quando potrai prenotare le lezioni da qui. Fino ad allora continua a prenotare come fai adesso."
+    : 'il tuo account è stato creato. Prima di prenotare, lo studio conferma la tua iscrizione: di solito ci vuole poco e ti avvisiamo noi appena è fatto. Intanto puoi già guardare il palinsesto. Poi dal tuo spazio personale potrai prenotare le lezioni e seguire il tuo credito.'
   const body = `
     <h1 style="${FONT} margin:0 0 20px; font-size:18px; font-weight:800; letter-spacing:0.14em; text-transform:uppercase; color:${INK}; text-align:center;">Benvenuta in Mee Too</h1>
     <p style="${FONT} margin:0 0 16px; font-size:15px; line-height:1.7; color:${INK};">${saluto}</p>
-    <p style="${FONT} margin:0 0 16px; font-size:15px; line-height:1.7; color:${INK};">il tuo account è stato creato. Prima di prenotare, lo studio conferma la tua iscrizione: di solito ci vuole poco e ti avvisiamo noi appena è fatto. Intanto puoi già guardare il palinsesto. Poi dal tuo spazio personale potrai prenotare le lezioni e seguire il tuo credito.</p>
+    <p style="${FONT} margin:0 0 16px; font-size:15px; line-height:1.7; color:${INK};">${testo}</p>
     <p style="${FONT} margin:0; font-size:15px; line-height:1.7; color:${INK};">Ti aspettiamo in studio.</p>
     ${ctaButton(params.appUrl, 'Entra')}
   `

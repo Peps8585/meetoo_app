@@ -36,6 +36,7 @@ const RPC_ERRORS: Record<string, string> = {
   booking_closed:     'Le iscrizioni a questa lezione sono chiuse.',
   not_full:           'Si è appena liberato un posto: puoi prenotare.',
   booking_locked:     'Le iscrizioni a questa lezione le ha chiuse lo studio.',
+  app_in_prova:       'Per ora le lezioni si prenotano come hai sempre fatto: ti avvisiamo noi quando potrai farlo da qui.',
   not_approved:       'Lo studio deve ancora confermare la tua iscrizione: appena lo fa potrai prenotare.',
 }
 
@@ -114,6 +115,8 @@ export default function PalinsestoPage() {
   const [inAttesa, setInAttesa] = useState(false)
   // crediti spenti dallo studio (piano di lancio, febbraio 2027): si prenota senza scalare
   const [conCrediti, setConCrediti] = useState(true)
+  // prenotazioni dall'app chiuse dallo studio (fase di prova): si guarda, non si prenota
+  const [appAperta, setAppAperta] = useState(true)
   // nome e cognome delle insegnanti: una cliente non legge i loro profili
   const [insegnanti, setInsegnanti] = useState<Map<string, string>>(new Map())
 
@@ -134,6 +137,8 @@ export default function PalinsestoPage() {
       setInAttesa(!!profile && !profile.approvata_at)
       const { data: crediti } = await supabase.rpc('crediti_attivi')
       setConCrediti(crediti !== false)
+      const { data: aperta } = await supabase.rpc('prenotazioni_app')
+      setAppAperta(aperta !== false)
       const { data: nomi } = await supabase.rpc('nomi_insegnanti')
       setInsegnanti(
         new Map(
@@ -329,7 +334,7 @@ export default function PalinsestoPage() {
     const within24h = inizio < 24 * 60 * 60 * 1000
     const busy = busyIds.has(s.id)
     const price = effectivePrice(s)
-    const showPrice = conCrediti && price !== null && price > 0
+    const showPrice = conCrediti && appAperta && price !== null && price > 0
     return { mine, isBooked, inWaitlist, freeSpots, isFull, closed, within24h, busy, price, showPrice }
   }
 
@@ -348,6 +353,8 @@ export default function PalinsestoPage() {
   // riquadro, finita l'azione, si torna al palinsesto e l'esito compare in basso.
   function tastoLezione(s: Schedule, grande: boolean) {
     const { mine, isBooked, inWaitlist, isFull, closed, within24h, busy } = statoLezione(s)
+    // app in prova: niente tasto per prenotare; chi e' gia' dentro (messa dallo studio) puo' disdire
+    if (!appAperta && !isBooked && !inWaitlist) return null
     const misura = grande
       ? 'w-full text-xs py-4'
       : 'text-[10px] px-4 py-1.5'
@@ -439,7 +446,7 @@ export default function PalinsestoPage() {
           </div>
         </div>
 
-        {inAttesa && <InAttesaConferma />}
+        {(inAttesa || !appAperta) && <InAttesaConferma inProva={!appAperta} />}
 
         {/* Feedback — toast fisso in basso allo schermo: visibile ovunque sia lo
             scroll, così l'avviso compare dov'è il dito e non fuori campo (mobile). */}

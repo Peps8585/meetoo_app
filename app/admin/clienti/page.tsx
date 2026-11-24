@@ -5,6 +5,7 @@ import { createClient as createAdminClient } from '@supabase/supabase-js'
 import ClientiList from './ClientiList'
 import type { ClientRow } from './ClientiList'
 import DaConfermare, { type InAttesa } from './DaConfermare'
+import InterruttoreApp from './InterruttoreApp'
 
 // Raw shapes returned by Supabase nested select
 type RawPackage = {
@@ -101,6 +102,8 @@ export default async function ClientiPage() {
     }
   })
 
+  const { data: appAperta } = await supabase.rpc('prenotazioni_app')
+
   return (
     <div className="p-6 sm:p-8">
       {/* Header */}
@@ -117,6 +120,8 @@ export default async function ClientiPage() {
           </span>
         </div>
       </div>
+
+      <InterruttoreApp iniziale={appAperta !== false} />
 
       <DaConfermare clienti={inAttesa} />
 

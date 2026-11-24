@@ -1546,3 +1546,14 @@ tutto; gli eventi studiati col social manager entrano nell'app da qui. Prima di 
 - Blocco `9-senza-crediti.sql` (50b82ab5) applicato sul vero alle 11.18 (si' 11.17), pagine online 11.21 (f56c03f READY). Interruttore ACCESO sul vero.
 - Risposta a Mattia: le clienti si registrano da sole (cancello di conferma dal 19/11); elenco App Palestre solo per
   confronto a meta' febbraio, niente caricamento il 25/1.
+
+### 24/11/2026 · Interruttore "Prenotazioni dall'app" (ramo `prenotazioni-app`)
+- Idea di Mattia: iscrizioni gia' da dicembre come "versione di prova", Giorgia conferma man mano, avvisi tenuti.
+  Per non avere due agende (App Palestre + app) serve un cancello diverso dalla conferma.
+- `studios.prenotazioni_app` (default true). Il trigger `bookings_solo_confermate` rifiuta con `app_in_prova`
+  le prenotazioni che la cliente fa per se' (prenota, lista d'attesa, posto dalla lista); lo studio prenota sempre
+  (studio_aggiungi_cliente provato). Funzioni `prenotazioni_app()` e `imposta_prenotazioni_app(bool)`.
+- Interruttore in Admin > Clienti. Chiuso: riquadro "versione di prova" (testo concordato con Mattia, nessuna data)
+  in home e palinsesto, niente tasto Prenota ne' prezzi, profilo senza credito se vuoto, email di benvenuto col
+  testo di prova.
+- Blocco `10-prenotazioni-app.sql`, codice ed6d7334, in attesa del si'. Dev rimesso ad aperto.
