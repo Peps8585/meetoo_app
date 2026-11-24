@@ -53,6 +53,9 @@ export async function sendBookingConfirmationEmail(scheduleId: string): Promise<
       .eq('id', user.id)
       .single()
 
+    const { data: crediti } = await supabase.rpc('crediti_attivi')
+    const conCrediti = crediti !== false
+
     const instructorName = schedule.profiles
       ? [schedule.profiles.first_name, schedule.profiles.last_name].filter(Boolean).join(' ') || null
       : null
@@ -66,8 +69,9 @@ export async function sendBookingConfirmationEmail(scheduleId: string): Promise<
       startsAt: schedule.starts_at,
       instructorName,
       location: schedule.location,
-      // Stessa logica di book_lesson: coalesce(price_override, classes.price)
-      price: schedule.price_override ?? schedule.classes.price,
+      // Stessa logica di book_lesson: coalesce(price_override, classes.price),
+      // e niente addebito se lo studio ha spento i crediti
+      price: conCrediti ? schedule.price_override ?? schedule.classes.price : 0,
       appUrl,
     })
     await sendEmail({ to: user.email, subject, html })

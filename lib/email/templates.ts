@@ -128,7 +128,11 @@ export function bookingConfirmationEmail(params: {
     <p style="${FONT} margin:0 0 20px; font-size:15px; line-height:1.7; color:${INK};">${saluto}</p>
     <p style="${FONT} margin:0 0 20px; font-size:15px; line-height:1.7; color:${INK};">il tuo posto è riservato:</p>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${BG}; border-bottom:1px solid ${BG}; padding:8px 0;">${rows}</table>
-    <p style="${FONT} margin:20px 0 0; font-size:13px; line-height:1.7; color:${SAGE};">Se non puoi venire, puoi disdire dall'app fino a 24 ore prima con riaccredito completo.</p>
+    <p style="${FONT} margin:20px 0 0; font-size:13px; line-height:1.7; color:${SAGE};">${
+      params.price != null && params.price > 0
+        ? "Se non puoi venire, puoi disdire dall'app fino a 24 ore prima con riaccredito completo."
+        : "Se non puoi venire, disdici dall'app: così il tuo posto si libera per un'altra persona."
+    }</p>
     ${ctaButton(`${params.appUrl}/palinsesto`, 'Vedi il palinsesto')}
   `
   return {

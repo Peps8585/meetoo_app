@@ -88,6 +88,11 @@ export default async function ProfiloPage() {
 
   const transactions = (transactionsData as WalletTransaction[]) ?? []
 
+  // Crediti spenti dallo studio (febbraio 2027) e nessun pacchetto caricato:
+  // il riquadro del credito non serve e direbbe solo "non hai credito".
+  const { data: crediti } = await supabase.rpc('crediti_attivi')
+  const mostraPacchetti = crediti !== false || activePackages.length > 0
+
   return (
     <main className="min-h-screen bg-meetoo-bg-light px-4 sm:px-6 py-8 sm:py-12">
       <div className="max-w-2xl mx-auto">
@@ -107,6 +112,7 @@ export default async function ProfiloPage() {
         </div>
 
         {/* ── I miei pacchetti ── */}
+        {mostraPacchetti && (
         <section className="mb-8">
           <h2 className="font-inter font-extrabold uppercase tracking-widest text-[11px] text-meetoo-accent-dark mb-4">
             I miei pacchetti
@@ -161,8 +167,10 @@ export default async function ProfiloPage() {
             </div>
           )}
         </section>
+        )}
 
         {/* ── Movimenti ── */}
+        {(mostraPacchetti || transactions.length > 0) && (
         <details className="group mb-8">
           <summary className="block cursor-pointer list-none rounded-full border border-meetoo-accent-dark/25 py-3 text-center font-inter text-[11px] uppercase tracking-widest text-meetoo-accent-dark [&::-webkit-details-marker]:hidden mb-3">
             <span className="group-open:hidden">Vedi i movimenti del credito</span>
@@ -206,6 +214,7 @@ export default async function ProfiloPage() {
             </div>
           )}
         </details>
+        )}
 
         {/* Le lezioni passate stanno nella pagina Prenotazioni: qui non si ripetono */}
         <Link

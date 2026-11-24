@@ -112,6 +112,8 @@ export default function PalinsestoPage() {
   const [aperta, setAperta] = useState<string | null>(null)
   // iscritta da poco e non ancora confermata dallo studio: guarda ma non prenota
   const [inAttesa, setInAttesa] = useState(false)
+  // crediti spenti dallo studio (piano di lancio, febbraio 2027): si prenota senza scalare
+  const [conCrediti, setConCrediti] = useState(true)
   // nome e cognome delle insegnanti: una cliente non legge i loro profili
   const [insegnanti, setInsegnanti] = useState<Map<string, string>>(new Map())
 
@@ -130,6 +132,8 @@ export default function PalinsestoPage() {
         .single()
       if (profile?.studio_id) setStudioId(profile.studio_id)
       setInAttesa(!!profile && !profile.approvata_at)
+      const { data: crediti } = await supabase.rpc('crediti_attivi')
+      setConCrediti(crediti !== false)
       const { data: nomi } = await supabase.rpc('nomi_insegnanti')
       setInsegnanti(
         new Map(
@@ -276,7 +280,7 @@ export default function PalinsestoPage() {
     if (!userId) return
 
     // Uscire dalla lista o liberare un posto fisso non ancora scalato non costa niente
-    if (within24h && status === 'confirmed') {
+    if (conCrediti && within24h && status === 'confirmed') {
       const confirmed = window.confirm(
         'Sei entro le 24 ore: se disdici perdi il credito. Confermi?'
       )
@@ -301,10 +305,12 @@ export default function PalinsestoPage() {
         ? 'Sei uscita dalla lista d\'attesa.'
         : status === 'held'
         ? 'Posto liberato. Il tuo posto fisso resta per le altre settimane.'
+        : !conCrediti
+        ? 'Prenotazione annullata.'
         : refunded
         ? 'Prenotazione annullata, credito riaccreditato.'
         : 'Prenotazione annullata. Credito trattenuto (penale entro 24h).',
-      type: refunded ? 'success' : 'warning',
+      type: refunded || !conCrediti ? 'success' : 'warning',
     })
 
     await loadSchedules(true)
@@ -323,7 +329,7 @@ export default function PalinsestoPage() {
     const within24h = inizio < 24 * 60 * 60 * 1000
     const busy = busyIds.has(s.id)
     const price = effectivePrice(s)
-    const showPrice = price !== null && price > 0
+    const showPrice = conCrediti && price !== null && price > 0
     return { mine, isBooked, inWaitlist, freeSpots, isFull, closed, within24h, busy, price, showPrice }
   }
 

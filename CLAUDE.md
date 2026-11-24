@@ -1535,3 +1535,14 @@ tutto; gli eventi studiati col social manager entrano nell'app da qui. Prima di 
   crediti; dal 22/2 Giorgia carica i residui dai cartellini; 1/3 crediti accesi; aprile disdetta App Palestre.
 - Ramo `carica-pacchetto`: tasto nella scheda cliente admin, funzione `carica_pacchetto` (blocco 8, codice 6e03575f,
   in attesa del si'). Crediti in euro: lezioni rimaste x prezzo lezione del pacchetto.
+
+### 24/11/2026 · Interruttore "Prenotazioni con crediti" (ramo `senza-crediti`)
+- Colonna `studios.crediti_attivi` (default true), `_booking_price` vale 0 se spenti: tutti i punti che scalano
+  (book_lesson_for, _confirm_hold) passano da li'. Funzioni `crediti_attivi()` e `imposta_crediti(bool)` (solo admin).
+- Interruttore in Admin > Pacchetti. Con i crediti spenti: palinsesto senza prezzi, niente avviso penale 24h,
+  email di conferma senza "Addebito", profilo senza riquadro del credito se la cliente non ha pacchetti.
+- Provato sul dev: saldo 0 prenota a crediti spenti (nessun movimento), rifiutata a crediti accesi; prenotata a
+  crediti accesi e disdetta a spenti = rimborso pieno. Dev rimesso a crediti accesi.
+- Blocco `9-senza-crediti.sql`, codice 50b82ab5, in attesa del si' di Mattia.
+- Risposta a Mattia: le clienti si registrano da sole (cancello di conferma dal 19/11); elenco App Palestre solo per
+  confronto a meta' febbraio, niente caricamento il 25/1.

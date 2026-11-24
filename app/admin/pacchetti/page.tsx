@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { utenteDaSessione } from '@/lib/supabase/utente'
 import PacchettiManager from './PacchettiManager'
+import InterruttoreCrediti from './InterruttoreCrediti'
 
 export default async function PacchettiPage() {
   const supabase = await createClient()
@@ -17,6 +18,8 @@ export default async function PacchettiPage() {
   if (profile?.role !== 'admin') redirect('/dashboard')
   if (!profile?.studio_id) redirect('/dashboard')
 
+  const { data: crediti } = await supabase.rpc('crediti_attivi')
+
   return (
     <div className="p-6 sm:p-8">
       <div className="mb-8">
@@ -27,6 +30,8 @@ export default async function PacchettiPage() {
           Pacchetti
         </h1>
       </div>
+
+      <InterruttoreCrediti iniziale={crediti !== false} />
 
       <PacchettiManager studioId={profile.studio_id} />
     </div>
