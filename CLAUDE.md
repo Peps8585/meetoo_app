@@ -1524,3 +1524,14 @@ tutto; gli eventi studiati col social manager entrano nell'app da qui. Prima di 
 - Push `approvazione-clienti:main` di Mattia (2b4b3b0), produzione READY: il cancello su main lascia passare il proprietario.
 - Insieme: palinsesto cliente senza "Home", riquadro notifiche su una riga.
 - Le clienti importate in blocco (passo dopo) vanno caricate con approvata_at gia' valorizzato.
+
+### 24/11/2026 · Piano di lancio (proposto a Mattia, sua idea: prima senza crediti)
+- App Palestre (gestionale attuale, app.shaggyowl.com) scade ad aprile 2027: usato come rubrica e prenotazioni,
+  NESSUN pacchetto dentro (crediti sui cartellini di carta di Giorgia). 327 anagrafiche. Nessun tasto di esportazione:
+  chiesto il file all'assistenza (testo dato a Mattia). La lettura diretta delle API con la sessione di Mattia e'
+  bloccata dal controllo di sicurezza: non riprovarci.
+- Piano: dicembre costruzione (Carica pacchetto, interruttore "prenotazioni senza crediti" per studio); gennaio prova
+  con Giorgia + 2-3 clienti dal 7/1, carico anagrafiche 25/1 (gia' confermate); 1/2 prenotazioni dall'app senza
+  crediti; dal 22/2 Giorgia carica i residui dai cartellini; 1/3 crediti accesi; aprile disdetta App Palestre.
+- Ramo `carica-pacchetto`: tasto nella scheda cliente admin, funzione `carica_pacchetto` (blocco 8, codice 6e03575f,
+  in attesa del si'). Crediti in euro: lezioni rimaste x prezzo lezione del pacchetto.
