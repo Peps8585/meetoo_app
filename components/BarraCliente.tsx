@@ -15,7 +15,7 @@ const VOCI = [
 ]
 
 // pagine dove la barra compare (il resto: studio, agenda, accesso, regali)
-const PAGINE = ['/dashboard', '/palinsesto', '/prenotazioni', '/eventi', '/messaggi', '/profilo']
+const PAGINE = ['/dashboard', '/palinsesto', '/prenotazioni', '/eventi', '/messaggi', '/profilo', '/contenuti']
 
 export default function BarraCliente() {
   const path = usePathname() ?? ''
