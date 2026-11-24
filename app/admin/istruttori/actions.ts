@@ -2,6 +2,7 @@
 
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createClient as createAdminSupabase } from '@supabase/supabase-js'
+import { emailSegnaposto, isSenzaEmail } from '@/lib/istruttori/senzaEmail'
 
 function getAdminClient() {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -44,8 +45,10 @@ export async function createInstructor(data: {
     const tempPassword = crypto.randomUUID().replace(/-/g, '') + 'Aa1!'
 
     // Crea l'utente in auth.users
+    // Email facoltativa (24/11/2026): senza, l'istruttore ha un indirizzo segnaposto
+    const email = data.email.trim() || emailSegnaposto()
     const { data: newUser, error: authError } = await adminClient.auth.admin.createUser({
-      email: data.email,
+      email,
       password: tempPassword,
       email_confirm: true,
     })
@@ -139,6 +142,68 @@ export async function setInstructorActive(
       return { lezioniFuture: count ?? 0 }
     }
 
+    return {}
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'Errore sconosciuto' }
+  }
+}
+
+async function soloAdmin() {
+  const supabase = await createServerClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return null
+  const { data } = await supabase.from('profiles').select('role, studio_id').eq('id', user.id).single()
+  return data?.role === 'admin' ? (data.studio_id as string) : null
+}
+
+/** Gli istruttori dello studio che non hanno ancora un'email vera. */
+export async function istruttoriSenzaEmail(): Promise<string[]> {
+  const studio = await soloAdmin()
+  if (!studio) return []
+  const admin = getAdminClient()
+  const { data: profili } = await admin.from('profiles').select('id').eq('role', 'instructor').eq('studio_id', studio)
+  const ids = new Set((profili ?? []).map((p) => p.id as string))
+  const { data } = await admin.auth.admin.listUsers({ perPage: 1000 })
+  return (data?.users ?? []).filter((u) => ids.has(u.id) && isSenzaEmail(u.email)).map((u) => u.id)
+}
+
+/**
+ * Modifica di un istruttore: nome, cognome, telefono ed eventualmente l'email,
+ * che si puo' aggiungere a chi e' stato inserito senza. Passa dal server perche'
+ * dal browser un admin non puo' aggiornare il profilo di un'altra persona.
+ */
+export async function updateInstructor(
+  id: string,
+  data: { first_name: string; last_name: string; phone: string; email: string }
+): Promise<{ error?: string }> {
+  try {
+    const studio = await soloAdmin()
+    if (!studio) return { error: 'Non autorizzato' }
+    const admin = getAdminClient()
+    const { data: target } = await admin.from('profiles').select('role, studio_id').eq('id', id).single()
+    if (!target || target.role !== 'instructor' || target.studio_id !== studio) return { error: 'Istruttore non trovato' }
+
+    const { error } = await admin
+      .from('profiles')
+      .update({
+        first_name: data.first_name,
+        last_name: data.last_name,
+        phone: data.phone || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+    if (error) return { error: error.message }
+
+    const email = data.email.trim()
+    if (email) {
+      const { data: u } = await admin.auth.admin.getUserById(id)
+      if (u?.user && isSenzaEmail(u.user.email)) {
+        const { error: e } = await admin.auth.admin.updateUserById(id, { email, email_confirm: true })
+        if (e) return { error: e.message }
+      }
+    }
     return {}
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Errore sconosciuto' }

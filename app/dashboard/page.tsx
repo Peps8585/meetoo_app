@@ -87,7 +87,10 @@ export default async function DashboardPage() {
 
   const profile = profileData as Profile | null
   const { data: appAperta } = await supabase.rpc('prenotazioni_app')
-  const appInProva = appAperta === false && (profileData as { role?: string } | null)?.role === 'client'
+  const eCliente = (profileData as { role?: string } | null)?.role === 'client'
+  const appInProva = appAperta === false && eCliente
+  const { data: provaPren } = await supabase.rpc('prenotazioni_prova')
+  const prenotazioniDiProva = provaPren === true && eCliente && !appInProva
   const displayName = profile?.first_name ?? user.email?.split('@')[0] ?? 'ospite'
 
   // Prossime lezioni: prenotate, posto fisso (anche tenuto) e lista d'attesa
@@ -249,8 +252,11 @@ export default async function DashboardPage() {
           </h2>
         </div>
 
-        {profileData && (!(profileData as { approvata_at: string | null }).approvata_at || appInProva) && (
-          <InAttesaConferma inProva={appInProva} />
+        {profileData && (!(profileData as { approvata_at: string | null }).approvata_at || appInProva || prenotazioniDiProva) && (
+          <InAttesaConferma
+            inProva={appInProva}
+            provaPrenotazioni={prenotazioniDiProva && !!(profileData as { approvata_at: string | null }).approvata_at}
+          />
         )}
 
         <Notifiche />

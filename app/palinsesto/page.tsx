@@ -36,6 +36,7 @@ const RPC_ERRORS: Record<string, string> = {
   booking_closed:     'Le iscrizioni a questa lezione sono chiuse.',
   not_full:           'Si è appena liberato un posto: puoi prenotare.',
   booking_locked:     'Le iscrizioni a questa lezione le ha chiuse lo studio.',
+  lista_in_prova:     'Nella versione di prova la lista d\'attesa non c\'è: prova con un\'altra lezione.',
   app_in_prova:       'Per ora le lezioni si prenotano come hai sempre fatto: ti avvisiamo noi quando potrai farlo da qui.',
   not_approved:       'Lo studio deve ancora confermare la tua iscrizione: appena lo fa potrai prenotare.',
 }
@@ -117,6 +118,8 @@ export default function PalinsestoPage() {
   const [conCrediti, setConCrediti] = useState(true)
   // prenotazioni dall'app chiuse dallo studio (fase di prova): si guarda, non si prenota
   const [appAperta, setAppAperta] = useState(true)
+  // prenotazioni di prova: si prenota per provare, non vale niente
+  const [prova, setProva] = useState(false)
   // nome e cognome delle insegnanti: una cliente non legge i loro profili
   const [insegnanti, setInsegnanti] = useState<Map<string, string>>(new Map())
 
@@ -139,6 +142,8 @@ export default function PalinsestoPage() {
       setConCrediti(crediti !== false)
       const { data: aperta } = await supabase.rpc('prenotazioni_app')
       setAppAperta(aperta !== false)
+      const { data: inProvaPren } = await supabase.rpc('prenotazioni_prova')
+      setProva(inProvaPren === true)
       const { data: nomi } = await supabase.rpc('nomi_insegnanti')
       setInsegnanti(
         new Map(
@@ -379,7 +384,8 @@ export default function PalinsestoPage() {
         </button>
       )
     }
-    if (isFull && !closed) {
+    // in prova la lista d'attesa non c'e' (manderebbe avvisi veri)
+    if (isFull && !closed && !prova) {
       return (
         <button
           disabled={busy}
@@ -446,7 +452,9 @@ export default function PalinsestoPage() {
           </div>
         </div>
 
-        {(inAttesa || !appAperta) && <InAttesaConferma inProva={!appAperta} />}
+        {(inAttesa || !appAperta || prova) && (
+          <InAttesaConferma inProva={!appAperta} provaPrenotazioni={appAperta && prova && !inAttesa} />
+        )}
 
         {/* Feedback — toast fisso in basso allo schermo: visibile ovunque sia lo
             scroll, così l'avviso compare dov'è il dito e non fuori campo (mobile). */}

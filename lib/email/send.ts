@@ -1,4 +1,5 @@
 import { Resend } from 'resend'
+import { isSenzaEmail } from '@/lib/istruttori/senzaEmail'
 
 // Mittente: finché non c'è un dominio verificato su Resend si usa il sandbox
 // onboarding@resend.dev, che consegna SOLO all'email dell'account Resend.
@@ -15,6 +16,9 @@ export async function sendEmail(params: {
   subject: string
   html: string
 }): Promise<{ ok: boolean }> {
+  // istruttori inseriti senza email: indirizzo segnaposto, non si scrive
+  if (isSenzaEmail(params.to)) return { ok: false }
+
   const apiKey = process.env.RESEND_API_KEY
   if (!apiKey) {
     console.warn(`[email] RESEND_API_KEY assente — invio saltato: "${params.subject}"`)

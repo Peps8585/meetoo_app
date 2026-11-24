@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
-import { createInstructor, setInstructorActive } from './actions'
+import { createInstructor, setInstructorActive, updateInstructor, istruttoriSenzaEmail } from './actions'
+import FoglioModifica from '@/components/FoglioModifica'
 
 type Instructor = {
   id: string
@@ -43,6 +44,8 @@ export default function IstruttoriPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState<FormState>(emptyForm)
   const [saving, setSaving] = useState(false)
+  // chi e' stato inserito senza email (24/11/2026): non entra nell'app finche' non la si aggiunge
+  const [senzaEmail, setSenzaEmail] = useState<Set<string>>(new Set())
 
   async function loadInstructors() {
     const supabase = createClient()
@@ -55,6 +58,7 @@ export default function IstruttoriPage() {
 
     if (error) setError(error.message)
     else setInstructors(data ?? [])
+    setSenzaEmail(new Set(await istruttoriSenzaEmail()))
     setLoading(false)
   }
 
@@ -99,18 +103,9 @@ export default function IstruttoriPage() {
     setError(null)
 
     if (editingId) {
-      // Aggiornamento: usa il browser client (nessuna operazione auth)
-      const supabase = createClient()
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          first_name: form.first_name,
-          last_name: form.last_name,
-          phone: form.phone || null,
-        })
-        .eq('id', editingId)
-
-      if (error) setError(error.message)
+      // Aggiornamento dal server: dal browser un admin non puo' modificare il profilo di un altro
+      const result = await updateInstructor(editingId, form)
+      if (result.error) setError(result.error)
       else { await loadInstructors(); closeForm() }
     } else {
       // Creazione: Server Action con service role key (crea auth.users + profile)
@@ -205,24 +200,27 @@ export default function IstruttoriPage() {
       )}
 
       {/* Form */}
-      {showForm && (
-        <div className="mb-8 bg-white/60 backdrop-blur-sm border border-white/80 rounded-2xl px-8 py-8 shadow-sm">
+      <FoglioModifica aperto={showForm} onChiudi={closeForm}>
+        <div>
           <h2 className="font-inter font-extrabold uppercase tracking-widest text-sm text-meetoo-accent-dark mb-7">
             {editingId ? 'Modifica Istruttore' : 'Nuovo Istruttore'}
           </h2>
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Email — solo in creazione */}
-            {!editingId && (
+            {/* Email: facoltativa in creazione; in modifica solo per chi non ce l'ha ancora */}
+            {(!editingId || senzaEmail.has(editingId)) && (
               <div className="space-y-1">
-                <label className={labelClass}>Email *</label>
+                <label className={labelClass}>Email (facoltativa)</label>
                 <input
                   type="email"
-                  required
                   value={form.email}
                   onChange={set('email')}
                   placeholder="istruttore@example.com"
                   className={inputClass}
                 />
+                <p className="font-inter font-light text-xs text-meetoo-accent-dark/40 pt-1">
+                  Serve solo per entrare nell&apos;app. Senza, l&apos;istruttore compare comunque nel palinsesto e gli
+                  puoi assegnare le lezioni. La puoi aggiungere quando vuoi.
+                </p>
               </div>
             )}
 
@@ -262,10 +260,10 @@ export default function IstruttoriPage() {
               />
             </div>
 
-            {!editingId && (
+            {(!editingId || senzaEmail.has(editingId)) && (
               <p className="font-inter font-light text-xs text-meetoo-accent-dark/40">
-                Verrà creato un account con password temporanea. L&apos;istruttore
-                potrà impostarla tramite il link &quot;Password dimenticata&quot;.
+                Con l&apos;email, l&apos;istruttore entra nell&apos;app impostando la sua password dal link
+                &quot;Password dimenticata&quot;.
               </p>
             )}
 
@@ -287,7 +285,7 @@ export default function IstruttoriPage() {
             </div>
           </form>
         </div>
-      )}
+      </FoglioModifica>
 
       {/* List */}
       {loading ? (
@@ -324,6 +322,11 @@ export default function IstruttoriPage() {
                 <div className="flex-1 min-w-0">
                   <p className="font-inter font-medium text-meetoo-accent-dark md:truncate">
                     {inst.first_name} {inst.last_name}
+                    {senzaEmail.has(inst.id) && (
+                      <span className="ml-2 align-middle font-inter font-normal uppercase tracking-widest text-[9px] text-amber-800 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
+                        senza email
+                      </span>
+                    )}
                     {inst.is_active === false && (
                       <span className="ml-2 align-middle font-inter font-normal uppercase tracking-widest text-[9px] text-meetoo-accent-dark/45 border border-meetoo-accent-dark/20 rounded-full px-2 py-0.5">
                         disattivato

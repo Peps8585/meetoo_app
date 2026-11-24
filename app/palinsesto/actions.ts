@@ -53,6 +53,10 @@ export async function sendBookingConfirmationEmail(scheduleId: string): Promise<
       .eq('id', user.id)
       .single()
 
+    // prenotazioni di prova: nessuna email, la prenotazione non vale
+    const { data: inProva } = await supabase.rpc('prenotazioni_prova')
+    if (inProva === true) return
+
     const { data: crediti } = await supabase.rpc('crediti_attivi')
     const conCrediti = crediti !== false
 

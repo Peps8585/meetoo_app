@@ -102,7 +102,7 @@ export default async function ClientiPage() {
     }
   })
 
-  const { data: appAperta } = await supabase.rpc('prenotazioni_app')
+  const { data: modo } = await supabase.rpc('modo_prenotazioni')
 
   return (
     <div className="p-6 sm:p-8">
@@ -121,7 +121,7 @@ export default async function ClientiPage() {
         </div>
       </div>
 
-      <InterruttoreApp iniziale={appAperta !== false} />
+      <InterruttoreApp iniziale={(modo as 'chiuse' | 'prova' | 'aperte' | null) ?? 'aperte'} />
 
       <DaConfermare clienti={inAttesa} />
 

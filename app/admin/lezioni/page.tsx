@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
+import FoglioModifica from '@/components/FoglioModifica'
 
 type ClassType = {
   id: string
@@ -183,8 +184,8 @@ export default function LezioniPage() {
       )}
 
       {/* Form */}
-      {showForm && (
-        <div className="mb-8 bg-white/60 backdrop-blur-sm border border-white/80 rounded-2xl px-8 py-8 shadow-sm">
+      <FoglioModifica aperto={showForm} onChiudi={closeForm}>
+        <div>
           <h2 className="font-inter font-extrabold uppercase tracking-widest text-sm text-meetoo-accent-dark mb-7">
             {editingId ? 'Modifica Tipologia' : 'Nuova Tipologia'}
           </h2>
@@ -261,7 +262,7 @@ export default function LezioniPage() {
             </div>
           </form>
         </div>
-      )}
+      </FoglioModifica>
 
       {/* List */}
       {loading ? (

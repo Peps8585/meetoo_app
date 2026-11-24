@@ -1565,3 +1565,14 @@ tutto; gli eventi studiati col social manager entrano nell'app da qui. Prima di 
   prima era nascosto (sensitive), probabilmente il dominio vercel.app: anche quello continua a funzionare.
 - Materiali per lo studio (QR, cartello A4, brochure A5): `~/Desktop/MEE TOO PILATES/LOCANDINE STUDIO/DESIGN/app_nuova.py`.
 - In home il riquadro "Contenuti" porta a /contenuti che non esiste (404): chiesto a Mattia se toglierlo.
+
+### 24/11/2026 pomeriggio · Istruttori senza email, prenotazioni di prova, schede di modifica (ramo `istruttori-e-prova`)
+- Istruttori: email facoltativa. Senza, l'account ha un indirizzo segnaposto su senza-email.meetoopilates.com
+  (lib/istruttori/senzaEmail.ts) e sendEmail lo salta. Badge "senza email"; in Modifica si aggiunge l'email vera
+  (updateInstructor, dal server: prima la modifica dal browser falliva in silenzio per la policy di profiles).
+- Prenotazioni dall'app a tre stati (Admin > Clienti): chiuse / di prova / aperte. In prova: prezzo 0, niente lista
+  d'attesa (lista_in_prova), bookings.di_prova = true, nessuna email di conferma, avviso fisso alle clienti.
+  annulla_prenotazioni_prova() le cancella tutte il giorno del lancio (senza avvisi). Attenzione: in prova anche le
+  prenotazioni fatte dallo studio e i posti fissi nascono di prova; i promemoria dei posti fissi partono comunque.
+- Schede di modifica (lezioni, istruttori, pacchetti) aperte davanti con components/FoglioModifica.tsx.
+- Blocco `11-prenotazioni-prova.sql`, codice 0a3f9549. Dev: provato e rimesso ad "aperte".
