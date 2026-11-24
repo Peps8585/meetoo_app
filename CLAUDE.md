@@ -1557,3 +1557,11 @@ tutto; gli eventi studiati col social manager entrano nell'app da qui. Prima di 
   in home e palinsesto, niente tasto Prenota ne' prezzi, profilo senza credito se vuoto, email di benvenuto col
   testo di prova.
 - Blocco `10-prenotazioni-app.sql` (ed6d7334) applicato sul vero 11.41 (si' 11.40), pagine online 11.55 (e1a45af READY). Interruttore APERTO sul vero: lo chiude lo studio quando partono le iscrizioni.
+
+### 24/11/2026 · Indirizzo app.meetoopilates.com
+- Dominio aggiunto al progetto Vercel; CNAME `app` -> cname.vercel-dns.com su Aruba (dal Chrome di Mattia, 12.30);
+  Redirect URL `https://app.meetoopilates.com/**` aggiunto su Supabase prod. Risponde con certificato dalle 12.43.
+- `APP_URL` di produzione portato a https://app.meetoopilates.com (12.44): vale dal prossimo rilascio. Il valore di
+  prima era nascosto (sensitive), probabilmente il dominio vercel.app: anche quello continua a funzionare.
+- Materiali per lo studio (QR, cartello A4, brochure A5): `~/Desktop/MEE TOO PILATES/LOCANDINE STUDIO/DESIGN/app_nuova.py`.
+- In home il riquadro "Contenuti" porta a /contenuti che non esiste (404): chiesto a Mattia se toglierlo.
