@@ -1556,4 +1556,4 @@ tutto; gli eventi studiati col social manager entrano nell'app da qui. Prima di 
 - Interruttore in Admin > Clienti. Chiuso: riquadro "versione di prova" (testo concordato con Mattia, nessuna data)
   in home e palinsesto, niente tasto Prenota ne' prezzi, profilo senza credito se vuoto, email di benvenuto col
   testo di prova.
-- Blocco `10-prenotazioni-app.sql`, codice ed6d7334, in attesa del si'. Dev rimesso ad aperto.
+- Blocco `10-prenotazioni-app.sql` (ed6d7334) applicato sul vero 11.41 (si' 11.40), pagine online 11.55 (e1a45af READY). Interruttore APERTO sul vero: lo chiude lo studio quando partono le iscrizioni.
