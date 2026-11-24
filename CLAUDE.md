@@ -1543,6 +1543,6 @@ tutto; gli eventi studiati col social manager entrano nell'app da qui. Prima di 
   email di conferma senza "Addebito", profilo senza riquadro del credito se la cliente non ha pacchetti.
 - Provato sul dev: saldo 0 prenota a crediti spenti (nessun movimento), rifiutata a crediti accesi; prenotata a
   crediti accesi e disdetta a spenti = rimborso pieno. Dev rimesso a crediti accesi.
-- Blocco `9-senza-crediti.sql`, codice 50b82ab5, in attesa del si' di Mattia.
+- Blocco `9-senza-crediti.sql` (50b82ab5) applicato sul vero alle 11.18 (si' 11.17), pagine online 11.21 (f56c03f READY). Interruttore ACCESO sul vero.
 - Risposta a Mattia: le clienti si registrano da sole (cancello di conferma dal 19/11); elenco App Palestre solo per
   confronto a meta' febbraio, niente caricamento il 25/1.
