@@ -48,6 +48,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import NoteForm from './NoteForm'
 import PostoFisso, { type SlotAttivo, type SlotPossibile } from './PostoFisso'
+import CaricaPacchetto, { type PacchettoStudio } from './CaricaPacchetto'
 import { etichettaSlot, romeSlot } from '@/lib/posti-fissi/slot'
 import { linkFoto } from '@/lib/foto'
 
@@ -247,6 +248,20 @@ export default async function ClienteDetailPage({
   const profile   = profileRes.data as ClientProfile
   const email     = authRes.data.user?.email ?? null
   const packages  = (packagesRes.data  as unknown as ClientPackage[]) ?? []
+  // pacchetti in vendita, per il tasto "Carica pacchetto" (24/11/2026)
+  const { data: pacchettiData } = await admin
+    .from('packages')
+    .select('id, name, credits, price, validity_days')
+    .eq('studio_id', studioId)
+    .eq('is_active', true)
+    .order('name')
+  const pacchettiStudio: PacchettoStudio[] = (pacchettiData ?? []).map((p) => ({
+    id: p.id,
+    name: p.name,
+    credits: p.credits ?? 0,
+    price: Number(p.price ?? 0),
+    validity_days: p.validity_days,
+  }))
   const bookings  = (bookingsRes.data  as unknown as RawBooking[])    ?? []
   const notes     = (notesRes.data     as unknown as Note[])          ?? []
 
@@ -406,6 +421,7 @@ export default async function ClienteDetailPage({
             })}
           </div>
         )}
+        <CaricaPacchetto clientId={clientId} pacchetti={pacchettiStudio} />
       </section>
 
       {/* ── SEZIONE 2b: Posto fisso ─────────────────────────────────────── */}
