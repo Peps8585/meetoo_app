@@ -39,8 +39,8 @@ export default async function ContenutiPage() {
             I nostri contenuti, anche a casa
           </h1>
           <p className="mt-3 font-inter text-[15px] font-light leading-relaxed text-meetoo-accent-dark/80">
-            Qui troverai i contenuti che i nostri istruttori, le nostre istruttrici e i professionisti che collaborano con lo
-            studio preparano per te: potrai guardarli da casa o da dove preferisci, quando hai un momento libero.
+            Qui troverai dei contenuti che prepareremo per te e potranno esserti utili per integrare il lavoro in studio:
+            potrai guardarli da casa o da dove preferisci, quando hai un momento libero.
           </p>
           <p className="mt-3 font-inter text-[15px] font-light leading-relaxed text-meetoo-accent-dark/80">
             Stiamo preparando questa sezione con cura. Appena sarà pronta la troverai qui, dentro l&apos;app, e ti avviseremo noi!
