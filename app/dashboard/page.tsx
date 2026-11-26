@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Calendar, User, Play, MessageCircle } from 'lucide-react'
+import { Calendar, User, Play, MessageCircle, Gift } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { utenteDaSessione } from '@/lib/supabase/utente'
 import { Logo } from '../Logo'
@@ -388,6 +388,23 @@ export default async function DashboardPage() {
             </div>
           </section>
         )}
+
+        {/* ── Regala Mee Too (Mattia 26/11/2026): porta alla pagina delle gift card ── */}
+        <Link
+          href="/regala"
+          className="bg-white/60 backdrop-blur-sm rounded-2xl shadow-sm border border-white/80 px-4 py-3 mb-8 flex items-center gap-3 hover:bg-white/80 transition-colors"
+        >
+          <Gift className="shrink-0 w-5 h-5 text-meetoo-bg-dark" />
+          <div className="min-w-0 flex-1">
+            <p className="font-inter font-normal uppercase tracking-widest text-[10px] text-meetoo-accent-dark">
+              Regala Mee Too
+            </p>
+            <p className="font-inter font-light text-xs leading-snug text-meetoo-accent-dark/70">
+              Una gift card per le lezioni dello studio, da regalare a chi vuoi tu.
+            </p>
+          </div>
+          <span className="shrink-0 font-inter font-light text-xs text-meetoo-accent-dark/45">→</span>
+        </Link>
 
         {/* ── Accesso rapido ── */}
         <section>
