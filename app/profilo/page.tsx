@@ -7,6 +7,8 @@ import { iniziali, linkFoto } from '@/lib/foto'
 import FotoProfilo from './FotoProfilo'
 import ConsensoWhatsApp from './ConsensoWhatsApp'
 import DatiPersonali from './DatiPersonali'
+import CertificatoMedico from '@/components/certificato/CertificatoMedico'
+import { linkCertificato } from '@/lib/certificato'
 
 type Profile = {
   first_name: string | null
@@ -14,6 +16,9 @@ type Profile = {
   phone: string | null
   avatar_url: string | null
   whatsapp_eventi: boolean | null
+  date_of_birth: string | null
+  certificato_path: string | null
+  certificato_scadenza: string | null
 }
 
 type ClientPackage = {
@@ -54,11 +59,12 @@ export default async function ProfiloPage() {
   // ── Dati personali ──────────────────────────────────────────────────
   const { data: profileData } = await supabase
     .from('profiles')
-    .select('first_name, last_name, phone, avatar_url, whatsapp_eventi')
+    .select('first_name, last_name, phone, avatar_url, whatsapp_eventi, date_of_birth, certificato_path, certificato_scadenza')
     .eq('id', user.id)
     .single()
 
   const profile = profileData as Profile | null
+  const linkCert = await linkCertificato(supabase, profile?.certificato_path ?? null)
   const foto = profile?.avatar_url ? (await linkFoto(supabase, [profile.avatar_url])).get(profile.avatar_url) ?? null : null
 
   // ── Pacchetti attivi ────────────────────────────────────────────────
@@ -246,9 +252,18 @@ export default async function ProfiloPage() {
               cognome={profile?.last_name ?? null}
               email={user.email ?? null}
               telefono={profile?.phone ?? null}
+              nascita={profile?.date_of_birth ?? null}
             />
           </div>
         </section>
+
+        {/* ── Certificato medico (26/11/2026) ── */}
+        <CertificatoMedico
+          userId={user.id}
+          percorso={profile?.certificato_path ?? null}
+          scadenza={profile?.certificato_scadenza ?? null}
+          link={linkCert}
+        />
 
         {/* ── Avvisi su WhatsApp ── */}
         <section className="mb-8">

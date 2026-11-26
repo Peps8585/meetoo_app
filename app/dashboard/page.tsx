@@ -7,6 +7,7 @@ import { Logo } from '../Logo'
 import DecisionCard from './DecisionCard'
 import Notifiche from './Notifiche'
 import InAttesaConferma from '@/components/InAttesaConferma'
+import CompletaDati from '@/components/CompletaDati'
 import { eventiInArrivo } from '@/lib/eventi'
 import CartaEvento from '@/components/eventi/CartaEvento'
 import { stileLezione } from '@/lib/coloreLezione'
@@ -81,7 +82,7 @@ export default async function DashboardPage() {
   // Fetch profile for personalized greeting
   const { data: profileData } = await supabase
     .from('profiles')
-    .select('first_name, last_name, approvata_at, role')
+    .select('first_name, last_name, approvata_at, role, phone, date_of_birth')
     .eq('id', user.id)
     .single()
 
@@ -91,6 +92,9 @@ export default async function DashboardPage() {
   const appInProva = appAperta === false && eCliente
   const { data: provaPren } = await supabase.rpc('prenotazioni_prova')
   const prenotazioniDiProva = provaPren === true && eCliente && !appInProva
+  // dopo la conferma dello studio, alla prima entrata: telefono e data di nascita (26/11/2026)
+  const pd = profileData as { approvata_at: string | null; phone: string | null; date_of_birth: string | null } | null
+  const mancanoDati = eCliente && !!pd?.approvata_at && (!pd?.phone || !pd?.date_of_birth)
   const displayName = profile?.first_name ?? user.email?.split('@')[0] ?? 'ospite'
 
   // Prossime lezioni: prenotate, posto fisso (anche tenuto) e lista d'attesa
@@ -260,6 +264,10 @@ export default async function DashboardPage() {
         )}
 
         <Notifiche />
+
+        {mancanoDati && (
+          <CompletaDati userId={user.id} email={user.email ?? null} telefono={pd?.phone ?? null} nascita={pd?.date_of_birth ?? null} />
+        )}
 
         {/* ── Messaggi dallo studio da leggere ── */}
         {daLeggere.length > 0 && (

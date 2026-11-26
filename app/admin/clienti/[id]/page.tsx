@@ -51,6 +51,7 @@ import PostoFisso, { type SlotAttivo, type SlotPossibile } from './PostoFisso'
 import CaricaPacchetto, { type PacchettoStudio } from './CaricaPacchetto'
 import { etichettaSlot, romeSlot } from '@/lib/posti-fissi/slot'
 import { linkFoto } from '@/lib/foto'
+import { statoCertificato, dataLunga } from '@/lib/certificato'
 
 // Pagina costruita sul server a ogni richiesta: leggere l'ora qui e' voluto.
 const adesso = () => Date.now()
@@ -66,6 +67,9 @@ type ClientProfile = {
   avatar_url: string | null
   role: string
   studio_id: string | null
+  date_of_birth: string | null
+  certificato_path: string | null
+  certificato_scadenza: string | null
 }
 
 type ClientPackage = {
@@ -184,7 +188,7 @@ export default async function ClienteDetailPage({
   const [profileRes, authRes, packagesRes, bookingsRes, notesRes, slotsRes, futureRes, prossimeRes] = await Promise.all([
     admin
       .from('profiles')
-      .select('id, first_name, last_name, phone, avatar_url, role, studio_id')
+      .select('id, first_name, last_name, phone, avatar_url, role, studio_id, date_of_birth, certificato_path, certificato_scadenza')
       .eq('id', clientId)
       .single(),
 
@@ -246,6 +250,10 @@ export default async function ClienteDetailPage({
   if (!profileRes.data) redirect('/admin/clienti')
 
   const profile   = profileRes.data as ClientProfile
+  const statoCert = statoCertificato(profile.certificato_path, profile.certificato_scadenza)
+  const linkCert = profile.certificato_path
+    ? (await admin.storage.from('certificati').createSignedUrl(profile.certificato_path, 60 * 30)).data?.signedUrl ?? null
+    : null
   const email     = authRes.data.user?.email ?? null
   const packages  = (packagesRes.data  as unknown as ClientPackage[]) ?? []
   // pacchetti in vendita, per il tasto "Carica pacchetto" (24/11/2026)
@@ -369,6 +377,12 @@ export default async function ClienteDetailPage({
                   <dd className="font-inter font-light text-sm text-meetoo-accent-dark">{profile.phone}</dd>
                 </div>
               )}
+              {profile.date_of_birth && (
+                <div className="flex items-center gap-2">
+                  <dt className="font-inter font-light text-[10px] uppercase tracking-widest text-meetoo-accent-dark/40 w-16 shrink-0">Nata il</dt>
+                  <dd className="font-inter font-light text-sm text-meetoo-accent-dark">{dataLunga(profile.date_of_birth)}</dd>
+                </div>
+              )}
               <div className="flex items-center gap-2">
                 <dt className="font-inter font-light text-[10px] uppercase tracking-widest text-meetoo-accent-dark/40 w-16 shrink-0">Iscritto</dt>
                 <dd className="font-inter font-light text-sm text-meetoo-accent-dark">
@@ -379,6 +393,32 @@ export default async function ClienteDetailPage({
           </div>
         </div>
       </div>
+
+      {/* ── Certificato medico (26/11/2026): lo vedono solo le admin ── */}
+      <section className="mb-6">
+        <h2 className="font-inter font-extrabold uppercase tracking-widest text-[11px] text-meetoo-accent-dark mb-3">
+          Certificato medico
+        </h2>
+        <div className="bg-white/60 backdrop-blur-sm border border-white/80 rounded-2xl px-5 py-4 shadow-sm flex items-center justify-between gap-3">
+          <p className={`font-inter text-sm ${
+            statoCert === 'scaduto' ? 'text-red-600' : statoCert === 'in_scadenza' ? 'text-amber-700' : statoCert === 'mancante' ? 'text-meetoo-accent-dark/50' : 'text-meetoo-accent-dark'
+          }`}>
+            {statoCert === 'mancante'
+              ? 'Non ancora caricato'
+              : statoCert === 'scaduto'
+              ? `Scaduto il ${dataLunga(profile.certificato_scadenza!)}`
+              : profile.certificato_scadenza
+              ? `${statoCert === 'in_scadenza' ? 'Scade' : 'Valido fino'} il ${dataLunga(profile.certificato_scadenza)}`
+              : 'Caricato'}
+          </p>
+          {linkCert && (
+            <a href={linkCert} target="_blank" rel="noopener noreferrer"
+               className="shrink-0 font-inter uppercase tracking-widest text-[11px] px-4 py-2 rounded-full border border-meetoo-accent-dark/30 text-meetoo-accent-dark">
+              Apri
+            </a>
+          )}
+        </div>
+      </section>
 
       {/* ── SEZIONE 2: Pacchetti attivi ────────────────────────────────── */}
       <section className="mb-6">

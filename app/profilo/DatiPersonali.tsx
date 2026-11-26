@@ -13,18 +13,21 @@ export default function DatiPersonali({
   cognome,
   email,
   telefono,
+  nascita,
 }: {
   userId: string
   nome: string | null
   cognome: string | null
   email: string | null
   telefono: string | null
+  nascita: string | null
 }) {
   const router = useRouter()
   const [modifica, setModifica] = useState(false)
   const [n, setN] = useState(nome ?? '')
   const [c, setC] = useState(cognome ?? '')
   const [t, setT] = useState(telefono ?? '')
+  const [d, setD] = useState(nascita ?? '')
   const [busy, setBusy] = useState(false)
   const [nota, setNota] = useState<{ ok: boolean; testo: string } | null>(null)
 
@@ -37,7 +40,7 @@ export default function DatiPersonali({
     setNota(null)
     const { error } = await createClient()
       .from('profiles')
-      .update({ first_name: n.trim(), last_name: c.trim(), phone: t.trim() || null })
+      .update({ first_name: n.trim(), last_name: c.trim(), phone: t.trim() || null, date_of_birth: d || null })
       .eq('id', userId)
     setBusy(false)
     if (error) {
@@ -53,6 +56,7 @@ export default function DatiPersonali({
     setN(nome ?? '')
     setC(cognome ?? '')
     setT(telefono ?? '')
+    setD(nascita ?? '')
     setNota(null)
     setModifica(false)
   }
@@ -75,6 +79,10 @@ export default function DatiPersonali({
         <label className="block">
           <span className={etichetta}>Telefono</span>
           <input className={campo} value={t} onChange={(e) => setT(e.target.value)} type="tel" inputMode="tel" autoComplete="tel" />
+        </label>
+        <label className="block">
+          <span className={etichetta}>Data di nascita</span>
+          <input className={campo} value={d} onChange={(e) => setD(e.target.value)} type="date" autoComplete="bday" />
         </label>
         <div>
           <span className={etichetta}>Email</span>
@@ -112,6 +120,7 @@ export default function DatiPersonali({
     { label: 'Cognome', value: c },
     { label: 'Email', value: email },
     { label: 'Telefono', value: t },
+    { label: 'Data di nascita', value: d ? new Date(d + 'T12:00:00').toLocaleDateString('it-IT') : '' },
   ]
 
   return (
