@@ -1,5 +1,6 @@
 import { getStripe } from '@/lib/stripe'
 import { fulfillCheckoutSession, voidRefundedGift } from '@/lib/gift/fulfill'
+import { annullaOrdineRimborsato, chiudiOrdinePacchetto } from '@/lib/pacchetti/negozio'
 
 /**
  * Avvisi di Stripe. Pagamento riuscito: chiude il regalo anche se chi ha pagato
@@ -21,9 +22,14 @@ export async function POST(request: Request) {
   if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') {
     const session = event.data.object
     if (session.metadata?.gift_card_id) await fulfillCheckoutSession(session.id)
+    if (session.metadata?.package_order_id) await chiudiOrdinePacchetto(session.id)
   }
   if (event.type === 'charge.refunded') {
     await voidRefundedGift(event.data.object.id)
+    // pacchetti comprati dall'app: rimborso totale = ordine annullato, lo studio toglie il credito
+    const ch = event.data.object
+    const pi = typeof ch.payment_intent === 'string' ? ch.payment_intent : ch.payment_intent?.id
+    if (ch.refunded && pi) await annullaOrdineRimborsato(pi)
   }
   return Response.json({ ricevuto: true })
 }

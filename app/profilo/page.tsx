@@ -118,6 +118,15 @@ export default async function ProfiloPage() {
           </h1>
         </div>
 
+        {/* prezzi di tutti i pacchetti, e acquisto quando lo studio lo apre (Mattia 26/11/2026) */}
+        <Link
+          href="/pacchetti"
+          className="mb-8 flex items-center justify-between rounded-2xl border border-white/80 bg-white/60 px-5 py-3 shadow-sm backdrop-blur-sm transition-colors hover:bg-white/80"
+        >
+          <span className="font-inter font-normal uppercase tracking-widest text-[10px] text-meetoo-accent-dark">Pacchetti e prezzi</span>
+          <span className="font-inter font-light text-xs text-meetoo-accent-dark/45">→</span>
+        </Link>
+
         {/* ── I miei pacchetti ── */}
         {mostraPacchetti && (
         <section className="mb-8">
