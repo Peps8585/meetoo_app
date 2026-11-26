@@ -142,7 +142,7 @@ export default function CertificatoMedico({
               <input type="checkbox" checked={consenso} onChange={(e) => setConsenso(e.target.checked)} className="mt-1" />
               <span className="font-inter font-light text-xs leading-relaxed text-meetoo-accent-dark/70">
                 Acconsento a conservare il mio certificato medico nell&apos;app. Lo vedete solo io e lo studio, serve a
-                verificare che io possa fare attività fisica e viene cancellato dopo la scadenza.
+                verificare che io possa fare attività fisica. Posso sostituirlo quando voglio.
               </span>
             </label>
             <div className="flex gap-2">

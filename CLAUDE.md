@@ -1581,7 +1581,7 @@ tutto; gli eventi studiati col social manager entrano nell'app da qui. Prima di 
 - Certificato: spazio privato `certificati` (10 MB, jpg/png/webp/pdf), lo leggono la cliente e le admin del suo
   studio, non le insegnanti (provato). profiles.certificato_path/_scadenza/_caricato_at/_consenso_at. Riquadro nel
   profilo (components/certificato/CertificatoMedico.tsx, foto ridotte a 1800 px), stato nella scheda cliente admin.
-  Da fare: cancellazione automatica qualche mese dopo la scadenza (promessa nel testo del consenso), etichetta in elenco.
+  Da fare (proposto, non promesso nel testo): cancellazione automatica dopo la scadenza, etichetta in elenco clienti.
 - Finestra "Benvenuta in Mee Too!" (components/CompletaDati.tsx): cliente confermata senza telefono o data di nascita;
   email solo da controllare. Data di nascita anche in Dati personali e nella scheda admin.
 - Blocco `12-certificato-medico.sql`, codice 5f9b9e10. Sul dev Bea ha telefono, nascita e certificato di prova.
